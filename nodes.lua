@@ -169,7 +169,7 @@ minetest.register_abm({
 	end,
 })
 
-
+--[[
 for i = 1, 5 do
 	minetest.override_item("default:grass_"..i, {drop = {
 		max_items = 1,
@@ -187,3 +187,4 @@ minetest.override_item("default:junglegrass", {drop = {
 		{items = {'default:junglegrass'}},
 	}
 }})
+]]

@@ -1,5 +1,14 @@
 
-farming_grain.enlarge_drop = function(item_name,def)
+local table_insert = function(tab,tin)
+  local out=tab
+  for i=#out,1,-1 do
+    out[i+1]=out[i]
+  end
+  out[1]=tin
+  return out
+end
+
+farming.enlarge_drop_table = function(item_name,def)
 --[[
 insert new seed at beginning of drop table. calculate new rarity.
 
@@ -50,12 +59,37 @@ farming.register_plant = function(name, def)
 	if not def.fertility then
 		def.fertility = {}
 	end
-
+	if not def.switch_drop_count then
+      def.switch_drop_count = math.floor(0.75 * def.steps)
+    else
+      if (def.switch_drop_count > def.steps) then
+        def.switch_drop_count = def.steps
+      end
+	end
+	if not def.spawn then
+	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
+				spawn_min = 0,
+				spawn_max = 42,
+				spawnby = nil,
+				scale = 0.006,
+				spawn_num = -1}
+	else
+		def.spawnon.spawnon=def.spawnon.spawnon or {"default:dirt_with_grass"}
+		def.spawnon.spawn_min = def.spawnon.spawn_min or 0
+		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
+		def.spawnon.spawnby = def.spawnon.spawn_by or nil
+		def.spawnon.scale = def.spawnon.scale or 0.006
+		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
+	end
+    
 	-- local definitions
 	local mname = name:split(":")[1]
 	local pname = name:split(":")[2]
 	local harvest_name=mname..":"..pname
 	local seed_name=mname..":seed_"..pname
+	if (def.groups["no_seed"] ~= nil) then
+	  seed_name = mname..":"..pname
+	end
 
 	farming.registered_plants[pname] = def
 
@@ -66,65 +100,13 @@ farming.register_plant = function(name, def)
 		groups = def.groups or {flammable = 2},
 	})
 	
-	-- Register growing steps
-	for i = 1, def.steps do
-		local base_rarity = 1
-		if def.steps ~= 1 then
-			base_rarity =  8 - (i - 1) * 7 / (def.steps - 1)
-		end
-		local drop = {
-			items = {
-				{items = {harvest_name},rarity=base_rarity},
-				
-		local drop = {
-			items = {
-				{items = {mname .. ":" .. pname}, rarity = base_rarity},
-				{items = {mname .. ":" .. pname}, rarity = base_rarity * 2},
-				{items = {mname .. ":seed_" .. pname}, rarity = base_rarity},
-				{items = {mname .. ":seed_" .. pname}, rarity = base_rarity * 2},
-			}
-		}
-		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		nodegroups[pname] = i
-
-		local next_plant = nil
-
-		if i < def.steps then
-			next_plant = mname .. ":" .. pname .. "_" .. (i + 1)
-			lbm_nodes[#lbm_nodes + 1] = mname .. ":" .. pname .. "_" .. i
-		end
-
-		minetest.register_node(":" .. mname .. ":" .. pname .. "_" .. i, {
-			drawtype = "plantlike",
-			waving = 1,
-			tiles = {mname .. "_" .. pname .. "_" .. i .. ".png"},
-			paramtype = "light",
-			paramtype2 = def.paramtype2 or nil,
-			place_param2 = def.place_param2 or nil,
-			walkable = false,
-			buildable_to = true,
-			drop = drop,
-			selection_box = {
-				type = "fixed",
-				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
-			},
-			groups = nodegroups,
-			sounds = default.node_sound_leaves_defaults(),
-			next_plant = next_plant,
-			on_timer = farming.grow_plant,
-			minlight = def.minlight,
-			maxlight = def.maxlight,
-		})
-	end
-
-
 	-- Register seed
-	local lbm_nodes = {mname .. ":seed_" .. pname}
+	local lbm_nodes = {seed_name}
 	local g = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
 	for k, v in pairs(def.fertility) do
 		g[v] = 1
 	end
-	minetest.register_node(":" .. mname .. ":seed_" .. pname, {
+	minetest.register_node(":" .. seed_name, {
 		description = def.description,
 		tiles = {def.inventory_image},
 		inventory_image = def.inventory_image,
@@ -165,6 +147,62 @@ farming.register_plant = function(name, def)
 		minlight = def.minlight,
 		maxlight = def.maxlight,
 	})
+	
+	-- Register growing steps
+	for i = 1, def.steps do
+		local base_rarity = 1
+		if def.steps ~= 1 then
+			base_rarity =  8 - (i - 1) * 7 / (def.steps - 1)
+		end
+		local drop = {
+			items = {
+				{items = {harvest_name}},
+				}
+			}
+		if (i >= def.switch_drop_count ) then
+		  table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity})
+--		  drop.items=table_insert(drop.items,{items={harvest_name},rarity=base_rarity})
+		end
+		if (i == def.steps and def.next_plant ~= nil) then
+		  def.next_plant_rarity = def.next_plant_rarity or base_rarity*2
+		  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
+--		  drop.items = table_insert(drop.items,{items=def.next_plant,rarity=def.next_plant_rarity})
+		end
+		
+		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		nodegroups[pname] = i
+
+		local next_plant = nil
+
+		if i < def.steps then
+			next_plant = harvest_name .. "_" .. (i + 1)
+			lbm_nodes[#lbm_nodes + 1] = harvest_name .. "_" .. i
+		end
+
+		minetest.register_node(":" .. harvest_name .. "_" .. i, {
+			drawtype = "plantlike",
+			waving = 1,
+			tiles = {harvest_name .. "_" .. i .. ".png"},
+			paramtype = "light",
+			paramtype2 = def.paramtype2 or nil,
+			place_param2 = def.place_param2 or nil,
+			walkable = false,
+			buildable_to = true,
+			drop = drop,
+			selection_box = {
+				type = "fixed",
+				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+			},
+			groups = nodegroups,
+			sounds = default.node_sound_leaves_defaults(),
+			next_plant = next_plant,
+			on_timer = farming.grow_plant,
+			minlight = def.minlight,
+			maxlight = def.maxlight,
+		})
+	end
+
+
 
 
 
@@ -175,6 +213,26 @@ farming.register_plant = function(name, def)
 		action = function(pos, node)
 			tick_again(pos)
 		end,
+	})
+
+    -- register mapgen
+	minetest.register_decoration({
+		deco_type = "simple",
+		place_on = def.spawnon.spawnon
+		sidelen = 16,
+		noise_params = {
+			offset = 0,
+			scale = def.spawnon.scale, -- 0.006,
+			spread = {x = 100, y = 100, z = 100},
+			seed = 329,
+			octaves = 3,
+			persist = 0.6
+		},
+		y_min = def.spawnon.spawn_min,
+		y_max = def.spawnon.spawn_max,
+		decoration = harvest_name.."_1",
+		spawn_by = def.spawnon.spawnby,
+		num_spawn_by = def.spawnon.spawn_num,
 	})
 
 	-- Return
