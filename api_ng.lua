@@ -86,7 +86,9 @@ farming.register_plant = function(name, def)
 	local mname = name:split(":")[1]
 	local pname = name:split(":")[2]
 	local harvest_name=mname..":"..pname
+	local harvest_name_png=mname.."_"..pname
 	local seed_name=mname..":seed_"..pname
+	local seed_name_png=mname.."_seed_"..pname
 	if (def.groups["no_seed"] ~= nil) then
 	  seed_name = mname..":"..pname
 	end
@@ -106,6 +108,7 @@ farming.register_plant = function(name, def)
 	for k, v in pairs(def.fertility) do
 		g[v] = 1
 	end
+        print("register "..seed_name)
 	minetest.register_node(":" .. seed_name, {
 		description = def.description,
 		tiles = {def.inventory_image},
@@ -178,11 +181,11 @@ farming.register_plant = function(name, def)
 			next_plant = harvest_name .. "_" .. (i + 1)
 			lbm_nodes[#lbm_nodes + 1] = harvest_name .. "_" .. i
 		end
-
+                print("register "..harvest_name.."_"..i)
 		minetest.register_node(":" .. harvest_name .. "_" .. i, {
 			drawtype = "plantlike",
 			waving = 1,
-			tiles = {harvest_name .. "_" .. i .. ".png"},
+			tiles = {harvest_name_png .. "_" .. i .. ".png"},
 			paramtype = "light",
 			paramtype2 = def.paramtype2 or nil,
 			place_param2 = def.place_param2 or nil,
@@ -216,9 +219,10 @@ farming.register_plant = function(name, def)
 	})
 
     -- register mapgen
+        print("spawn on "..def.spawnon.spawnon[1])
 	minetest.register_decoration({
 		deco_type = "simple",
-		place_on = def.spawnon.spawnon
+		place_on = def.spawnon.spawnon,
 		sidelen = 16,
 		noise_params = {
 			offset = 0,
