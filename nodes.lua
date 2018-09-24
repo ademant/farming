@@ -1,42 +1,18 @@
-minetest.override_item("default:dirt", {
+local add_soil = function(item,soil)
+  minetest.override_item(item,{
 	soil = {
-		base = "default:dirt",
-		dry = "farming:soil",
-		wet = "farming:soil_wet"
-	}
-})
+		base = item,
+		dry = soil,
+		wet = soil.."_wet"
+		}
+	})
+end
 
-minetest.override_item("default:dirt_with_grass", {
-	soil = {
-		base = "default:dirt_with_grass",
-		dry = "farming:soil",
-		wet = "farming:soil_wet"
-	}
-})
-
-minetest.override_item("default:dirt_with_dry_grass", {
-	soil = {
-		base = "default:dirt_with_dry_grass",
-		dry = "farming:soil",
-		wet = "farming:soil_wet"
-	}
-})
-
-minetest.override_item("default:dirt_with_rainforest_litter", {
-	soil = {
-		base = "default:dirt_with_rainforest_litter",
-		dry = "farming:soil",
-		wet = "farming:soil_wet"
-	}
-})
-
-minetest.override_item("default:dirt_with_coniferous_litter", {
-	soil = {
-		base = "default:dirt_with_coniferous_litter",
-		dry = "farming:soil",
-		wet = "farming:soil_wet"
-	}
-})
+local change_soil = {"default:dirt","default:dirt_with_grass","default:dirt_with_dry_grass","default:dirt_with_rainforest_litter",
+	"default:dirt_with_coniferous_litter"}
+for i,v in ipairs(change_soil) do
+	add_soil(v,"farming:soil")
+end
 
 minetest.register_node("farming:soil", {
 	description = "Soil",
@@ -64,14 +40,11 @@ minetest.register_node("farming:soil_wet", {
 	}
 })
 
-minetest.override_item("default:desert_sand", {
-	groups = {crumbly=3, falling_node=1, sand=1, soil = 1},
-	soil = {
-		base = "default:desert_sand",
-		dry = "farming:desert_sand_soil",
-		wet = "farming:desert_sand_soil_wet"
-	}
-})
+local change_soil_desert = {"default:desert_sand"}
+for i,v in ipairs(change_soil_desert) do
+	add_soil(v,"farming:desert_sand_soil")
+end
+
 minetest.register_node("farming:desert_sand_soil", {
 	description = "Desert Sand Soil",
 	drop = "default:desert_sand",
@@ -105,16 +78,6 @@ minetest.register_node("farming:straw", {
 	groups = {snappy=3, flammable=4, fall_damage_add_percent=-30},
 	sounds = default.node_sound_leaves_defaults(),
 })
-
-stairs.register_stair_and_slab(
-	"straw",
-	"farming:straw",
-	{snappy = 3, flammable = 4},
-	{"farming_straw.png"},
-	"Straw Stair",
-	"Straw Slab",
-	default.node_sound_leaves_defaults()
-)
 
 minetest.register_abm({
 	label = "Farming soil",
@@ -169,22 +132,3 @@ minetest.register_abm({
 	end,
 })
 
---[[
-for i = 1, 5 do
-	minetest.override_item("default:grass_"..i, {drop = {
-		max_items = 1,
-		items = {
-			{items = {'farming:seed_wheat'},rarity = 5},
-			{items = {'default:grass_1'}},
-		}
-	}})
-end
-
-minetest.override_item("default:junglegrass", {drop = {
-	max_items = 1,
-	items = {
-		{items = {'farming:seed_cotton'},rarity = 8},
-		{items = {'default:junglegrass'}},
-	}
-}})
-]]

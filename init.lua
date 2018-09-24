@@ -4,12 +4,14 @@ farming = {}
 farming.path = minetest.get_modpath("farming")
 
 
+minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loading from "..minetest.get_modpath(minetest.get_current_modname()))
 -- Load files
 
 dofile(farming.path .. "/api.lua")
 dofile(farming.path .. "/api_ng.lua")
 dofile(farming.path .. "/nodes.lua")
 dofile(farming.path .. "/hoes.lua")
+dofile(farming.path .. "/utensils.lua")
 
 
 -- WHEAT
@@ -138,3 +140,6 @@ minetest.register_craft({
 	recipe = "farming:hoe_wood",
 	burntime = 5,
 })
+
+
+minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")
