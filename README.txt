@@ -6,6 +6,7 @@ Authors of source code
 ----------------------
 Originally by PilzAdam (MIT)
 webdesigner97 (MIT)
+ademant (MIT)
 Various Minetest developers and contributors (MIT)
 
 Authors of media (textures)
@@ -18,9 +19,6 @@ Created by PilzAdam (CC BY 3.0):
   farming_string.png
 
 Created by BlockMen (CC BY 3.0):
-  farming_tool_diamondhoe.png
-  farming_tool_mesehoe.png
-  farming_tool_bronzehoe.png
   farming_tool_steelhoe.png
   farming_tool_stonehoe.png
   farming_tool_woodhoe.png
@@ -38,3 +36,7 @@ Created by Gambit (CC BY 3.0):
 
 Created by Napiophelios (CC BY-SA 3.0):
   farming_cotton.png
+
+Created by ademant (CC BY 3.0):
+  farming_tool_flail.png
+  farming_tool_coffee_grinder.png (based on art by cactus_cowboy on openclipart.org)

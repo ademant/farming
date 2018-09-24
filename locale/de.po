@@ -1,0 +1,39 @@
+# German Translation for farming mod.
+# Copyright (C) 2017
+# This file is distributed under the same license as the farming package.
+# Xanthin.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.27\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-03-31 HO:MI+ZONE\n"
+"PO-Revision-Date: 2016-03-31 HO:MI+ZONE\n"
+"Last-Translator: Xanthin\n"
+"Language-Team: \n"
+"Language: German \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: spelt.lua
+msgid "Spelt"
+msgstr "Dinkel"
+
+#: spelt.lua
+msgid "Spelt Seed"
+msgstr "Dinkelkörner"
+
+#: spelt.lua
+msgid "Roasted Spelt"
+msgstr "Gerösteter Dinkel"
+
+#: spelt.lua
+msgid "Spelt Coffee"
+msgstr "Dinkelkaffee"
+
+#: spelt.lua
+msgid "Cup of Spelt Coffee"
+msgstr "Tasse Dinkelkaffee"
+

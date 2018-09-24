@@ -3,91 +3,43 @@
 farming = {}
 farming.path = minetest.get_modpath("farming")
 
+local S = dofile(farming.path .. "/intllib.lua")
+farming.intllib = S
+
 
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loading from "..minetest.get_modpath(minetest.get_current_modname()))
 -- Load files
 
+farming.rarety = 0.002 -- 0.006
+farming.potato = minetest.settings:get("farming.potato") or true
+farming.wheat = minetest.settings:get("farming.wheat") or true
+farming.cotton = minetest.settings:get("farming.cotton") or true
+
+dofile(farming.path .. "/config.lua")
+--[[
+for i,inp in ipairs({farming.path,minetest.get_worldpath}) do
+    print(inp.."/farming.conf")
+	local inconf = io.open(inp.."/farming.conf", "r")
+	if inconf then
+		dofile(inp .. "/farming.conf")
+		inp:close()
+		inp = nil
+	end
+end
+]]
 dofile(farming.path .. "/api.lua")
 dofile(farming.path .. "/api_ng.lua")
 dofile(farming.path .. "/nodes.lua")
 dofile(farming.path .. "/hoes.lua")
 dofile(farming.path .. "/utensils.lua")
+dofile(farming.path .. "/craft.lua")
 
 
--- WHEAT
+dofile(farming.path .. "/crops/wheat.lua")
+dofile(farming.path .. "/crops/potato.lua")
+dofile(farming.path .. "/crops/barley.lua")
+dofile(farming.path .. "/crops/cotton.lua")
 
-farming.register_plant("farming:wheat", {
-	description = "Wheat Seed",
-	paramtype2 = "meshoptions",
-	inventory_image = "farming_wheat_seed.png",
-	steps = 8,
-	minlight = 13,
-	maxlight = default.LIGHT_MAX,
-	fertility = {"grassland"},
-	groups = {food_wheat = 1, flammable = 4},
-	place_param2 = 3,
-})
-
-minetest.register_craftitem("farming:flour", {
-	description = "Flour",
-	inventory_image = "farming_flour.png",
-	groups = {food_flour = 1, flammable = 1},
-})
-
-minetest.register_craftitem("farming:bread", {
-	description = "Bread",
-	inventory_image = "farming_bread.png",
-	on_use = minetest.item_eat(5),
-	groups = {food_bread = 1, flammable = 2},
-})
-
-minetest.register_craft({
-	type = "shapeless",
-	output = "farming:flour",
-	recipe = {"farming:wheat", "farming:wheat", "farming:wheat", "farming:wheat"}
-})
-
-minetest.register_craft({
-	type = "cooking",
-	cooktime = 15,
-	output = "farming:bread",
-	recipe = "farming:flour"
-})
-
-
--- Cotton
-
-farming.register_plant("farming:cotton", {
-	description = "Cotton Seed",
-	inventory_image = "farming_cotton_seed.png",
-	steps = 8,
-	minlight = 13,
-	maxlight = default.LIGHT_MAX,
-	fertility = {"grassland", "desert"},
-	groups = {flammable = 4},
-})
-
-minetest.register_craftitem("farming:string", {
-	description = "String",
-	inventory_image = "farming_string.png",
-	groups = {flammable = 2},
-})
-
-minetest.register_craft({
-	output = "wool:white",
-	recipe = {
-		{"farming:cotton", "farming:cotton"},
-		{"farming:cotton", "farming:cotton"},
-	}
-})
-
-minetest.register_craft({
-	output = "farming:string 2",
-	recipe = {
-		{"farming:cotton"},
-		{"farming:cotton"},
-	}
-})
 
 
 -- Straw

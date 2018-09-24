@@ -66,7 +66,7 @@ farming.register_plant = function(name, def)
         def.switch_drop_count = def.steps
       end
 	end
-	if not def.spawn then
+	if not def.spawnon then
 	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
 				spawn_min = 0,
 				spawn_max = 42,
@@ -78,7 +78,7 @@ farming.register_plant = function(name, def)
 		def.spawnon.spawn_min = def.spawnon.spawn_min or 0
 		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
 		def.spawnon.spawnby = def.spawnon.spawn_by or nil
-		def.spawnon.scale = def.spawnon.scale or 0.006
+		def.spawnon.scale = def.spawnon.scale or farming.rarety
 		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
 	end
     
@@ -157,19 +157,27 @@ farming.register_plant = function(name, def)
 		if def.steps ~= 1 then
 			base_rarity =  8 - (i - 1) * 7 / (def.steps - 1)
 		end
+		-- create drop table
 		local drop = {
 			items = {
 				{items = {harvest_name}},
 				}
 			}
+		-- if seeds are not crafted out of harvest, drop additional seeds
+		if def.groups.drop_seed ~= nil then
+		  table.insert(drop.items,1,{items={seed_name}})
+		end
+		-- with higher grow levels you harvest more
 		if (i >= def.switch_drop_count ) then
 		  table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity})
---		  drop.items=table_insert(drop.items,{items={harvest_name},rarity=base_rarity})
+			if def.groups.drop_seed ~= nil then
+			  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity})
+			end
 		end
+		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == def.steps and def.next_plant ~= nil) then
 		  def.next_plant_rarity = def.next_plant_rarity or base_rarity*2
 		  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
---		  drop.items = table_insert(drop.items,{items=def.next_plant,rarity=def.next_plant_rarity})
 		end
 		
 		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
@@ -205,10 +213,6 @@ farming.register_plant = function(name, def)
 		})
 	end
 
-
-
-
-
 	-- replacement LBM for pre-nodetimer plants
 	minetest.register_lbm({
 		name = ":" .. mname .. ":start_nodetimer_" .. pname,
@@ -219,26 +223,32 @@ farming.register_plant = function(name, def)
 	})
 
     -- register mapgen
-        print("spawn on "..def.spawnon.spawnon[1])
-	minetest.register_decoration({
-		deco_type = "simple",
-		place_on = def.spawnon.spawnon,
-		sidelen = 16,
-		noise_params = {
-			offset = 0,
-			scale = def.spawnon.scale, -- 0.006,
-			spread = {x = 100, y = 100, z = 100},
-			seed = 329,
-			octaves = 3,
-			persist = 0.6
-		},
-		y_min = def.spawnon.spawn_min,
-		y_max = def.spawnon.spawn_max,
-		decoration = harvest_name.."_1",
-		spawn_by = def.spawnon.spawnby,
-		num_spawn_by = def.spawnon.spawn_num,
-	})
-
+        print("spawn "..dump(def.spawnon))
+        print("scale "..def.spawnon.scale)
+    local mapgen_level = def.switch_drop_count - 1
+    print(mapgen_level)
+    for i = 1,math.max(mapgen_level,1) do
+      for j,onpl in ipairs(def.spawnon.spawnon) do
+		minetest.register_decoration({
+			deco_type = "simple",
+			place_on = onpl,
+			sidelen = 16,
+			noise_params = {
+				offset = 0.12 - 0.08*i,
+				scale = def.spawnon.scale, -- 0.006,
+				spread = {x = 200, y = 200, z = 200},
+				seed = 329,
+				octaves = 3,
+				persist = 0.6
+			},
+			y_min = def.spawnon.spawn_min,
+			y_max = def.spawnon.spawn_max,
+			decoration = harvest_name.."_"..i,
+			spawn_by = def.spawnon.spawnby,
+			num_spawn_by = def.spawnon.spawn_num,
+		})
+	  end
+	end
 	-- Return
 	local r = {
 		seed = mname .. ":seed_" .. pname,
