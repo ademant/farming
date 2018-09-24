@@ -66,6 +66,9 @@ farming.register_plant = function(name, def)
         def.switch_drop_count = def.steps
       end
 	end
+	if not def.wildname then
+	
+	end
 	if not def.spawnon then
 	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
 				spawn_min = 0,
@@ -90,7 +93,7 @@ farming.register_plant = function(name, def)
 	local seed_name=mname..":seed_"..pname
 	local seed_name_png=mname.."_seed_"..pname
 	if (def.groups["no_seed"] ~= nil) then
-	  seed_name = mname..":"..pname
+	  seed_name = harvest_name
 	end
 
 	farming.registered_plants[pname] = def
@@ -143,7 +146,7 @@ farming.register_plant = function(name, def)
 					pointed_thing) or itemstack
 			end
 
-			return farming.place_seed(itemstack, placer, pointed_thing, mname .. ":seed_" .. pname)
+			return farming.place_seed(itemstack, placer, pointed_thing, seed_name)
 		end,
 		next_plant = mname .. ":" .. pname .. "_1",
 		on_timer = farming.grow_plant,
@@ -225,9 +228,6 @@ farming.register_plant = function(name, def)
     -- register mapgen
         print("spawn "..dump(def.spawnon))
         print("scale "..def.spawnon.scale)
-    local mapgen_level = def.switch_drop_count - 1
-    print(mapgen_level)
-    for i = 1,math.max(mapgen_level,1) do
       for j,onpl in ipairs(def.spawnon.spawnon) do
 		minetest.register_decoration({
 			deco_type = "simple",
@@ -243,7 +243,7 @@ farming.register_plant = function(name, def)
 			},
 			y_min = def.spawnon.spawn_min,
 			y_max = def.spawnon.spawn_max,
-			decoration = harvest_name.."_"..i,
+			decoration = harvest_name.."_1",
 			spawn_by = def.spawnon.spawnby,
 			num_spawn_by = def.spawnon.spawn_num,
 		})

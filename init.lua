@@ -12,6 +12,8 @@ minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loadi
 
 farming.rarety = 0.002 -- 0.006
 farming.potato = minetest.settings:get("farming.potato") or true
+farming.carrot = minetest.settings:get("farming.carrot") or true
+farming.tomato = minetest.settings:get("farming.tomato") or true
 farming.wheat = minetest.settings:get("farming.wheat") or true
 farming.cotton = minetest.settings:get("farming.cotton") or true
 
@@ -37,6 +39,8 @@ dofile(farming.path .. "/craft.lua")
 
 dofile(farming.path .. "/crops/wheat.lua")
 dofile(farming.path .. "/crops/potato.lua")
+dofile(farming.path .. "/crops/carrot.lua")
+dofile(farming.path .. "/crops/tomato.lua")
 dofile(farming.path .. "/crops/barley.lua")
 dofile(farming.path .. "/crops/cotton.lua")
 

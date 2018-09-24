@@ -1,11 +1,11 @@
--- Barley
+-- Chili
 
-farming.register_plant("farming:barley", {
-	description = "Barley Seed",
+farming.register_plant("farming:chili", {
+	description = "Chili Seed",
 	paramtype2 = "meshoptions",
-	inventory_image = "farming_barley_seed.png",
-	steps = 7,
-	switch_drop_count = 5, -- at which stage more harvest
+	inventory_image = "farming_chili_seed.png",
+	steps = 8,
+	switch_drop_count = 6, -- at which stage more harvest
 	minlight = 13,
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},

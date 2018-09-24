@@ -1,15 +1,15 @@
--- Barley
+-- Corn
 
-farming.register_plant("farming:barley", {
-	description = "Barley Seed",
+farming.register_plant("farming:corn", {
+	description = "Corn",
 	paramtype2 = "meshoptions",
-	inventory_image = "farming_barley_seed.png",
-	steps = 7,
-	switch_drop_count = 5, -- at which stage more harvest
+	inventory_image = "farming_corn.png",
+	steps = 8,
+	switch_drop_count = 6, -- at which stage more harvest
 	minlight = 13,
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food_wheat = 1, flammable = 4},
+	groups = {food_wheat = 1, flammable = 4,no_seed=1},
 	place_param2 = 3,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,

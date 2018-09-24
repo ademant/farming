@@ -1,11 +1,11 @@
--- Barley
+-- Spelt
 
-farming.register_plant("farming:barley", {
-	description = "Barley Seed",
+farming.register_plant("farming:spelt", {
+	description = "Spelt Seed",
 	paramtype2 = "meshoptions",
-	inventory_image = "farming_barley_seed.png",
+	inventory_image = "farming_wheat_spelt.png",
 	steps = 7,
-	switch_drop_count = 5, -- at which stage more harvest
+	switch_drop_count = 6, -- at which stage more harvest
 	minlight = 13,
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
