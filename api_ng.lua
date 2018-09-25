@@ -8,35 +8,6 @@ local table_insert = function(tab,tin)
   return out
 end
 
-farming.enlarge_drop_table = function(item_name,def)
---[[
-insert new seed at beginning of drop table. calculate new rarity.
-
-example:
-farming_grain.enlarge_drop("default:grass_4",{items={"farming:seed_wheat"},rarity=8})
-]]
-
-  local tdrop=minetest.registered_nodes[item_name].drop.items -- get drop.items table of stored item
-  local new_drop={def}
-
-  -- new drop table
-  if tdrop ~= nil then
-    for i=1,#tdrop do
-      new_drop[i+1]=tdrop[i]
-    end
-  end
-  -- calculate new rarity for each element. if all seeds have same rarity then the first element will drop more often than following elements
-  for i=1,#new_drop do
-    new_rarity=2^(#new_drop-i)
-    new_drop[i].rarity=new_rarity
-  end
-  -- grab old drop table
-  local old_def=minetest.registered_nodes[item_name].drop
-  old_def.items=new_drop
-  -- override drop table
-  minetest.override_item(item_name,{drop=old_def})
-end
-
 
 -- Register plants
 farming.register_plant = function(name, def)
@@ -66,8 +37,12 @@ farming.register_plant = function(name, def)
         def.switch_drop_count = def.steps
       end
 	end
+	-- wild form, which are placed by mapgen
 	if not def.wildname then
-	
+	  def.wildname = name
+	end
+	if not def.max_harvest then
+	  def.max_harvest = 2
 	end
 	if not def.spawnon then
 	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
@@ -155,11 +130,13 @@ farming.register_plant = function(name, def)
 	})
 	
 	-- Register growing steps
+	local grad_harvest = def.max_harvest / def.steps
 	for i = 1, def.steps do
 		local base_rarity = 1
 		if def.steps ~= 1 then
 			base_rarity =  8 - (i - 1) * 7 / (def.steps - 1)
 		end
+		local step_harvest = math.floor(i * grad_harvest + 0.05)
 		-- create drop table
 		local drop = {
 			items = {
@@ -171,11 +148,13 @@ farming.register_plant = function(name, def)
 		  table.insert(drop.items,1,{items={seed_name}})
 		end
 		-- with higher grow levels you harvest more
-		if (i >= def.switch_drop_count ) then
-		  table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity})
+		if step_harvest > 1 then
+		  for h = 2,step_harvest do
+ 		    table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
 			if def.groups.drop_seed ~= nil then
-			  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity})
+			  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
 			end
+		  end
 		end
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == def.steps and def.next_plant ~= nil) then
@@ -226,15 +205,16 @@ farming.register_plant = function(name, def)
 	})
 
     -- register mapgen
-        print("spawn "..dump(def.spawnon))
-        print("scale "..def.spawnon.scale)
+--      print("spawn "..dump(def.spawnon))
+--      print("scale "..def.spawnon.scale)
+    if def.groups[no_spawn] ~= nil then
       for j,onpl in ipairs(def.spawnon.spawnon) do
 		minetest.register_decoration({
 			deco_type = "simple",
 			place_on = onpl,
 			sidelen = 16,
 			noise_params = {
-				offset = 0.12 - 0.08*i,
+				offset = 0.12,
 				scale = def.spawnon.scale, -- 0.006,
 				spread = {x = 200, y = 200, z = 200},
 				seed = 329,
@@ -243,7 +223,7 @@ farming.register_plant = function(name, def)
 			},
 			y_min = def.spawnon.spawn_min,
 			y_max = def.spawnon.spawn_max,
-			decoration = harvest_name.."_1",
+			decoration = def.wildname,
 			spawn_by = def.spawnon.spawnby,
 			num_spawn_by = def.spawnon.spawn_num,
 		})
