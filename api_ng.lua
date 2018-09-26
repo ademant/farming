@@ -1,13 +1,4 @@
-
-local table_insert = function(tab,tin)
-  local out=tab
-  for i=#out,1,-1 do
-    out[i+1]=out[i]
-  end
-  out[1]=tin
-  return out
-end
-
+local S = farming.intllib
 
 -- Register plants
 farming.register_plant = function(name, def)
@@ -37,12 +28,22 @@ farming.register_plant = function(name, def)
         def.switch_drop_count = def.steps
       end
 	end
-	-- wild form, which are placed by mapgen
-	if not def.wildname then
-	  def.wildname = name
-	end
 	if not def.max_harvest then
 	  def.max_harvest = 2
+	end
+	if not def.mean_grow_time then
+	  def.mean_grow_time=math.random(170,220)
+	end
+	if not def.range_grow_time then
+	  def.range_grow_time=math.random(15,25)
+	end
+	if def.range_grow_time > def.mean_grow_time then
+	  def.range_grow_time = math.floor(def.mean_grow_time / 2)
+	end
+	def.min_grow_time=math.floor(def.mean_grow_time-def.range_grow_time)
+	def.max_grow_time=math.floor(def.mean_grow_time+def.range_grow_time)
+	if not def.eat_hp then
+	  def.eat_hp = 1
 	end
 	if not def.spawnon then
 	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
@@ -74,11 +75,15 @@ farming.register_plant = function(name, def)
 	farming.registered_plants[pname] = def
 
 	-- Register harvest
-	minetest.register_craftitem(":" .. harvest_name, {
-		description = pname:gsub("^%l", string.upper),
-		inventory_image = mname .. "_" .. pname .. ".png",
+	local harvest_def={
+		description = S(pname:gsub("^%l", string.upper)),
+		inventory_image = harvest_name_png .. ".png",
 		groups = def.groups or {flammable = 2},
-	})
+	}
+	if ( def.eat_hp > 0 ) then
+	  harvest_def.on_use=minetest.item_eat(def.eat_hp)
+	end
+	minetest.register_craftitem(":" .. harvest_name, harvest_def)
 	
 	-- Register seed
 	local lbm_nodes = {seed_name}
@@ -87,8 +92,7 @@ farming.register_plant = function(name, def)
 		g[v] = 1
 	end
         print("register "..seed_name)
-	minetest.register_node(":" .. seed_name, {
-		description = def.description,
+    local seed_def = {description = S(def.description),
 		tiles = {def.inventory_image},
 		inventory_image = def.inventory_image,
 		wield_image = def.inventory_image,
@@ -109,7 +113,6 @@ farming.register_plant = function(name, def)
 			dug = {name = "default_grass_footstep", gain = 0.2},
 			place = {name = "default_place_node", gain = 0.25},
 		}),
-
 		on_place = function(itemstack, placer, pointed_thing)
 			local under = pointed_thing.under
 			local node = minetest.get_node(under)
@@ -117,17 +120,43 @@ farming.register_plant = function(name, def)
 			if udef and udef.on_rightclick and
 					not (placer and placer:is_player() and
 					placer:get_player_control().sneak) then
-				return udef.on_rightclick(under, node, placer, itemstack,
-					pointed_thing) or itemstack
+				return udef.on_rightclick(under, node, placer, itemstack,pointed_thing) or itemstack
 			end
 
 			return farming.place_seed(itemstack, placer, pointed_thing, seed_name)
 		end,
-		next_plant = mname .. ":" .. pname .. "_1",
-		on_timer = farming.grow_plant,
+		next_plant = harvest_name .. "_1",
+		on_timer = function(pos, elapsed)
+				local node = minetest.get_node(pos)
+				local name = node.name
+				local def = minetest.registered_nodes[name]
+				-- grow seed
+				local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
+				if not soil_node then
+					minetest.get_node_timer(pos):start(math.random(40, 80))
+					return
+				end
+				-- omitted is a check for light, we assume seeds can germinate in the dark.
+				for _, v in pairs(def.fertility) do
+					if minetest.get_item_group(soil_node.name, v) ~= 0 then
+						local placenode = {name = def.next_plant}
+						if def.place_param2 then
+							placenode.param2 = def.place_param2
+						end
+						minetest.swap_node(pos, placenode)
+						local def_next=minetest.registered_nodes[def.next_plant]
+						if def_next.next_plant then
+							minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+							return
+						end
+					end
+				end
+
+			end,
 		minlight = def.minlight,
 		maxlight = def.maxlight,
-	})
+	}
+	minetest.register_node(":" .. seed_name, seed_def)
 	
 	-- Register growing steps
 	local grad_harvest = def.max_harvest / def.steps
@@ -147,32 +176,30 @@ farming.register_plant = function(name, def)
 		if def.groups.drop_seed ~= nil then
 		  table.insert(drop.items,1,{items={seed_name}})
 		end
-		-- with higher grow levels you harvest more
-		if step_harvest > 1 then
-		  for h = 2,step_harvest do
- 		    table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
-			if def.groups.drop_seed ~= nil then
-			  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
+		-- enlarge drop table only, if grain type
+		if def.groups.grain then
+			-- with higher grow levels you harvest more
+			if step_harvest > 1 then
+			  for h = 2,step_harvest do
+				table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
+				if def.groups.drop_seed ~= nil then
+				  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
+				end
+			  end
 			end
-		  end
-		end
-		-- at the end stage you can harvest by change a cultured seed (if defined)
-		if (i == def.steps and def.next_plant ~= nil) then
-		  def.next_plant_rarity = def.next_plant_rarity or base_rarity*2
-		  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
-		end
-		
+			-- at the end stage you can harvest by change a cultured seed (if defined)
+			if (i == def.steps and def.next_plant ~= nil) then
+			  def.next_plant_rarity = def.next_plant_rarity or base_rarity*2
+			  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
+			end
+        end		
 		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
 		nodegroups[pname] = i
 
 		local next_plant = nil
 
-		if i < def.steps then
-			next_plant = harvest_name .. "_" .. (i + 1)
-			lbm_nodes[#lbm_nodes + 1] = harvest_name .. "_" .. i
-		end
                 print("register "..harvest_name.."_"..i)
-		minetest.register_node(":" .. harvest_name .. "_" .. i, {
+        local node_def = {
 			drawtype = "plantlike",
 			waving = 1,
 			tiles = {harvest_name_png .. "_" .. i .. ".png"},
@@ -188,11 +215,61 @@ farming.register_plant = function(name, def)
 			},
 			groups = nodegroups,
 			sounds = default.node_sound_leaves_defaults(),
-			next_plant = next_plant,
-			on_timer = farming.grow_plant,
 			minlight = def.minlight,
 			maxlight = def.maxlight,
-		})
+		}
+		if i < def.steps then
+			next_plant = harvest_name .. "_" .. (i + 1)
+			node_def.next_plant=next_plant
+			lbm_nodes[#lbm_nodes + 1] = harvest_name .. "_" .. i
+			node_def.on_timer = function(pos, elapsed)
+					local node = minetest.get_node(pos)
+					local name = node.name
+					local def = minetest.registered_nodes[name]
+					-- check if on wet soil
+					local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
+					if minetest.get_item_group(below.name, "soil") < 3 then
+						minetest.get_node_timer(pos):start(math.random(40, 80))
+						return
+					end
+					-- check light
+					local light = minetest.get_node_light(pos)
+					if not light or light < def.minlight or light > def.maxlight then
+						minetest.get_node_timer(pos):start(math.random(40, 80))
+						return
+					end
+					-- grow
+					local placenode = {name = def.next_plant}
+					if def.place_param2 then
+						placenode.param2 = def.place_param2
+					end
+					minetest.swap_node(pos, placenode)
+					-- new timer needed?
+					local def_next=minetest.registered_nodes[def.next_plant]
+					minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+					return
+				end
+		end
+		if i == def.steps and def.groups.punchable then
+			node_def.on_punch = function(pos, node, puncher, pointed_thing)
+				-- grow
+				local pre_node = harvest_name .. "_"..(i-1)
+				print(pre_node .. " pre node")
+				local placenode = {name = pre_node}
+				if def.place_param2 then
+					placenode.param2 = def.place_param2
+				end
+				minetest.swap_node(pos, placenode)
+				puncher:get_inventory():add_item('main',seed_name)
+				-- new timer needed?
+				local pre_def=minetest.registered_nodes[pre_node]
+				if pre_def.next_plant then
+					minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
+				end
+			end
+
+		end
+		minetest.register_node(":" .. harvest_name .. "_" .. i, node_def)
 	end
 
 	-- replacement LBM for pre-nodetimer plants
@@ -207,14 +284,15 @@ farming.register_plant = function(name, def)
     -- register mapgen
 --      print("spawn "..dump(def.spawnon))
 --      print("scale "..def.spawnon.scale)
-    if def.groups[no_spawn] ~= nil then
+    if def.groups.no_spawn == nil then
+      print("spawn "..dump(def.spawnon))
       for j,onpl in ipairs(def.spawnon.spawnon) do
 		minetest.register_decoration({
 			deco_type = "simple",
 			place_on = onpl,
 			sidelen = 16,
 			noise_params = {
-				offset = 0.12,
+				offset = 0.52,
 				scale = def.spawnon.scale, -- 0.006,
 				spread = {x = 200, y = 200, z = 200},
 				seed = 329,
@@ -223,7 +301,7 @@ farming.register_plant = function(name, def)
 			},
 			y_min = def.spawnon.spawn_min,
 			y_max = def.spawnon.spawn_max,
-			decoration = def.wildname,
+			decoration = def.wildname or harvest_name.."_1",
 			spawn_by = def.spawnon.spawnby,
 			num_spawn_by = def.spawnon.spawn_num,
 		})

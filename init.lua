@@ -51,20 +51,8 @@ dofile(farming.path .. "/craft.lua")
 
 
 dofile(farming.path .. "/crops/wheat.lua")
-dofile(farming.path .. "/crops/spelt.lua")
-dofile(farming.path .. "/crops/barley.lua")
-dofile(farming.path .. "/crops/potato.lua")
-dofile(farming.path .. "/crops/carrot.lua")
-dofile(farming.path .. "/crops/corn.lua")
-dofile(farming.path .. "/crops/cocoa.lua")
-dofile(farming.path .. "/crops/coffee.lua")
-dofile(farming.path .. "/crops/tomato.lua")
-dofile(farming.path .. "/crops/blueberry.lua")
-dofile(farming.path .. "/crops/blackberry.lua")
-dofile(farming.path .. "/crops/raspberry.lua")
 dofile(farming.path .. "/crops/strawberry.lua")
 dofile(farming.path .. "/crops/cotton.lua")
-dofile(farming.path .. "/crops/rhubarb.lua")
 
 
 

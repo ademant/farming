@@ -58,6 +58,7 @@ minetest.register_craft({
 })
 
 seed_craft("farming:wheat")
+seed_craft("farming:culturewheat")
 seed_craft("farming:barley")
 
 roast_seed("farming:seed_barley","farming:seed_barley_roasted")
