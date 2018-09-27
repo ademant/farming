@@ -1,5 +1,51 @@
 local S = farming.intllib
 
+-- helping function for getting biomes
+farming.get_biomes = function(biom_def)
+	local possible_biomes={}
+	local count_def=0
+	if (biom_def.min_temp ~= nil or biom_def.max_temp ~= nil) then
+	  count_def = count_def + 1
+	end
+	if (biom_def.min_humidity ~= nil or biom_def.max_humidity ~= nil) then
+	  count_def = count_def + 1
+	end
+	if biom_def.spawnon then
+		if (biom_def.min_humidity ~= nil or biom_def_max_humidity ~= nil) then
+		  count_def = count_def + 1
+		end
+	end
+	local mintemp = biom_def.min_temp or -100
+	local maxtemp = biom_def.max_temp or 1000
+	local minhum = biom_def.min_humidity or -100
+	local maxhum = biom_def.max_humidity or 1000
+	local minelev = biom_def.spawnon.spawn_min or 0
+	local maxelev = biom_def.spawnon.spawn_max or 31000
+	for name,def in pairs(minetest.registered_biomes) do
+--	  print(name)
+	  local bpossible = 0
+	  if def.heat_point >= mintemp and def.heat_point <= maxtemp then
+	    bpossible = bpossible + 1
+--	    print("heat")
+	  end
+	  if def.humidity_point >= minhum and def.humidity_point <= maxhum then
+	    bpossible = bpossible + 1
+--	    print("humidity")
+	  end
+--	  print(def.y_min.."-def-"..def.y_max)
+--	  print(minelev.."-search-"..maxelev)
+	  if def.y_min <= maxelev and def.y_max >= minelev then
+	    bpossible = bpossible + 1
+--	    print("elevation")
+	  end
+--	  print("possible: "..bpossible)
+--	  print("max: "..count_def)
+	  if bpossible == count_def then
+	    table.insert(possible_biomes,1,name)
+	  end
+	end
+	return possible_biomes
+end
 -- Register plants
 farming.register_plant = function(name, def)
 	-- Check def table
@@ -51,6 +97,7 @@ farming.register_plant = function(name, def)
 				spawn_max = 42,
 				spawnby = nil,
 				scale = 0.006,
+				offset = 0.12,
 				spawn_num = -1}
 	else
 		def.spawnon.spawnon=def.spawnon.spawnon or {"default:dirt_with_grass"}
@@ -58,6 +105,7 @@ farming.register_plant = function(name, def)
 		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
 		def.spawnon.spawnby = def.spawnon.spawn_by or nil
 		def.spawnon.scale = def.spawnon.scale or farming.rarety
+		def.spawnon.offset = def.spawnon.offset or 0.12
 		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
 	end
     
@@ -91,7 +139,7 @@ farming.register_plant = function(name, def)
 	for k, v in pairs(def.fertility) do
 		g[v] = 1
 	end
-        print("register "..seed_name)
+--        print("register "..seed_name)
     local seed_def = {description = S(def.description),
 		tiles = {def.inventory_image},
 		inventory_image = def.inventory_image,
@@ -198,7 +246,7 @@ farming.register_plant = function(name, def)
 
 		local next_plant = nil
 
-                print("register "..harvest_name.."_"..i)
+--                print("register "..harvest_name.."_"..i)
         local node_def = {
 			drawtype = "plantlike",
 			waving = 1,
@@ -254,7 +302,7 @@ farming.register_plant = function(name, def)
 			node_def.on_punch = function(pos, node, puncher, pointed_thing)
 				-- grow
 				local pre_node = harvest_name .. "_"..(i-1)
-				print(pre_node .. " pre node")
+--				print(pre_node .. " pre node")
 				local placenode = {name = pre_node}
 				if def.place_param2 then
 					placenode.param2 = def.place_param2
@@ -285,14 +333,14 @@ farming.register_plant = function(name, def)
 --      print("spawn "..dump(def.spawnon))
 --      print("scale "..def.spawnon.scale)
     if def.groups.no_spawn == nil then
-      print("spawn "..dump(def.spawnon))
+--      print("spawn "..dump(def.spawnon))
       for j,onpl in ipairs(def.spawnon.spawnon) do
-		minetest.register_decoration({
+		local sdef={
 			deco_type = "simple",
 			place_on = onpl,
 			sidelen = 16,
 			noise_params = {
-				offset = 0.52,
+				offset = def.spawnon.offset,
 				scale = def.spawnon.scale, -- 0.006,
 				spread = {x = 200, y = 200, z = 200},
 				seed = 329,
@@ -304,7 +352,9 @@ farming.register_plant = function(name, def)
 			decoration = def.wildname or harvest_name.."_1",
 			spawn_by = def.spawnon.spawnby,
 			num_spawn_by = def.spawnon.spawn_num,
-		})
+			biomes = farming.get_biomes(def)
+		}
+		minetest.register_decoration(sdef)
 	  end
 	end
 	-- Return

@@ -8,6 +8,11 @@ for name,def in pairs(minetest.registered_biomes) do
   end
 end
 
+local def=farming.plant_def
+def.description = S("Cotton Seed")
+def.inventory_image = "farming_cotton_seed.png"
+def.groups.cotton=1
+--[[
 local def={
 	description = S("Cotton Seed"),
 	paramtype2 = "meshoptions",
@@ -27,6 +32,7 @@ local def={
 				scale = 0.006, -- 0.006
 				spawn_num = -1}
 }
+]]
 if(table.getn(possible_biomes)>0) then
   def.biomes=possible_biomes
 end
