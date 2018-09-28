@@ -170,7 +170,6 @@ farming.register_plant = function(name, def)
 					placer:get_player_control().sneak) then
 				return udef.on_rightclick(under, node, placer, itemstack,pointed_thing) or itemstack
 			end
-
 			return farming.place_seed(itemstack, placer, pointed_thing, seed_name)
 		end,
 		next_plant = harvest_name .. "_1",
@@ -218,8 +217,7 @@ farming.register_plant = function(name, def)
 		local drop = {
 			items = {
 				{items = {harvest_name}},
-				}
-			}
+				}}
 		-- if seeds are not crafted out of harvest, drop additional seeds
 		if def.groups.drop_seed ~= nil then
 		  table.insert(drop.items,1,{items={seed_name}})
@@ -335,7 +333,7 @@ farming.register_plant = function(name, def)
     if def.groups.no_spawn == nil then
 --      print("spawn "..dump(def.spawnon))
       for j,onpl in ipairs(def.spawnon.spawnon) do
-		local sdef={
+		local deco_def={
 			deco_type = "simple",
 			place_on = onpl,
 			sidelen = 16,
@@ -354,7 +352,7 @@ farming.register_plant = function(name, def)
 			num_spawn_by = def.spawnon.spawn_num,
 			biomes = farming.get_biomes(def)
 		}
-		minetest.register_decoration(sdef)
+		minetest.register_decoration(deco_def)
 	  end
 	end
 	-- Return

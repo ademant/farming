@@ -58,27 +58,4 @@ for name,def in pairs(minetest.registered_biomes) do
 end
 --print(table.maxn(farming.possible_biomes))
 
-farming.plant_def={
-	paramtype2 = "meshoptions",
-	steps = 8, -- steps till full-grown plant
-	mean_grow_time=20, -- mean time till next step
-	range_grow_time=3, -- plus/minus for random generator
-	max_harvest=2, -- max amount of harvesting item for full grown plant
---	eat_hp=1, -- set in config for eatable plants
-	minlight = 13, 
-	maxlight = default.LIGHT_MAX,
-	fertility = {"grassland"},
-	groups = {grain = 1, flammable = 4},
-	place_param2 = 3,
-	min_temp=10,
-	max_temp=50,
-	min_humidity=10,
-	max_humidity=70,
-	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
-				spawn_min = 0,
-				spawn_max = 42,
-				spawnby = nil,
-				scale = 0.006, -- 0.006
-				spawn_num = -1}
-}
 

@@ -7,18 +7,41 @@ for name,def in pairs(minetest.registered_biomes) do
     table.insert(possible_biomes,1,name)
   end
 end
-local def=farming.plant_def
-def.description = S("Strawberry")
-def.inventory_image = "farming_strawberry.png"
-def.eat_hp=2
-def.groups.food=1
-def.steps=4
-def.max_harvest=2
-def.groups.food_wheat=1
+local sdef={
+	paramtype2 = "meshoptions",
+	steps = 8, -- steps till full-grown plant
+	mean_grow_time=20, -- mean time till next step
+	range_grow_time=3, -- plus/minus for random generator
+	max_harvest=2, -- max amount of harvesting item for full grown plant
+--	eat_hp=1, -- set in config for eatable plants
+	minlight = 13, 
+	maxlight = default.LIGHT_MAX,
+	fertility = {"grassland"},
+	groups = {food=1,grain = 1, flammable = 4},
+	place_param2 = 3,
+	min_temp=10,
+	max_temp=50,
+	min_humidity=10,
+	max_humidity=70,
+	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
+				spawn_min = 0,
+				spawn_max = 42,
+				spawnby = nil,
+				scale = 0.006, -- 0.006
+				spawn_num = -1},
+	description = S("Strawberry"),
+	inventory_image = "farming_strawberry.png",
+	eat_hp=2,
+	steps=4,
+	max_harvest=2,
+	}
 
 --if(table.getn(possible_biomes)>0) then
 --  def.biomes=possible_biomes
 --end
+print("strawberry")
+print(dump(sdef))
+print(dump(def))
 
-farming.register_plant("farming:strawberry", def)
+farming.register_plant("farming:strawberry", sdef)
 
