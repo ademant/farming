@@ -165,9 +165,7 @@ farming.register_plant = function(name, def)
 			local under = pointed_thing.under
 			local node = minetest.get_node(under)
 			local udef = minetest.registered_nodes[node.name]
-			if udef and udef.on_rightclick and
-					not (placer and placer:is_player() and
-					placer:get_player_control().sneak) then
+			if udef and udef.on_rightclick and not (placer and placer:is_player() and placer:get_player_control().sneak) then
 				return udef.on_rightclick(under, node, placer, itemstack,pointed_thing) or itemstack
 			end
 			return farming.place_seed(itemstack, placer, pointed_thing, seed_name)
@@ -214,10 +212,7 @@ farming.register_plant = function(name, def)
 		end
 		local step_harvest = math.floor(i * grad_harvest + 0.05)
 		-- create drop table
-		local drop = {
-			items = {
-				{items = {harvest_name}},
-				}}
+		local drop = {}
 		-- if seeds are not crafted out of harvest, drop additional seeds
 		if def.groups.drop_seed ~= nil then
 		  table.insert(drop.items,1,{items={seed_name}})
@@ -225,8 +220,8 @@ farming.register_plant = function(name, def)
 		-- enlarge drop table only, if grain type
 		if def.groups.grain then
 			-- with higher grow levels you harvest more
-			if step_harvest > 1 then
-			  for h = 2,step_harvest do
+			if step_harvest >= 1 then
+			  for h = 1,step_harvest do
 				table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
 				if def.groups.drop_seed ~= nil then
 				  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
