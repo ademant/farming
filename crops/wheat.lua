@@ -11,7 +11,7 @@ local w1def={
 	minlight = 13, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food_wheat=1,grain = 1, flammable = 4},
+	groups = {food_wheat=1, grain = 1, flammable = 4},
 	place_param2 = 3,
 	min_temp=10,
 	max_temp=50,
