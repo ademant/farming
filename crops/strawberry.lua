@@ -27,7 +27,6 @@ local sdef={
 				spawn_min = 0,
 				spawn_max = 42,
 				spawnby = nil,
-				scale = 0.006, -- 0.006
 				spawn_num = -1},
 	description = S("Strawberry"),
 	inventory_image = "farming_strawberry.png",

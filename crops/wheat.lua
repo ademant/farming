@@ -21,7 +21,6 @@ local w1def={
 				spawn_min = 0,
 				spawn_max = 42,
 				spawnby = nil,
-				scale = 0.006, -- 0.006
 				spawn_num = -1},
 	description = S("Wheat Seed"),
 	inventory_image = "farming_wheat_seed.png",

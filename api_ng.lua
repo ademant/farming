@@ -105,7 +105,7 @@ farming.register_plant = function(name, def)
 		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
 		def.spawnon.spawnby = def.spawnon.spawn_by or nil
 		def.spawnon.scale = def.spawnon.scale or farming.rarety
-		def.spawnon.offset = def.spawnon.offset or 0.12
+		def.spawnon.offset = def.spawnon.offset or 0.02
 		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
 	end
     
