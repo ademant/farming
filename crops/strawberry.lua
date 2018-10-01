@@ -9,7 +9,7 @@ for name,def in pairs(minetest.registered_biomes) do
 end
 local sdef={
 	paramtype2 = "meshoptions",
-	steps = 8, -- steps till full-grown plant
+	steps = 4, -- steps till full-grown plant
 	mean_grow_time=20, -- mean time till next step
 	range_grow_time=3, -- plus/minus for random generator
 	max_harvest=2, -- max amount of harvesting item for full grown plant
@@ -17,7 +17,7 @@ local sdef={
 	minlight = 13, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food=1,grain = 1, flammable = 4},
+	groups = {food=1,grain = 1, flammable = 4,no_seed=1 ,punchable = 1},
 	place_param2 = 3,
 	min_temp=10,
 	max_temp=50,

@@ -259,7 +259,6 @@ farming.register_plant = function(name, def)
 			place_param2 = def.place_param2 or nil,
 			walkable = false,
 			buildable_to = true,
---			drop = drop,
 			selection_box = {
 				type = "fixed",
 				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
@@ -335,11 +334,13 @@ farming.register_plant = function(name, def)
 --      print("spawn "..dump(def.spawnon))
 --      print("scale "..def.spawnon.scale)
     if def.groups.no_spawn == nil then
---      print("spawn "..dump(def.spawnon))
-      for j,onpl in ipairs(def.spawnon.spawnon) do
+      print("spawn "..dump(def.spawnon))
+      print(dump(farming.get_biomes(def)))
+--      for j,onpl in ipairs(def.spawnon.spawnon) do
 		local deco_def={
 			deco_type = "simple",
-			place_on = onpl,
+--			place_on = onpl,
+			place_on = def.spawnon.spawnon,
 			sidelen = 16,
 			noise_params = {
 				offset = def.spawnon.offset,
@@ -351,13 +352,13 @@ farming.register_plant = function(name, def)
 			},
 			y_min = def.spawnon.spawn_min,
 			y_max = def.spawnon.spawn_max,
-			decoration = def.wildname or harvest_name.."_1",
+			decoration = def.wildname or harvest_name.."_"..def.steps,
 			spawn_by = def.spawnon.spawnby,
 			num_spawn_by = def.spawnon.spawn_num,
-			biomes = farming.get_biomes(def)
+--			biomes = farming.get_biomes(def)
 		}
 		minetest.register_decoration(deco_def)
-	  end
+--	  end
 	end
 	-- Return
 	local r = {
