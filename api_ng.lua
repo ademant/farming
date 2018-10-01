@@ -222,9 +222,17 @@ farming.register_plant = function(name, def)
 			-- with higher grow levels you harvest more
 			if step_harvest >= 1 then
 			  for h = 1,step_harvest do
-				table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
-				if def.groups.drop_seed ~= nil then
-				  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
+			    print(h.." - "..harvest_name.." - "..base_rarity.." - "..table.getn(drop))
+			    print(dump(drop))
+			    if(table.getn(drop) == 0) then
+			      drop = {items = {items = {harvest_name},rarity=1}}
+			      print(table.getn(drop))
+			      print(dump(drop))
+			    else
+					table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
+					if def.groups.drop_seed ~= nil then
+					  table.insert(drop.items,1,{items={seed_name},rarity=base_rarity*h})
+					end
 				end
 			  end
 			end
@@ -318,7 +326,7 @@ farming.register_plant = function(name, def)
 		name = ":" .. mname .. ":start_nodetimer_" .. pname,
 		nodenames = lbm_nodes,
 		action = function(pos, node)
-			tick_again(pos)
+				minetest.get_node_timer(pos):start(math.random(40, 80))
 		end,
 	})
 

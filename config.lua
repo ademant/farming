@@ -5,33 +5,27 @@
 	world folder for map specific settings.
 --]]
 
--- true to enable crop/food in-game and on mapgen
-farming.carrot = true
-farming.potato = true
-farming.tomato = true
-farming.cucumber = true
-farming.corn = true
-farming.coffee = true
-farming.melon = true
-farming.pumpkin = true
-farming.cocoa = true
-farming.raspberry = true
-farming.blueberry = true
-farming.rhubarb = true
-farming.beans = true
-farming.grapes = true
-farming.barley = true
-farming.chili = true
-farming.hemp = true
-farming.onion = true
-farming.garlic = true
-farming.pepper = true
-farming.pineapple = true
-farming.peas = true
-farming.beetroot = true
+farming.crops = {"wheat","cotton","strawberry"}
+
+for i,crop in ipairs(farming.crops) do
+  print(crop.." - "..farming.config:get_string(crop))
+  if farming.config:get_string(crop) == "" then
+    farming.config:set_int(crop,1)
+  end
+  if minetest.settings:get("farming."..crop) ~= nil then
+    if minetest.settings:get_bool("farming."..crop) then
+      farming.config:set_int(crop,1)
+    else
+      farming.config:set_int(crop,0)
+    end
+  end
+end
+if minetest.settings:get("farming.rarety") then
+  farming.config:set_float("rarety",minetest.settings:get("farming.rarety"))
+end
 
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
-farming.rarety = 0.002
+farming.rarety = farming.config:get_float("rarety") or 0.002
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}
