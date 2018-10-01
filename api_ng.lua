@@ -2,6 +2,9 @@ local S = farming.intllib
 
 -- helping function for getting biomes
 farming.get_biomes = function(biom_def)
+--[[
+  catch all biomes out of minetest.registered_biomes which fit definition
+]]
 	local possible_biomes={}
 	local count_def=0
 	if (biom_def.min_temp ~= nil or biom_def.max_temp ~= nil) then
@@ -15,6 +18,8 @@ farming.get_biomes = function(biom_def)
 		  count_def = count_def + 1
 		end
 	end
+	
+	-- check definition: if not set, choose values, which should fit all biomes
 	local mintemp = biom_def.min_temp or -100
 	local maxtemp = biom_def.max_temp or 1000
 	local minhum = biom_def.min_humidity or -100
@@ -22,30 +27,23 @@ farming.get_biomes = function(biom_def)
 	local minelev = biom_def.spawnon.spawn_min or 0
 	local maxelev = biom_def.spawnon.spawn_max or 31000
 	for name,def in pairs(minetest.registered_biomes) do
---	  print(name)
 	  local bpossible = 0
 	  if def.heat_point >= mintemp and def.heat_point <= maxtemp then
 	    bpossible = bpossible + 1
---	    print("heat")
 	  end
 	  if def.humidity_point >= minhum and def.humidity_point <= maxhum then
 	    bpossible = bpossible + 1
---	    print("humidity")
 	  end
---	  print(def.y_min.."-def-"..def.y_max)
---	  print(minelev.."-search-"..maxelev)
 	  if def.y_min <= maxelev and def.y_max >= minelev then
 	    bpossible = bpossible + 1
---	    print("elevation")
 	  end
---	  print("possible: "..bpossible)
---	  print("max: "..count_def)
 	  if bpossible == count_def then
 	    table.insert(possible_biomes,1,name)
 	  end
 	end
 	return possible_biomes
 end
+
 -- Register plants
 farming.register_plant = function(name, def)
 	-- Check def table
@@ -215,19 +213,20 @@ farming.register_plant = function(name, def)
 		local drop = {}
 		-- if seeds are not crafted out of harvest, drop additional seeds
 		if def.groups.drop_seed ~= nil then
-		  table.insert(drop.items,1,{items={seed_name}})
+--		  table.insert(drop.items,1,{items={seed_name}})
+		  drop = {items = {items = {seed_name}}}
 		end
 		-- enlarge drop table only, if grain type
 		if def.groups.grain then
 			-- with higher grow levels you harvest more
 			if step_harvest >= 1 then
 			  for h = 1,step_harvest do
-			    print(h.." - "..harvest_name.." - "..base_rarity.." - "..table.getn(drop))
-			    print(dump(drop))
-			    if(table.getn(drop) == 0) then
-			      drop = {items = {items = {harvest_name},rarity=1}}
-			      print(table.getn(drop))
-			      print(dump(drop))
+--			    print(h.." - "..harvest_name.." - "..base_rarity.." - "..table.getn(drop))
+--			    print(dump(drop))
+			    if(drop.items == nil) then
+			      drop = {items = {{items = {harvest_name},rarity=1}}}
+--			      print(table.getn(drop))
+--			      print(dump(drop))
 			    else
 					table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
 					if def.groups.drop_seed ~= nil then
@@ -241,7 +240,9 @@ farming.register_plant = function(name, def)
 			  def.next_plant_rarity = def.next_plant_rarity or base_rarity*2
 			  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
 			end
-        end		
+        end
+        print("drop table")
+        print(dump(drop))
 		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
 		nodegroups[pname] = i
 

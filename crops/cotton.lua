@@ -58,6 +58,5 @@ local def={
 --end
 print("cotton")
 print(dump(cdef))
-print(dump(def))
 farming.register_plant("farming:cotton", cdef)
 

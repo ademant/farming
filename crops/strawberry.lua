@@ -40,7 +40,6 @@ local sdef={
 --end
 print("strawberry")
 print(dump(sdef))
-print(dump(def))
 
 farming.register_plant("farming:strawberry", sdef)
 
