@@ -82,9 +82,9 @@ local register_plant_check_def = function(def)
 	end
 	def.min_grow_time=math.floor(def.mean_grow_time-def.range_grow_time)
 	def.max_grow_time=math.floor(def.mean_grow_time+def.range_grow_time)
-	if not def.eat_hp then
-	  def.eat_hp = 1
-	end
+--	if not def.eat_hp then
+--	  def.eat_hp = 1
+--	end
 	if not def.spawnon then
 	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
 				spawn_min = 0,
@@ -129,15 +129,14 @@ farming.register_plant = function(name, def)
 	farming.registered_plants[pname] = def
 
 	-- Register harvest
-	local harvest_def={
-		description = S(pname:gsub("^%l", string.upper)),
-		inventory_image = harvest_name_png .. ".png",
-		groups = def.groups or {flammable = 2},
-	}
-	if ( def.eat_hp > 0 ) then
-	  harvest_def.on_use=minetest.item_eat(def.eat_hp)
+	if (def.groups["no_seed"] == nil) then
+		local harvest_def={
+			description = S(pname:gsub("^%l", string.upper)),
+			inventory_image = harvest_name_png .. ".png",
+			groups = def.groups or {flammable = 2},
+		}
+		minetest.register_craftitem(":" .. harvest_name, harvest_def)
 	end
-	minetest.register_craftitem(":" .. harvest_name, harvest_def)
 	
 	-- Register seed
 	local lbm_nodes = {seed_name}
@@ -207,6 +206,9 @@ farming.register_plant = function(name, def)
 		minlight = def.minlight,
 		maxlight = def.maxlight,
 	}
+	if def.eat_hp then
+	  seed_def.on_use=minetest.item_eat(def.eat_hp)
+	end
 	minetest.register_node(":" .. seed_name, seed_def)
 	
 	-- Register growing steps

@@ -30,7 +30,7 @@ local sdef={
 				spawn_num = -1},
 	description = S("Strawberry"),
 	inventory_image = "farming_strawberry.png",
-	eat_hp=2,
+	eat_hp=4,
 	steps=4,
 	max_harvest=2,
 	}
