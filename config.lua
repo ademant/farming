@@ -5,7 +5,7 @@
 	world folder for map specific settings.
 --]]
 
-farming.crops = {"wheat","cotton","strawberry"}
+farming.crops = {"wheat","cotton","strawberry","potato"}
 
 for i,crop in ipairs(farming.crops) do
   print(crop.." - "..farming.config:get_string(crop))

@@ -44,12 +44,8 @@ farming.get_biomes = function(biom_def)
 	return possible_biomes
 end
 
--- Register plants
-farming.register_plant = function(name, def)
-	-- Check def table
-	if not def.steps then
-		return nil
-	end
+-- function to check definition
+local register_plant_check_def = function(def)
 	if not def.description then
 		def.description = "Seed"
 	end
@@ -106,6 +102,18 @@ farming.register_plant = function(name, def)
 		def.spawnon.offset = def.spawnon.offset or 0.02
 		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
 	end
+  return def
+end
+
+
+-- Register plants
+farming.register_plant = function(name, def)
+	-- Check def table
+	if not def.steps then
+		return nil
+	end
+	-- check definition
+    def = register_plant_check_def(def)
     
 	-- local definitions
 	local mname = name:split(":")[1]
@@ -221,12 +229,8 @@ farming.register_plant = function(name, def)
 			-- with higher grow levels you harvest more
 			if step_harvest >= 1 then
 			  for h = 1,step_harvest do
---			    print(h.." - "..harvest_name.." - "..base_rarity.." - "..table.getn(drop))
---			    print(dump(drop))
 			    if(drop.items == nil) then
 			      drop = {items = {{items = {harvest_name},rarity=1}}}
---			      print(table.getn(drop))
---			      print(dump(drop))
 			    else
 					table.insert(drop.items,1,{items={harvest_name},rarity=base_rarity*h})
 					if def.groups.drop_seed ~= nil then
@@ -241,14 +245,11 @@ farming.register_plant = function(name, def)
 			  table.insert(drop.items,1,{items={def.next_plant},rarity=def.next_plant_rarity})
 			end
         end
-        print("drop table")
-        print(dump(drop))
 		local nodegroups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
 		nodegroups[pname] = i
 
 		local next_plant = nil
 
---                print("register "..harvest_name.."_"..i)
         local node_def = {
 			drawtype = "plantlike",
 			waving = 1,
@@ -258,7 +259,7 @@ farming.register_plant = function(name, def)
 			place_param2 = def.place_param2 or nil,
 			walkable = false,
 			buildable_to = true,
-			drop = drop,
+--			drop = drop,
 			selection_box = {
 				type = "fixed",
 				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
@@ -268,6 +269,9 @@ farming.register_plant = function(name, def)
 			minlight = def.minlight,
 			maxlight = def.maxlight,
 		}
+		if drop.items ~= nil then
+		  node_def.drop = drop
+		end
 		if i < def.steps then
 			next_plant = harvest_name .. "_" .. (i + 1)
 			node_def.next_plant=next_plant
@@ -276,15 +280,11 @@ farming.register_plant = function(name, def)
 					local node = minetest.get_node(pos)
 					local name = node.name
 					local def = minetest.registered_nodes[name]
-					-- check if on wet soil
+					-- check if on wet soil and enough light
 					local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
-					if minetest.get_item_group(below.name, "soil") < 3 then
-						minetest.get_node_timer(pos):start(math.random(40, 80))
-						return
-					end
-					-- check light
 					local light = minetest.get_node_light(pos)
-					if not light or light < def.minlight or light > def.maxlight then
+					if (minetest.get_item_group(below.name, "soil") < 3) or
+					 not light or light < def.minlight or light > def.maxlight then
 						minetest.get_node_timer(pos):start(math.random(40, 80))
 						return
 					end
@@ -366,3 +366,5 @@ farming.register_plant = function(name, def)
 	}
 	return r
 end
+
+
