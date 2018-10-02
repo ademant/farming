@@ -164,8 +164,9 @@ farming.register_seed=function(sdef)
 		next_plant = sdef.harvest_name .. "_1",
 		on_place = farming.place_seed,
 		on_timer = farming.seed_on_timer,
+		description = sdef.description,
 	}
-	for i,colu in ipairs({"description","inventory_image","minlight","maxlight","place_param2","fertility"}) do
+	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	seed_def.tiles = {sdef.inventory_image}
@@ -177,9 +178,9 @@ farming.register_seed=function(sdef)
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
---	print(dump(seed_def))
+	print(dump(seed_def))
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
-	farming.register_lbm(sdef.seed_name,sdef)
+--	farming.register_lbm(sdef.seed_name,sdef)
 end
 
 farming.step_on_timer = function(pos, elapsed)
@@ -251,7 +252,6 @@ farming.register_steps = function(pname,sdef)
 			type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
 		},
-		groups = nodegroups,
 		sounds = default.node_sound_leaves_defaults(),
 		minlight = sdef.minlight,
 		maxlight = sdef.maxlight,
@@ -260,7 +260,7 @@ farming.register_steps = function(pname,sdef)
 	if has_harvest then
 	  drop_item = sdef.harvest_name
 	end
-	local lbm_nodes = {}
+	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
 		node_def=node_def
 		node_def.groups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
@@ -301,7 +301,7 @@ farming.register_steps = function(pname,sdef)
 		end
 		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, node_def)
 		print(sdef.harvest_name.."_"..i)
-		print(dump(node_def))
+--		print(dump(node_def))
 	end
 	farming.register_lbm(lbm_nodes,sdef)
 end
@@ -322,8 +322,8 @@ farming.register_mapgen = function(mdef)
 --      print("spawn "..dump(def.spawnon))
 --      print("scale "..def.spawnon.scale)
     if mdef.groups.no_spawn == nil then
-      print("spawn "..dump(mdef.spawnon))
-      print(dump(farming.get_biomes(mdef)))
+--      print("spawn "..dump(mdef.spawnon))
+--      print(dump(farming.get_biomes(mdef)))
 --      for j,onpl in ipairs(def.spawnon.spawnon) do
 		local deco_def={
 			deco_type = "simple",
@@ -366,7 +366,7 @@ farming.register_plant = function(name, def)
 	local harvest_name_png=def.mod_name.."_"..def.plant_name..".png"
 	def.seed_name=def.mod_name..":seed_"..def.plant_name
 	local seed_name_png=def.mod_name.."_seed_"..def.plant_name..".png"
-	local lbm_nodes = {seed_name}
+	local lbm_nodes = {def.seed_name}
 
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
     local has_harvest = true
