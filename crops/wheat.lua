@@ -28,7 +28,7 @@ local w1def={
 	next_plant="farming:culturewheat",
 	next_plant_rarity=12,
 	}
-print(dump(w1def))
+--print(dump(w1def))
 --if(table.getn(farming.possible_biomes)>0) then
 --  def.biomes=farming.possible_biomes
 --end

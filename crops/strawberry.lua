@@ -17,7 +17,7 @@ local sdef={
 	minlight = 13, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food=1,grain = 1, flammable = 4,no_seed=1 ,punchable = 1},
+	groups = {food=1,grain = 1, flammable = 4,no_harvest=1 ,punchable = 1},
 	place_param2 = 3,
 	min_temp=10,
 	max_temp=50,
@@ -38,8 +38,8 @@ local sdef={
 --if(table.getn(possible_biomes)>0) then
 --  def.biomes=possible_biomes
 --end
-print("strawberry")
-print(dump(sdef))
+--print("strawberry")
+--print(dump(sdef))
 
 farming.register_plant("farming:strawberry", sdef)
 

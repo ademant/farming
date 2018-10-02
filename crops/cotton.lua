@@ -56,7 +56,7 @@ local def={
 --if(table.getn(possible_biomes)>0) then
 --  cdef.biomes=possible_biomes
 --end
-print("cotton")
-print(dump(cdef))
+--print("cotton")
+--print(dump(cdef))
 farming.register_plant("farming:cotton", cdef)
 

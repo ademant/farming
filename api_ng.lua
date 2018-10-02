@@ -105,7 +105,298 @@ local register_plant_check_def = function(def)
   return def
 end
 
+farming.seed_on_timer = function(pos, elapsed)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	-- grow seed
+	local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
+	if not soil_node then
+		minetest.get_node_timer(pos):start(math.random(40, 80))
+		return
+	end
+	-- omitted is a check for light, we assume seeds can germinate in the dark.
+	for _, v in pairs(def.fertility) do
+		if minetest.get_item_group(soil_node.name, v) ~= 0 then
+			local placenode = {name = def.next_plant}
+			if def.place_param2 then
+				placenode.param2 = def.place_param2
+			end
+			minetest.swap_node(pos, placenode)
+			local def_next=minetest.registered_nodes[def.next_plant]
+			if def_next.next_plant then
+				minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+				return
+			end
+		end
+	end
+end
+			
+farming.register_harvest=function(hdef)
+local harvest_def={
+	description = S(hdef.description:gsub("^%l", string.upper)),
+	inventory_image = hdef.harvest_png,
+	groups = hdef.groups or {flammable = 2},
+}
+if not harvest_def.groups["harvest"] then
+  harvest_def.groups["harvest"] = 1
+end
+--print(dump(harvest_def))
+minetest.register_craftitem(":" .. hdef.harvest_name, harvest_def)
+end
 
+farming.register_seed=function(sdef)
+    local seed_def = {
+		drawtype = "signlike",
+		paramtype = "light",
+		paramtype2 = "wallmounted",
+		walkable = false,
+		sunlight_propagates = true,
+		selection_box = {
+			type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+		},
+		sounds = default.node_sound_dirt_defaults({
+			dig = {name = "", gain = 0},
+			dug = {name = "default_grass_footstep", gain = 0.2},
+			place = {name = "default_place_node", gain = 0.25},
+		}),
+		next_plant = sdef.harvest_name .. "_1",
+		on_place = farming.place_seed,
+		on_timer = farming.seed_on_timer,
+	}
+	for i,colu in ipairs({"description","inventory_image","minlight","maxlight","place_param2","fertility"}) do
+	  seed_def[colu] = sdef[colu]
+	end
+	seed_def.tiles = {sdef.inventory_image}
+	seed_def.wield_image = {sdef.inventory_image}
+	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
+	for k, v in pairs(sdef.fertility) do
+		seed_def.groups[v] = 1
+	end
+	if sdef.eat_hp then
+	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
+	end
+--	print(dump(seed_def))
+	minetest.register_node(":" .. sdef.seed_name, seed_def)
+	farming.register_lbm(sdef.seed_name,sdef)
+end
+
+farming.step_on_timer = function(pos, elapsed)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	-- check if on wet soil and enough light
+	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
+	local light = minetest.get_node_light(pos)
+	if (minetest.get_item_group(below.name, "soil") < 3) or
+	 not light or light < def.minlight or light > def.maxlight then
+		minetest.get_node_timer(pos):start(math.random(40, 80))
+		return
+	end
+	-- grow
+	local placenode = {name = def.next_plant}
+	if def.place_param2 then
+		placenode.param2 = def.place_param2
+	end
+	minetest.swap_node(pos, placenode)
+	-- new timer needed?
+	local def_next=minetest.registered_nodes[def.next_plant]
+	minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+	return
+end
+
+farming.step_on_punch = function(pos, node, puncher, pointed_thing)
+				-- grow
+				local pre_node = harvest_name .. "_"..(i-1)
+				local placenode = {name = pre_node}
+				if def.place_param2 then
+					placenode.param2 = def.place_param2
+				end
+				minetest.swap_node(pos, placenode)
+				puncher:get_inventory():add_item('main',seed_name)
+				-- new timer needed?
+				local pre_def=minetest.registered_nodes[pre_node]
+				if pre_def.next_plant then
+					minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
+				end
+			end
+
+farming.register_steps = function(pname,sdef)
+	-- check if plant gives harvest, where seed can be extractet or gives directly seed
+    local has_harvest = true
+    if sdef.groups["no_harvest"] then 
+      has_harvest = false
+    end
+    -- check if plant give seeds if punched. then drop table is quite simple
+    local is_punchable = false
+    if sdef.groups["punchable"] then
+      is_punchable = true
+    end
+    -- check if cultured plant exist
+    local has_next_plant = false
+    if sdef.next_plant then
+      has_next_plant = true
+    end
+
+	local node_def = {
+		drawtype = "plantlike",
+		waving = 1,
+		paramtype = "light",
+		paramtype2 = sdef.paramtype2 or nil,
+		place_param2 = sdef.place_param2 or nil,
+		walkable = false,
+		buildable_to = true,
+		selection_box = {
+			type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+		},
+		groups = nodegroups,
+		sounds = default.node_sound_leaves_defaults(),
+		minlight = sdef.minlight,
+		maxlight = sdef.maxlight,
+	}
+	local drop_item = sdef.seed_name
+	if has_harvest then
+	  drop_item = sdef.harvest_name
+	end
+	local lbm_nodes = {}
+	for i=1,sdef.steps do
+		node_def=node_def
+		node_def.groups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		node_def.groups[pname] = i
+		node_def.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
+		node_def.next_plant=nil
+		node_def.on_timer = nil
+		if i < sdef.steps then
+			node_def.next_plant=sdef.mod_name..":"..sdef.plant_name .. "_" .. (i + 1)
+			lbm_nodes[#lbm_nodes + 1] = sdef.harvest_name .. "_" .. i
+			node_def.on_timer = farming.step_on_timer
+		end
+		local base_rarity = 1
+		if sdef.steps ~= 1 then
+			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
+		end
+		node_def.drop={items={{items={drop_item}}}}
+
+		local base_rarity = 1
+		if sdef.steps ~= 1 then
+			base_rarity =  sdef.steps - i + 1
+		end
+
+		-- with higher grow levels you harvest more
+		local step_harvest = math.floor(i*sdef.max_harvest/sdef.steps + 0.05)
+		if step_harvest > 1 then
+		  for h = 2,step_harvest do
+			table.insert(node_def.drop.items,1,{items={drop_item},rarity=base_rarity*h})
+		  end
+		end
+		-- at the end stage you can harvest by change a cultured seed (if defined)
+		if (i == sdef.steps and sdef.next_plant ~= nil) then
+		  sdef.next_plant_rarity = sdef.next_plant_rarity or base_rarity*2
+		  table.insert(node_def.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
+		end
+		if i == sdef.steps and is_punchable then
+			node_def.on_punch = farming.step_on_punch
+		end
+		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, node_def)
+		print(sdef.harvest_name.."_"..i)
+		print(dump(node_def))
+	end
+	farming.register_lbm(lbm_nodes,sdef)
+end
+
+farming.register_lbm = function(lbm_nodes,def)
+	-- replacement LBM for pre-nodetimer plants
+	minetest.register_lbm({
+		name = ":" .. def.mod_name .. ":start_nodetimer_" .. def.plant_name,
+		nodenames = lbm_nodes,
+		action = function(pos, node)
+				minetest.get_node_timer(pos):start(math.random(40, 80))
+		end,
+	})
+end
+
+farming.register_mapgen = function(mdef)
+    -- register mapgen
+--      print("spawn "..dump(def.spawnon))
+--      print("scale "..def.spawnon.scale)
+    if mdef.groups.no_spawn == nil then
+      print("spawn "..dump(mdef.spawnon))
+      print(dump(farming.get_biomes(mdef)))
+--      for j,onpl in ipairs(def.spawnon.spawnon) do
+		local deco_def={
+			deco_type = "simple",
+--			place_on = onpl,
+			place_on = mdef.spawnon.spawnon,
+			sidelen = 16,
+			noise_params = {
+				offset = mdef.spawnon.offset,
+				scale = mdef.spawnon.scale, -- 0.006,
+				spread = {x = 200, y = 200, z = 200},
+				seed = 329,
+				octaves = 3,
+				persist = 0.6
+			},
+			y_min = mdef.spawnon.spawn_min,
+			y_max = mdef.spawnon.spawn_max,
+			decoration = mdef.wildname or mdef.harvest_name.."_"..mdef.steps,
+			spawn_by = mdef.spawnon.spawnby,
+			num_spawn_by = mdef.spawnon.spawn_num,
+--			biomes = farming.get_biomes(def)
+		}
+		minetest.register_decoration(deco_def)
+--	  end
+	end
+end
+
+-- Register plants
+farming.register_plant = function(name, def)
+	-- Check def table
+	if not def.steps then
+		return nil
+	end
+	-- check definition
+    def = register_plant_check_def(def)
+    
+	-- local definitions
+	def.mod_name = name:split(":")[1]
+	def.plant_name = name:split(":")[2]
+	def.harvest_name=def.mod_name..":"..def.plant_name
+	local harvest_name_png=def.mod_name.."_"..def.plant_name..".png"
+	def.seed_name=def.mod_name..":seed_"..def.plant_name
+	local seed_name_png=def.mod_name.."_seed_"..def.plant_name..".png"
+	local lbm_nodes = {seed_name}
+
+	-- check if plant gives harvest, where seed can be extractet or gives directly seed
+    local has_harvest = true
+    if def.groups["no_harvest"] then 
+      has_harvest = false
+    end
+    -- check if plant give seeds if punched. then drop table is quite simple
+    local is_punchable = false
+    if def.groups["punchable"] then
+      is_punchable = true
+    end
+    -- check if cultured plant exist
+    local has_next_plant = false
+    if def.next_plant then
+      has_next_plant = true
+    end
+    
+    -- if plant has harvest then registering
+    if has_harvest then
+      def.harvest_png=harvest_name_png
+      farming.register_harvest(def)
+    end
+    
+    farming.register_seed(def)
+
+	farming.register_steps(def.plant_name,def)
+	
+	farming.register_mapgen(def)
+end
+--[[
 -- Register plants
 farming.register_plant = function(name, def)
 	-- Check def table
@@ -122,14 +413,16 @@ farming.register_plant = function(name, def)
 	local harvest_name_png=mname.."_"..pname
 	local seed_name=mname..":seed_"..pname
 	local seed_name_png=mname.."_seed_"..pname
-	if (def.groups["no_seed"] ~= nil) then
+	local bnoharvest = false
+	if def.groups["no_harvest"] then bnoharvest = true end
+	if bnoharvest then
 	  seed_name = harvest_name
 	end
 
 	farming.registered_plants[pname] = def
 
 	-- Register harvest
-	if (def.groups["no_seed"] == nil) then
+	if not bnoharvest then
 		local harvest_def={
 			description = S(pname:gsub("^%l", string.upper)),
 			inventory_image = harvest_name_png .. ".png",
@@ -166,15 +459,7 @@ farming.register_plant = function(name, def)
 			dug = {name = "default_grass_footstep", gain = 0.2},
 			place = {name = "default_place_node", gain = 0.25},
 		}),
-		on_place = function(itemstack, placer, pointed_thing)
-			local under = pointed_thing.under
-			local node = minetest.get_node(under)
-			local udef = minetest.registered_nodes[node.name]
-			if udef and udef.on_rightclick and not (placer and placer:is_player() and placer:get_player_control().sneak) then
-				return udef.on_rightclick(under, node, placer, itemstack,pointed_thing) or itemstack
-			end
-			return farming.place_seed(itemstack, placer, pointed_thing, seed_name)
-		end,
+		on_place = farming.place_seed,
 		next_plant = harvest_name .. "_1",
 		on_timer = function(pos, elapsed)
 				local node = minetest.get_node(pos)
@@ -370,4 +655,4 @@ farming.register_plant = function(name, def)
 	return r
 end
 
-
+]]
