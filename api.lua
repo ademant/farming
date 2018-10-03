@@ -126,6 +126,7 @@ end
 
 -- Seed placement
 farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
+  print(plantname)
 	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pt then

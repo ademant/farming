@@ -17,7 +17,7 @@ dofile(farming.path .. "/config.lua")
 dofile(farming.path .. "/api.lua")
 dofile(farming.path .. "/api_ng.lua")
 dofile(farming.path .. "/nodes.lua")
-dofile(farming.path .. "/hoes.lua")
+dofile(farming.path .. "/tools.lua")
 dofile(farming.path .. "/utensils.lua")
 dofile(farming.path .. "/craft.lua")
 
@@ -27,6 +27,8 @@ for i,crop in ipairs(farming.crops) do
     dofile(farming.path.."/crops/"..crop..".lua")
   end
 end
+print("dump registered plants")
+print(dump(farming.registered_plants))
 
 
 
