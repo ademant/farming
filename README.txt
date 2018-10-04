@@ -40,3 +40,5 @@ Created by Napiophelios (CC BY-SA 3.0):
 Created by ademant (CC BY 3.0):
   farming_tool_flail.png
   farming_tool_coffee_grinder.png (based on art by cactus_cowboy on openclipart.org)
+  farming_tool_scythe
+  farming_tool_billhook
