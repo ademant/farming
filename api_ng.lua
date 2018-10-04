@@ -61,13 +61,6 @@ local register_plant_check_def = function(def)
 	if not def.fertility then
 		def.fertility = {}
 	end
-	if not def.switch_drop_count then
-      def.switch_drop_count = math.floor(0.75 * def.steps)
-    else
-      if (def.switch_drop_count > def.steps) then
-        def.switch_drop_count = def.steps
-      end
-	end
 	if not def.max_harvest then
 	  def.max_harvest = 2
 	end
@@ -146,6 +139,98 @@ end
 minetest.register_craftitem(":" .. hdef.harvest_name, harvest_def)
 end
 
+farming.seed_on_place = function(itemstack, placer, pointed_thing)
+	local under = pointed_thing.under
+	local node = minetest.get_node(under)
+	local udef = minetest.registered_nodes[node.name]
+	if udef and udef.on_rightclick and
+			not (placer and placer:is_player() and
+			placer:get_player_control().sneak) then
+		return udef.on_rightclick(under, node, placer, itemstack,
+			pointed_thing) or itemstack
+	end
+	return farming.place_seed(itemstack, placer, pointed_thing, sdef.seed_name)
+end
+
+-- Seed placement
+-- adopted from minetest-game
+farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
+--  print(plantname)
+	local pt = pointed_thing
+	-- check if pointing at a node
+	if not pt then
+		return itemstack
+	end
+	if pt.type ~= "node" then
+		return itemstack
+	end
+
+	local under = minetest.get_node(pt.under)
+	local above = minetest.get_node(pt.above)
+	local udef = minetest.registered_nodes[under.name]
+	local pdef = minetest.registered_nodes[plantname]
+	
+	local player_name = placer and placer:get_player_name() or ""
+
+	if minetest.is_protected(pt.under, player_name) then
+		minetest.record_protection_violation(pt.under, player_name)
+		return
+	end
+	if minetest.is_protected(pt.above, player_name) then
+		minetest.record_protection_violation(pt.above, player_name)
+		return
+	end
+
+	-- return if any of the nodes is not registered
+	if not minetest.registered_nodes[under.name] then
+		return itemstack
+	end
+	if not minetest.registered_nodes[above.name] then
+		return itemstack
+	end
+
+	-- check if pointing at the top of the node
+	if pt.above.y ~= pt.under.y+1 then
+		return itemstack
+	end
+
+	-- check if you can replace the node above the pointed node
+	if not minetest.registered_nodes[above.name].buildable_to then
+		return itemstack
+	end
+
+	-- check if pointing at soil and seed needs soil
+	if (minetest.get_item_group(under.name, "soil") < 2) and (minetest.get_item_group(plantname,"on_soil") >= 1) then
+		return itemstack
+	end
+	-- if not neet soil, check for other restrictions
+	if (minetest.get_item_group(plantname,"on_soil")<1) then
+	  --check for correct height as given in mapgen options
+	  if (pt.under.y < pdef.spawnon.spawn_min or pt.under.y > pdef.spawnon.spawn_max) then
+  	    return itemstack
+	  end
+	  -- check if node is in spawning list
+	  local is_correct_node = false
+	  for _,spawnon in ipairs(pdef.spawnon.spawnon) do
+	    if under.name == spawnon then
+	      is_correct_node = true
+	    end
+	  end
+	  if not is_correct_node then
+	    return itemstack
+	  end
+	end
+
+	-- add the node and remove 1 item from the itemstack
+	minetest.add_node(pt.above, {name = plantname, param2 = 1})
+	tick(pt.above)
+	if not (creative and creative.is_enabled_for
+			and creative.is_enabled_for(player_name)) then
+		itemstack:take_item()
+	end
+	return itemstack
+end
+
 farming.register_seed=function(sdef)
   print("seed")
   print(dump(sdef))
@@ -166,22 +251,10 @@ farming.register_seed=function(sdef)
 			place = {name = "default_place_node", gain = 0.25},
 		}),
 		next_plant = sdef.harvest_name .. "_1",
-		on_place = function(itemstack, placer, pointed_thing)
-			local under = pointed_thing.under
-			local node = minetest.get_node(under)
-			local udef = minetest.registered_nodes[node.name]
-			if udef and udef.on_rightclick and
-					not (placer and placer:is_player() and
-					placer:get_player_control().sneak) then
-				return udef.on_rightclick(under, node, placer, itemstack,
-					pointed_thing) or itemstack
-			end
-			return farming.place_seed(itemstack, placer, pointed_thing, sdef.seed_name)
-		end,
+		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
-		description = sdef.description,
 	}
-	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility"}) do
+	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility","description"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	seed_def.tiles = {sdef.inventory_image}
@@ -189,6 +262,9 @@ farming.register_seed=function(sdef)
 	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
+	end
+	if sdef.groups["on_soil"] then
+	  seed_def.groups["on_soil"] = sdef.groups["on_soil"]
 	end
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
@@ -205,7 +281,7 @@ farming.step_on_timer = function(pos, elapsed)
 	-- check if on wet soil and enough light
 	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
 	local light = minetest.get_node_light(pos)
-	if (minetest.get_item_group(below.name, "soil") < 3) or
+	if ((minetest.get_item_group(below.name, "soil") < 3) and (minetest.get_item_group(node,"on_soil") >= 1))or
 	 not light or light < def.minlight or light > def.maxlight then
 		minetest.get_node_timer(pos):start(math.random(40, 80))
 		return
@@ -223,20 +299,23 @@ farming.step_on_timer = function(pos, elapsed)
 end
 
 farming.step_on_punch = function(pos, node, puncher, pointed_thing)
-				-- grow
-				local pre_node = harvest_name .. "_"..(i-1)
-				local placenode = {name = pre_node}
-				if def.place_param2 then
-					placenode.param2 = def.place_param2
-				end
-				minetest.swap_node(pos, placenode)
-				puncher:get_inventory():add_item('main',seed_name)
-				-- new timer needed?
-				local pre_def=minetest.registered_nodes[pre_node]
-				if pre_def.next_plant then
-					minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
-				end
-			end
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	-- grow
+	local pre_node = def.pre_plant
+	local placenode = {name = pre_node}
+	if def.place_param2 then
+		placenode.param2 = def.place_param2
+	end
+	minetest.swap_node(pos, placenode)
+	puncher:get_inventory():add_item('main',def.seed_name)
+	-- new timer needed?
+	local pre_def=minetest.registered_nodes[pre_node]
+	if pre_def.next_plant then
+		minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
+	end
+end
 
 farming.register_steps = function(pname,sdef)
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
@@ -312,6 +391,7 @@ farming.register_steps = function(pname,sdef)
 		  table.insert(node_def.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
 		end
 		if i == sdef.steps and is_punchable then
+		    node_def.pre_plant = sdef.mod_name..":"..sdef.plant_name .. "_" .. (i - 1)
 			node_def.on_punch = farming.step_on_punch
 		end
 		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, node_def)
@@ -413,7 +493,7 @@ farming.register_plant = function(name, def)
 	farming.register_mapgen(def)
 end
 
--- Register new hoes
+-- Register new Scythes
 farming.register_scythe = function(name, def)
 	-- Check for : prefix (register new hoes in your mod's namespace)
 	if name:sub(1,1) ~= ":" then
@@ -458,6 +538,117 @@ farming.register_scythe = function(name, def)
 end
 
 farming.scythe_on_use = function(itemstack, user, pointed_thing, uses)
+	local pt = pointed_thing
+	-- check if pointing at a node
+	if not pt then
+		return
+	end
+	if pt.type ~= "node" then
+		return
+	end
+	local sdef=minetest.registered_nodes[pt.node]
+	if sdef.groups["no_harvest"] then
+	  return
+	end
+	if sdef.groups["grain"] == nil then
+	  return
+	end
+	local under = minetest.get_node(pt.under)
+	local p = {x=pt.under.x, y=pt.under.y+1, z=pt.under.z}
+	local above = minetest.get_node(p)
+
+	-- return if any of the nodes is not registered
+	if not minetest.registered_nodes[under.name] then
+		return
+	end
+	if not minetest.registered_nodes[above.name] then
+		return
+	end
+
+	-- check if the node above the pointed thing is air
+	if above.name ~= "air" then
+		return
+	end
+
+	-- check if pointing at soil
+	if minetest.get_item_group(under.name, "soil") ~= 1 then
+		return
+	end
+
+	if minetest.is_protected(pt.under, user:get_player_name()) then
+		minetest.record_protection_violation(pt.under, user:get_player_name())
+		return
+	end
+	if minetest.is_protected(pt.above, user:get_player_name()) then
+		minetest.record_protection_violation(pt.above, user:get_player_name())
+		return
+	end
+
+	-- dig node and add additional harvest
+	minetest.dig_node(pt)
+	minetest.sound_play("default_dig_crumbly", {
+		pos = pt.under,
+		gain = 0.5,
+	})
+
+	if not (creative and creative.is_enabled_for
+			and creative.is_enabled_for(user:get_player_name())) then
+		-- wear tool
+		local wdef = itemstack:get_definition()
+		itemstack:add_wear(65535/(uses-1))
+		-- tool break sound
+		if itemstack:get_count() == 0 and wdef.sound and wdef.sound.breaks then
+			minetest.sound_play(wdef.sound.breaks, {pos = pt.above, gain = 0.5})
+		end
+	end
+	return itemstack
+end
+
+-- Register new Scythes
+farming.register_billhook = function(name, def)
+	-- Check for : prefix (register new hoes in your mod's namespace)
+	if name:sub(1,1) ~= ":" then
+		name = ":" .. name
+	end
+	-- Check def table
+	if def.description == nil then
+		def.description = "Billhook"
+	end
+	if def.inventory_image == nil then
+		def.inventory_image = "unknown_item.png"
+	end
+	if def.max_uses == nil then
+		def.max_uses = 30
+	end
+	-- Register the tool
+	minetest.register_tool(name, {
+		description = def.description,
+		inventory_image = def.inventory_image,
+		on_use = function(itemstack, user, pointed_thing)
+			return farming.scythe_on_use(itemstack, user, pointed_thing, def.max_uses)
+		end,
+		groups = def.groups,
+		sound = {breaks = "default_tool_breaks"},
+	})
+	-- Register its recipe
+	if def.recipe then
+		minetest.register_craft({
+			output = name:sub(2),
+			recipe = def.recipe
+		})
+	elseif def.material then
+		minetest.register_craft({
+			output = name:sub(2),
+			recipe = {
+				{"", def.material, def.material},
+				{"", "group:stick", ""},
+				{"group:stick", "", ""}
+			}
+		})
+	end
+end
+
+farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pt then

@@ -124,65 +124,6 @@ local function tick_again(pos)
 	minetest.get_node_timer(pos):start(math.random(40, 80))
 end
 
--- Seed placement
-farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
-  print(plantname)
-	local pt = pointed_thing
-	-- check if pointing at a node
-	if not pt then
-		return itemstack
-	end
-	if pt.type ~= "node" then
-		return itemstack
-	end
-
-	local under = minetest.get_node(pt.under)
-	local above = minetest.get_node(pt.above)
-
-	local player_name = placer and placer:get_player_name() or ""
-
-	if minetest.is_protected(pt.under, player_name) then
-		minetest.record_protection_violation(pt.under, player_name)
-		return
-	end
-	if minetest.is_protected(pt.above, player_name) then
-		minetest.record_protection_violation(pt.above, player_name)
-		return
-	end
-
-	-- return if any of the nodes is not registered
-	if not minetest.registered_nodes[under.name] then
-		return itemstack
-	end
-	if not minetest.registered_nodes[above.name] then
-		return itemstack
-	end
-
-	-- check if pointing at the top of the node
-	if pt.above.y ~= pt.under.y+1 then
-		return itemstack
-	end
-
-	-- check if you can replace the node above the pointed node
-	if not minetest.registered_nodes[above.name].buildable_to then
-		return itemstack
-	end
-
-	-- check if pointing at soil
-	if minetest.get_item_group(under.name, "soil") < 2 then
-		return itemstack
-	end
-
-	-- add the node and remove 1 item from the itemstack
-	minetest.add_node(pt.above, {name = plantname, param2 = 1})
-	tick(pt.above)
-	if not (creative and creative.is_enabled_for
-			and creative.is_enabled_for(player_name)) then
-		itemstack:take_item()
-	end
-	return itemstack
-end
-
 farming.grow_plant = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local name = node.name

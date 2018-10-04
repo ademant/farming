@@ -9,7 +9,7 @@ local po_def={
 	minlight = 13,
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food_wheat = 1, flammable = 4,no_harvest=1},
+	groups = {food_wheat = 1, flammable = 4,no_harvest=1, on_soil = 1},
 	place_param2 = 3,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,

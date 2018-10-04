@@ -29,7 +29,7 @@ farming.register_scythe(":farming:scythe_wood", {
 })
 farming.register_scythe(":farming:scythe_stone", {
 	description = "Stone Scythe",
-	inventory_image = "farming_tool_scythe_steel.png",
+	inventory_image = "farming_tool_scythe_stone.png",
 	max_uses = 60,
 	material = "group:stone",
 	groups = {flammable = 2},
@@ -37,6 +37,27 @@ farming.register_scythe(":farming:scythe_stone", {
 farming.register_scythe(":farming:scythe_steel", {
 	description = "Steel Scythe",
 	inventory_image = "farming_tool_scythe_steel.png",
+	max_uses = 500,
+	material = "default:steel_ingot",
+	groups = {flammable = 2},
+})
+farming.register_billhook(":farming:billhook_wood", {
+	description = "Wooden Billhook",
+	inventory_image = "farming_tool_billhook_wood.png",
+	max_uses = 30,
+	material = "group:wood",
+	groups = {flammable = 2},
+})
+farming.register_billhook(":farming:billhook_stone", {
+	description = "Stone Billhook",
+	inventory_image = "farming_tool_billhook_stone.png",
+	max_uses = 60,
+	material = "group:stone",
+	groups = {flammable = 2},
+})
+farming.register_billhook(":farming:billhook_steel", {
+	description = "Steel Billhook",
+	inventory_image = "farming_tool_billhook_steel.png",
 	max_uses = 500,
 	material = "default:steel_ingot",
 	groups = {flammable = 2},
