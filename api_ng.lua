@@ -103,15 +103,26 @@ farming.seed_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
+	print(dump(pos))
 	-- grow seed
 	local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
 	if not soil_node then
 		minetest.get_node_timer(pos):start(math.random(40, 80))
 		return
 	end
+	local spawnon={}
+	for _,v in pairs(def.fertility) do
+	  table.insert(spawnon,1,v)
+	end
+	for _,v in pairs(def.spawnon.spawnon) do
+	  table.insert(spawnon,1,v)
+	end
+	print(dump(spawnon))
+--	print(dump(def))
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
-	for _, v in pairs(def.fertility) do
-		if minetest.get_item_group(soil_node.name, v) ~= 0 then
+--	for _, v in pairs(def.fertility) do
+	for _, v in pairs(spawnon) do
+		if (minetest.get_item_group(soil_node.name, v) ~= 0) or (soil_node.name == v) then
 			local placenode = {name = def.next_plant}
 			if def.place_param2 then
 				placenode.param2 = def.place_param2
@@ -143,19 +154,19 @@ farming.seed_on_place = function(itemstack, placer, pointed_thing)
 	local under = pointed_thing.under
 	local node = minetest.get_node(under)
 	local udef = minetest.registered_nodes[node.name]
+	local plantname = itemstack:get_name()
 	if udef and udef.on_rightclick and
 			not (placer and placer:is_player() and
 			placer:get_player_control().sneak) then
 		return udef.on_rightclick(under, node, placer, itemstack,
 			pointed_thing) or itemstack
 	end
-	return farming.place_seed(itemstack, placer, pointed_thing, sdef.seed_name)
+	return farming.place_seed(itemstack, placer, pointed_thing, plantname)
 end
 
 -- Seed placement
 -- adopted from minetest-game
 farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
---  print(plantname)
 	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pt then
@@ -169,7 +180,8 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	local above = minetest.get_node(pt.above)
 	local udef = minetest.registered_nodes[under.name]
 	local pdef = minetest.registered_nodes[plantname]
-	
+--	print(plantname)
+--	print(dump(pdef))
 	local player_name = placer and placer:get_player_name() or ""
 
 	if minetest.is_protected(pt.under, player_name) then
@@ -223,7 +235,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 
 	-- add the node and remove 1 item from the itemstack
 	minetest.add_node(pt.above, {name = plantname, param2 = 1})
-	tick(pt.above)
+	minetest.get_node_timer(pt.above):start(math.random(16, 26))
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
@@ -232,9 +244,9 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 end
 
 farming.register_seed=function(sdef)
-  print("seed")
-  print(dump(sdef))
-  print(sdef.seed_name)
+--  print("seed")
+--  print(dump(sdef))
+--  print(sdef.seed_name)
     local seed_def = {
 		drawtype = "signlike",
 		paramtype = "light",
@@ -254,7 +266,7 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility","description"}) do
+	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility","description","spawnon"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	seed_def.tiles = {sdef.inventory_image}
@@ -269,7 +281,7 @@ farming.register_seed=function(sdef)
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
-	print(dump(seed_def))
+--	print(dump(seed_def))
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 --	farming.register_lbm(sdef.seed_name,sdef)
 end
@@ -278,6 +290,8 @@ farming.step_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
+	print(name)
+	print(dump(def))
 	-- check if on wet soil and enough light
 	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
 	local light = minetest.get_node_light(pos)
@@ -395,7 +409,7 @@ farming.register_steps = function(pname,sdef)
 			node_def.on_punch = farming.step_on_punch
 		end
 		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, node_def)
-		print(sdef.harvest_name.."_"..i)
+--		print(sdef.harvest_name.."_"..i)
 --		print(dump(node_def))
 	end
 	farming.register_lbm(lbm_nodes,sdef)
