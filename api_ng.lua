@@ -79,15 +79,7 @@ local register_plant_check_def = function(def)
 --	if not def.eat_hp then
 --	  def.eat_hp = 1
 --	end
-	if not def.spawnon then
-	  def.spawnon = { spawnon = {"default:dirt_with_grass"},
-				spawn_min = 0,
-				spawn_max = 42,
-				spawnby = nil,
-				scale = 0.006,
-				offset = 0.12,
-				spawn_num = -1}
-	else
+	if def.spawnon then
 		def.spawnon.spawnon=def.spawnon.spawnon or {"default:dirt_with_grass"}
 		def.spawnon.spawn_min = def.spawnon.spawn_min or 0
 		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
@@ -340,6 +332,11 @@ farming.register_plant = function(name, def)
     if def.next_plant then
       has_next_plant = true
     end
+    local spawns = true
+    if (not def.spawnon) or (def.groups["no_spawn"]) then
+      def.spawnon = nil
+      def.groups["no_spawn"] = 1
+    end
     
     -- if plant has harvest then registering
     if has_harvest then
@@ -351,7 +348,9 @@ farming.register_plant = function(name, def)
 
 	farming.register_steps(def.plant_name,def)
 	
-	farming.register_mapgen(def)
+	if (def.spawnon) then
+		farming.register_mapgen(def)
+	end
 	
     if is_infectable then
       farming.register_infect(def)
