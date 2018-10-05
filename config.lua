@@ -26,6 +26,9 @@ end
 
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
 farming.rarety = farming.config:get_float("rarety") or 0.002
+-- random waiting time for growing
+farming.wait_min = farming.config:get_int("wati_min") or 40
+farming.wait_max = farming.config:get_int("wati_max") or 80
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}
