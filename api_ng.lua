@@ -103,7 +103,8 @@ farming.seed_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
-	print(dump(pos))
+--	print(dump(pos))
+--	print(dump(def))
 	-- grow seed
 	local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
 	if not soil_node then
@@ -117,7 +118,7 @@ farming.seed_on_timer = function(pos, elapsed)
 	for _,v in pairs(def.spawnon.spawnon) do
 	  table.insert(spawnon,1,v)
 	end
-	print(dump(spawnon))
+--	print(dump(spawnon))
 --	print(dump(def))
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
 --	for _, v in pairs(def.fertility) do
@@ -129,8 +130,13 @@ farming.seed_on_timer = function(pos, elapsed)
 			end
 			minetest.swap_node(pos, placenode)
 			local def_next=minetest.registered_nodes[def.next_plant]
-			if def_next.next_plant then
-				minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+--			print(soil_node.name)
+			print(def.next_plant)
+			print(dump(def_next))
+			if def.next_plant then
+				local node_timer=math.random(def.min_grow_time or 100, def.max_grow_time or 200)
+				print(node_timer)
+				minetest.get_node_timer(pos):start(node_timer)
 				return
 			end
 		end
@@ -307,8 +313,10 @@ farming.step_on_timer = function(pos, elapsed)
 	end
 	minetest.swap_node(pos, placenode)
 	-- new timer needed?
-	local def_next=minetest.registered_nodes[def.next_plant]
-	minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+	if def.next_plant then
+		local def_next=minetest.registered_nodes[def.next_plant]
+		minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+	end
 	return
 end
 
@@ -329,6 +337,21 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	if pre_def.next_plant then
 		minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
 	end
+end
+
+farming.harvest_on_dig = function(pos, node, digger)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	print(dump(digger))
+--	local player = minetest.get_player_by_name(digger)
+--	print(dump(player))
+	if (def.next_plant == nil) and (digger:get_wielded_item() == "farming:billhook_wood") then
+	  print("Hello World")
+	else
+	  minetest.handle_node_drops(pos,def.drops,digger)
+	end
+	minetest.remove_node(pos)
 end
 
 farming.register_steps = function(pname,sdef)
@@ -352,40 +375,41 @@ farming.register_steps = function(pname,sdef)
 		drawtype = "plantlike",
 		waving = 1,
 		paramtype = "light",
-		paramtype2 = sdef.paramtype2 or nil,
-		place_param2 = sdef.place_param2 or nil,
 		walkable = false,
 		buildable_to = true,
-		selection_box = {
-			type = "fixed",
-			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
-		},
+		selection_box = {type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
-		minlight = sdef.minlight,
-		maxlight = sdef.maxlight,
 	}
+	for _,colu in ipairs({"paramtype2","place_param2","minlight","maxlight","seed_name"}) do
+	  if sdef[colu] then
+	    node_def[colu] = sdef[colu]
+	  end
+	end
 	local drop_item = sdef.seed_name
 	if has_harvest then
 	  drop_item = sdef.harvest_name
 	end
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
-		node_def=node_def
-		node_def.groups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		node_def.groups[pname] = i
-		node_def.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
-		node_def.next_plant=nil
-		node_def.on_timer = nil
+	    local ndef={}
+	    for _,colu in ipairs({"minlight","maxlight","sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2",
+				"walkable","buildable_to","seed_name"}) do
+			ndef[colu]=node_def[colu]
+		end
+		ndef.groups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		ndef.groups[pname] = i
+		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
 		if i < sdef.steps then
-			node_def.next_plant=sdef.mod_name..":"..sdef.plant_name .. "_" .. (i + 1)
+			ndef.next_plant=sdef.harvest_name .. "_" .. (i + 1)
 			lbm_nodes[#lbm_nodes + 1] = sdef.harvest_name .. "_" .. i
-			node_def.on_timer = farming.step_on_timer
+			ndef.on_timer = farming.step_on_timer
 		end
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
 			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
 		end
-		node_def.drop={items={{items={drop_item}}}}
+		ndef.drop={items={{items={drop_item}}}}
 
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
@@ -396,19 +420,22 @@ farming.register_steps = function(pname,sdef)
 		local step_harvest = math.floor(i*sdef.max_harvest/sdef.steps + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
-			table.insert(node_def.drop.items,1,{items={drop_item},rarity=base_rarity*h})
+			table.insert(ndef.drop.items,1,{items={drop_item},rarity=base_rarity*h})
 		  end
+		end
+		if i == sdef.steps then
+		  ndef.on_dig = farming.harvest_on_dig
 		end
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == sdef.steps and sdef.next_plant ~= nil) then
 		  sdef.next_plant_rarity = sdef.next_plant_rarity or base_rarity*2
-		  table.insert(node_def.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
+		  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
 		end
 		if i == sdef.steps and is_punchable then
-		    node_def.pre_plant = sdef.mod_name..":"..sdef.plant_name .. "_" .. (i - 1)
-			node_def.on_punch = farming.step_on_punch
+		    ndef.pre_plant = sdef.harvest_name .. "_" .. (i - 1)
+			ndef.on_punch = farming.step_on_punch
 		end
-		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, node_def)
+		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, ndef)
 --		print(sdef.harvest_name.."_"..i)
 --		print(dump(node_def))
 	end
@@ -638,9 +665,9 @@ farming.register_billhook = function(name, def)
 	minetest.register_tool(name, {
 		description = def.description,
 		inventory_image = def.inventory_image,
-		on_use = function(itemstack, user, pointed_thing)
-			return farming.scythe_on_use(itemstack, user, pointed_thing, def.max_uses)
-		end,
+--		on_use = function(itemstack, user, pointed_thing)
+--			return farming.scythe_on_use(itemstack, user, pointed_thing, def.max_uses)
+--		end,
 		groups = def.groups,
 		sound = {breaks = "default_tool_breaks"},
 	})
