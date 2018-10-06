@@ -23,6 +23,7 @@ local function seed_craft(grain_name)
 	},
 	replacements = {{"group:food_flail", modname..":flail"},
 				{"group:food_wheat","farming:straw"}},
+	additional_wear=0.5,
   })
   minetest.register_craft({
 	type = "shapeless",
