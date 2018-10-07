@@ -23,16 +23,32 @@ farming.register_hoe(":farming:hoe_steel", {
 farming.register_scythe(":farming:scythe_wood", {
 	description = "Wooden Scythe",
 	inventory_image = "farming_tool_scythe_wood.png",
-	max_uses = 30,
+--	max_uses = 30,
 	material = "group:wood",
 	groups = {flammable = 2},
+	tool_capabilities = {
+		full_punch_interval = 1.0,
+		max_drop_level=1,
+		groupcaps={
+			snappy = {times={[1]=4.00, [2]=1.60, [3]=0.80}, uses=10, maxlevel=1},
+		},
+		damage_groups = {fleshy=4},
+	},
 })
 farming.register_scythe(":farming:scythe_stone", {
 	description = "Stone Scythe",
 	inventory_image = "farming_tool_scythe_stone.png",
-	max_uses = 60,
+--	max_uses = 60,
 	material = "group:stone",
 	groups = {flammable = 2},
+	tool_capabilities = {
+		full_punch_interval = 1.0,
+		max_drop_level=1,
+		groupcaps={
+			snappy = {times={[1]=3.00, [2]=1.40, [3]=0.70}, uses=20, maxlevel=1},
+		},
+		damage_groups = {fleshy=4},
+	},
 })
 farming.register_scythe(":farming:scythe_steel", {
 	description = "Steel Scythe",
@@ -44,9 +60,17 @@ farming.register_scythe(":farming:scythe_steel", {
 farming.register_billhook(":farming:billhook_wood", {
 	description = "Wooden Billhook",
 	inventory_image = "farming_tool_billhook_wood.png",
-	max_uses = 30,
+--	max_uses = 30,
 	material = "group:wood",
 	groups = {flammable = 2},
+	tool_capabilities = {
+		full_punch_interval = 1.0,
+		max_drop_level=1,
+		groupcaps={
+			snappy = {times={[1]=5.00, [2]=2.00, [3]=1.40}, uses=10, maxlevel=1},
+		},
+		damage_groups = {fleshy=4},
+	},
 })
 farming.register_billhook(":farming:billhook_stone", {
 	description = "Stone Billhook",

@@ -17,7 +17,7 @@ local sdef={
 	minlight = 13, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food=1,grain = 1, flammable = 4,no_harvest=1 ,punchable = 1},
+	groups = {food=1,grain = 1, flammable = 4,no_harvest=1 ,punchable = 1,snappy=1},
 	place_param2 = 3,
 	min_temp=10,
 	max_temp=50,
@@ -31,8 +31,6 @@ local sdef={
 	description = S("Strawberry"),
 	inventory_image = "farming_strawberry.png",
 	eat_hp=4,
-	steps=4,
-	max_harvest=2,
 	}
 
 --if(table.getn(possible_biomes)>0) then

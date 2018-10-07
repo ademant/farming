@@ -11,7 +11,7 @@ local w1def={
 	minlight = 13, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food_wheat=1, grain = 1, flammable = 4, on_soil = 1},
+	groups = {food_wheat=1, grain = 1, flammable = 4, on_soil = 1,snappy=1,food=1,infectable=1},
 	place_param2 = 3,
 	min_temp=10,
 	max_temp=50,
@@ -44,7 +44,7 @@ local wdef={
 	minlight = 11, 
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
-	groups = {food_wheat=1,no_spawn=1,grain = 1, flammable = 4, on_soil = 1},
+	groups = {food_wheat=1,no_spawn=1,grain = 1, flammable = 4, on_soil = 1,infectable=1},
 	place_param2 = 3,
 	description = S("Culture Wheat Seed"),
 	inventory_image = "farming_culturewheat_seed.png",
@@ -53,6 +53,7 @@ local wdef={
 	eat_hp=1,
 	mean_grow_time=20,
 	range_grow_time=5,
+	abm={change = 20}, -- change that randomly new wheat is created
 	}
 farming.register_plant("farming:culturewheat", wdef)
 

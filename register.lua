@@ -112,17 +112,52 @@ end
 farming.register_infect=function(idef)
 	local infect_def={
 		description = S(idef.description:gsub("^%l", string.upper)),
-		inventory_image = idef.mod_name.."_"..idef.plantname.."_ill.png",
+		inventory_image = idef.mod_name.."_"..idef.plant_name.."_ill.png",
 		groups = idef.groups or {flammable = 2,ill=2},
+		tiles = {idef.mod_name.."_"..idef.plant_name.."_ill.png"},
+		wield_image = {idef.mod_name.."_"..idef.plant_name.."_ill.png"},
+		drawtype = "plantlike",
+		waving = 1,
+		paramtype = "light",
+		walkable = false,
+		buildable_to = true,
+		selection_box = {type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
+		sounds = default.node_sound_leaves_defaults(),
 	}
-	for _,coln in ipairs({"plant_name","seed_name","harvest_name"}) do
+	for _,coln in ipairs({"plant_name","seed_name","harvest_name","place_param2","fertility","description","spawnon"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
 	if not infect_def.groups["ill"] then
 	  infect_def.groups["ill"] = 2
 	end
-	minetest.register_craftitem(":" .. idef.harvest_name.."_infected", infect_def)
+	minetest.register_node(":" .. idef.harvest_name.."_infected", infect_def)
+	print(dump(infect_def))
+	local abm_def = {
+		nodenames = {"group:"..idef.plant_name},
+		intervall = math.random(10,20),
+		change = 1,
+		action = function(pos)
+			if math.random(0,5)<1 then
+				minetest.add_node(pos,{name=idef.harvest_name.."_infected"})
+			end
+			end,
+		}
+	minetest.register_abm(abm_def)
+	local abm_def = {
+		nodenames = {"group:"..idef.plant_name},
+		neighbors = {"group:"..idef.plant_name},
+		intervall = math.random(30,40),
+		change = 1,
+		action = function(pos)
+			if math.random(0,50)<1 then
+				minetest.add_node(pos,{name=idef.harvest_name.."_infected"})
+			end
+			end,
+		}
+	print(dump(abm_def))
+	minetest.register_abm(abm_def)
 end
 
 
@@ -208,7 +243,10 @@ farming.register_steps = function(pname,sdef)
 				"walkable","buildable_to","seed_name","plant_name","harvest_name"}) do
 			ndef[colu]=node_def[colu]
 		end
-		ndef.groups = {snappy = 3, flammable = 2, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		if sdef["snappy"] then
+		  ndef.groups["snappy"] = sdef["snappy"]
+		end
 		ndef.groups[pname] = i
 		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
 		if i < sdef.steps then
@@ -246,6 +284,7 @@ farming.register_steps = function(pname,sdef)
 		    ndef.pre_step = sdef.harvest_name .. "_" .. (i - 1)
 			ndef.on_punch = farming.step_on_punch
 		end
+--		print(dump(ndef))
 		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, ndef)
 	end
 	farming.register_lbm(lbm_nodes,sdef)
@@ -262,6 +301,32 @@ farming.register_lbm = function(lbm_nodes,def)
 	})
 end
 
+farming.register_abm = function(mdef)
+	local rand_change = 50
+	if mdef.abm then
+	  if mdef.abm.change then
+	    rand_change = mdef.abm.change
+	  end
+	end
+	minetest.register_abm({
+		nodenames = mdef.spawnon.spawnon,
+		interval = math.random(10,16),
+		chance = 1,
+		action = function(pos)
+			local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
+			local above = minetest.get_node(ptabove)
+			if above.name ~= "air" then
+				return
+			end
+			if (ptabove.y < mdef.spawnon.spawn_min or ptabove.y > mdef.spawnon.spawn_max ) then
+				return
+			end
+			if math.random(0,rand_change) < 1 then
+				minetest.add_node(ptabove, {name=mdef.harvest_name.."_"..mdef.steps})
+			end
+		end,
+	})
+end
 farming.register_mapgen = function(mdef)
     -- register mapgen
     if mdef.groups.no_spawn == nil then
@@ -346,6 +411,7 @@ farming.register_plant = function(name, def)
 	
 	if (def.spawnon) then
 		farming.register_mapgen(def)
+		farming.register_abm(def)
 	end
 	
     if is_infectable then
@@ -384,6 +450,7 @@ farming.register_scythe = function(name,def)
   end
   farming.register_tool(name,def)
 end
+
 -- Register new Scythes
 farming.register_tool = function(name, def)
 	-- recipe has to be provided
@@ -431,21 +498,18 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	end
 	minetest.swap_node(pos, placenode)
 	puncher:get_inventory():add_item('main',def.seed_name)
-	print(dump(puncher))
 	-- getting one more when using billhook
 	local tool_def = puncher:get_wielded_item():get_definition()
-	print(dump(puncher:get_wielded_item():get_wear()))
+--	print(tool_def.max_uses)
 	if tool_def.groups["billhook"] then
   	  puncher:get_inventory():add_item('main',def.seed_name)
-  	  puncher:get_wielded_item():add_wear(65535/(tool_def.max_uses-1))
-	print(dump(puncher:get_wielded_item():get_wear()))
-	print(tool_def.max_uses)
 	end
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
 	if pre_def.next_step then
 		minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
 	end
+	return 
 end
 
 farming.harvest_on_dig = function(pos, node, digger)
@@ -455,12 +519,9 @@ farming.harvest_on_dig = function(pos, node, digger)
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) then
 	  local plant_def=farming.registered_plants[def.plant_name]
-	  local droptable={plant_def.harvest_name.." "..(plant_def.max_harvest+1)}
-	  core.handle_node_drops(pos,droptable,digger)
-  	  minetest.remove_node(pos)
-	else
-	  minetest.node_dig(pos,node,digger)
+   	  digger:get_inventory():add_item('main',plant_def.harvest_name)
 	end
+  minetest.node_dig(pos,node,digger)
 end
 
 farming.step_on_timer = function(pos, elapsed)
@@ -625,12 +686,8 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pt then
-	  print("1")
 		return
 	end
---	if pt.type ~= "node" then
---		return
---	end
 
 	local under = minetest.get_node(pt.under)
 	local p = {x=pt.under.x, y=pt.under.y+1, z=pt.under.z}
@@ -638,19 +695,14 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
-	  print("2")
 		return
 	end
 	if not minetest.registered_nodes[above.name] then
-		  print("3")
-
 		return
 	end
 
 	-- check if the node above the pointed thing is air
 	if above.name ~= "air" then
-		  print("4")
-
 		return
 	end
 
@@ -662,7 +714,6 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 		minetest.record_protection_violation(pt.above, user:get_player_name())
 		return
 	end
-	print("Hello Wordld")
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(user:get_player_name())) then
 		-- wear tool

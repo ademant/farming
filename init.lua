@@ -27,9 +27,19 @@ for i,crop in ipairs(farming.crops) do
     dofile(farming.path.."/crops/"..crop..".lua")
   end
 end
-print("dump registered plants")
-print(dump(farming.registered_plants))
+--print("dump registered plants")
+--print(dump(farming.registered_plants))
 
+--[[
+minetest.register_abm({
+	nodenames = {"default:aspen_tree"},
+	interval = 30,
+	chance = 1,
+	action = function(pos)
+		minetest.add_node(pos, {name="default:wood"})
+	end,
+})
+]]
 
 
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")
