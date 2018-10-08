@@ -237,7 +237,6 @@ farming.register_seed=function(sdef)
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 end
 
-
 farming.register_steps = function(pname,sdef)
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
     local has_harvest = true
@@ -285,15 +284,15 @@ farming.register_steps = function(pname,sdef)
 				"walkable","buildable_to","seed_name","plant_name","harvest_name"}) do
 			ndef[colu]=node_def[colu]
 		end
-		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1, farming = 1}
 		if sdef["snappy"] then
 		  ndef.groups["snappy"] = sdef["snappy"]
 		end
 		ndef.groups[pname] = i
 		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
 		if i < sdef.steps then
-			ndef.next_step=sdef.harvest_name .. "_" .. (i + 1)
-			lbm_nodes[#lbm_nodes + 1] = sdef.harvest_name .. "_" .. i
+			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
+			lbm_nodes[#lbm_nodes + 1] = sdef.step_name .. "_" .. i
 			ndef.on_timer = farming.step_on_timer
 		end
 		local base_rarity = 1
@@ -323,11 +322,11 @@ farming.register_steps = function(pname,sdef)
 		  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
 		end
 		if i == sdef.steps and is_punchable then
-		    ndef.pre_step = sdef.harvest_name .. "_" .. (i - 1)
+		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
 			ndef.on_punch = farming.step_on_punch
 		end
 --		print(dump(ndef))
-		minetest.register_node(":" .. sdef.harvest_name .. "_" .. i, ndef)
+		minetest.register_node(":" .. sdef.step_name .. "_" .. i, ndef)
 	end
 	farming.register_lbm(lbm_nodes,sdef)
 end
@@ -436,7 +435,7 @@ farming.register_mapgen = function(mdef)
 			},
 			y_min = mdef.spawnon.spawn_min,
 			y_max = mdef.spawnon.spawn_max,
-			decoration = mdef.wildname or mdef.harvest_name.."_"..mdef.steps,
+			decoration = mdef.wildname or mdef.step_name.."_"..mdef.steps,
 			spawn_by = mdef.spawnon.spawnby,
 			num_spawn_by = mdef.spawnon.spawn_num,
 --			biomes = farming.get_biomes(def)
@@ -459,6 +458,7 @@ farming.register_plant = function(name, def)
 	def.mod_name = name:split(":")[1]
 	def.plant_name = name:split(":")[2]
 	def.harvest_name=def.mod_name..":"..def.plant_name
+	def.step_name=def.mod_name..":"..def.plant_name
 	def.seed_name=def.mod_name..":seed_"..def.plant_name
 
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
@@ -497,13 +497,19 @@ farming.register_plant = function(name, def)
 
 	farming.register_steps(def.plant_name,def)
 	
-	if (def.spawnon) then
-		farming.register_mapgen(def)
-	end
-	if (def.spread) then
-		for i=1,def.spread.base_rate do
-			table.insert(farming.spreading_crops,1,{def.harvest_name.."_1"})
+--	if (def.spawnon) then
+--		farming.register_mapgen(def)
+--	end
+	if (def.spread) and (not def.groups["no_spawn"]) then
+		local spread_def={name=def.step_name.."_1",
+				temp_min=def.min_temp,temp_max=def.max_temp,
+				hum_min=def.min_humidity,hum_max=def.max_humidity,
+				y_min=0,y_max=31000,base_rate = def.spread.base_rate}
+		if (def.spawnon) then
+			spread_def.y_min=def.spawnon.spawn_min
+			spread_def.y_max=def.spawnon.spawn_max
 		end
+		table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
     if is_infectable then

@@ -26,7 +26,7 @@ local sdef={
 	inventory_image = "farming_raspberry.png",
 	eat_hp=2,
 	spread = {spreadon = farming.change_soil or {"default:dirt_with_grass"},
-		base_rate = 100,
+		base_rate = 1,
 		spread = 50,
 		intervall = 12,
 		change = 0.00001, --part of soil, which get plants
