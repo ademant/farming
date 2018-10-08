@@ -17,7 +17,7 @@ farming.register_plant("farming:barley", {
 	max_humidity=70,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,
-				spawn_max = 42,
+				spawn_max = 500,
 				spawnby = nil,
 				spawn_num = -1},
 	eat_hp=1,

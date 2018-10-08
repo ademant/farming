@@ -13,13 +13,13 @@ local w1def={
 	fertility = {"grassland"},
 	groups = {food_wheat=1, grain = 1, flammable = 4, on_soil = 1,snappy=1,food=1,infectable=1},
 	place_param2 = 3,
-	min_temp=10,
+	min_temp=15,
 	max_temp=50,
-	min_humidity=10,
+	min_humidity=20,
 	max_humidity=70,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,
-				spawn_max = 42,
+				spawn_max = 50,
 				spawnby = nil,
 				spawn_num = -1},
 	description = S("Wheat Seed"),
@@ -40,10 +40,6 @@ local w1def={
 		change = 0.0001, --part of soil, which get plants
 		},
 	}
---print(dump(w1def))
---if(table.getn(farming.possible_biomes)>0) then
---  def.biomes=farming.possible_biomes
---end
 farming.register_plant("farming:wheat", w1def)
 
 local wdef={
