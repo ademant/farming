@@ -1,19 +1,19 @@
 local S = farming.intllib
--- Tomato
+-- Hops
 
-farming.register_plant("farming:tomato", {
-	description = "Tomato",
+farming.register_plant("farming:hops", {
+	description = "Hops",
 	paramtype2 = "meshoptions",
-	inventory_image = "farming_tomato_seed.png",
+	inventory_image = "farming_hops_seed.png",
 	steps = 8,
 	minlight = 13,
 	maxlight = default.LIGHT_MAX,
 	fertility = {"grassland"},
 	groups = {food_wheat=1, grain = 1, flammable = 4, on_soil = 1,snappy=1,food=1,punchable=1},
 	place_param2 = 3,
-	min_temp=10,
+	min_temp=20,
 	max_temp=50,
-	min_humidity=10,
+	min_humidity=20,
 	max_humidity=70,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,

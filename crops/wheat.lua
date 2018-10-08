@@ -27,6 +27,18 @@ local w1def={
 	eat_hp=1,
 	next_plant="farming:culturewheat",
 	next_plant_rarity=12,
+	infect = {
+		base_rate = 10,
+		mono_rate = 5,
+		infect_rate = 5,
+		intervall = 50,
+		},
+	spread = {spreadon = farming.change_soil or {"default:dirt_with_grass"},
+		base_rate = 10,
+		spread = 5,
+		intervall = 12,
+		change = 0.0001, --part of soil, which get plants
+		},
 	}
 --print(dump(w1def))
 --if(table.getn(farming.possible_biomes)>0) then
@@ -53,7 +65,18 @@ local wdef={
 	eat_hp=1,
 	mean_grow_time=20,
 	range_grow_time=5,
-	abm={change = 20}, -- change that randomly new wheat is created
+	infect = {
+		base_rate = 10,
+		mono_rate = 5,
+		infect_rate = 2,
+		intervall = 50,
+		},
+	spread = {spreadon = farming.change_soil or {"default:dirt_with_grass"},
+		base_rate = 100,
+		spread = 50,
+		intervall = 360,
+		change = 0.00001, --part of soil, which get plants
+		},
 	}
 farming.register_plant("farming:culturewheat", wdef)
 

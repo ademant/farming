@@ -21,19 +21,68 @@ msgstr ""
 msgid "Spelt"
 msgstr "Dinkel"
 
-#: spelt.lua
 msgid "Spelt Seed"
 msgstr "Dinkelkörner"
 
-#: spelt.lua
 msgid "Roasted Spelt"
 msgstr "Gerösteter Dinkel"
 
-#: spelt.lua
 msgid "Spelt Coffee"
 msgstr "Dinkelkaffee"
 
-#: spelt.lua
 msgid "Cup of Spelt Coffee"
 msgstr "Tasse Dinkelkaffee"
 
+msgid "Wheat"
+msgstr "Weizen"
+
+msgid "Barley"
+msgstr "Gerste"
+
+msgid "Coffee"
+msgstr "Kaffee"
+
+msgid "Cocoa"
+msgstr "Cacao"
+
+msgid "Potato"
+msgstr "Kartoffel"
+
+msgid "Beetroot"
+msgstr "Rote Beete"
+
+msgid "Blackberry"
+msgstr "Brombeere"
+
+msgid "Raspberry"
+msgstr "Himbeere"
+
+msgid "Strawberry"
+msgstr "Erdbeere"
+
+msgid "Blueberry"
+msgstr "Heidelbeere"
+
+msgid "Carrot"
+msgstr "Karotte"
+
+msgid "Corn"
+msgstr "Mais"
+
+msgid "Cotton"
+msgstr "Baumwolle"
+
+msgid "Garlic"
+msgstr "Knoblauch"
+
+msgid "Mustard"
+msgstr "Senf"
+
+msgid "Rhubarb"
+msgstr "Rhabarber"
+
+msgid "Tomatoe"
+msgstr "Tomate"
+
+msgid "Hops"
+msgstr "Hopfen"

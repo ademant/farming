@@ -1,12 +1,6 @@
 -- Strawberry
 local S = farming.intllib
 
-local possible_biomes={}
-for name,def in pairs(minetest.registered_biomes) do
-  if def.heat_point > 12 and def.heat_point < 40 and def.humidity_point > 10 and def.humidity_point < 50 then
-    table.insert(possible_biomes,1,name)
-  end
-end
 local sdef={
 	paramtype2 = "meshoptions",
 	steps = 4, -- steps till full-grown plant
@@ -30,14 +24,15 @@ local sdef={
 				spawn_num = -1},
 	description = S("Strawberry"),
 	inventory_image = "farming_strawberry.png",
-	eat_hp=4,
+	eat_hp=2,
+	spread = {spreadon = farming.change_soil or {"default:dirt_with_grass"},
+		base_rate = 100,
+		spread = 50,
+		intervall = 12,
+		change = 0.00001, --part of soil, which get plants
+		},
 	}
 
---if(table.getn(possible_biomes)>0) then
---  def.biomes=possible_biomes
---end
---print("strawberry")
---print(dump(sdef))
 
 farming.register_plant("farming:strawberry", sdef)
 

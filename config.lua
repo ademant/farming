@@ -5,7 +5,7 @@
 	world folder for map specific settings.
 --]]
 
-farming.crops = {"wheat","strawberry","potato"}
+farming.crops = {"wheat","strawberry","potato","barley","blackberry","corn","coffee","raspberry","cocoa","spelt","mustard","cotton","tomato"}
 
 for i,crop in ipairs(farming.crops) do
   print(crop.." - "..farming.config:get_string(crop))
@@ -53,6 +53,7 @@ for name,def in pairs(minetest.registered_biomes) do
     table.insert(farming.possible_biomes,1,name)
   end
 end
---print(table.maxn(farming.possible_biomes))
 
+-- register for crops, which are spreading by abm
+farming.spreading_crops = {}
 

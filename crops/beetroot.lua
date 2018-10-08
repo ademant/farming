@@ -1,10 +1,9 @@
-local S = farming.intllib
--- Corn
+-- Beetroot
 
 local po_def={
-	description = "Corn",
+	description = "Beetroot",
 	paramtype2 = "meshoptions",
-	inventory_image = "farming_corn.png",
+	inventory_image = "farming_beetroot.png",
 	steps = 8,
 	max_harvest=4,
 	minlight = 13,
@@ -18,16 +17,24 @@ local po_def={
 				spawnby = nil,
 				scale = 0.006, -- 0.006
 				spawn_num = -1},
+	infect = {
+		base_rate = 10,
+		mono_rate = 5,
+		infect_rate = 5,
+		intervall = 50,
+		},
 	spread = {spreadon = farming.change_soil or {"default:dirt_with_grass"},
 		base_rate = 10,
 		spread = 5,
 		intervall = 12,
 		change = 0.0001, --part of soil, which get plants
 		},
-	min_temp=20,
-	max_temp=60,
+	min_temp=10,
+	max_temp=50,
 	min_humidity=10,
 	max_humidity=70,
 }
-farming.register_plant("farming:corn", po_def)
+farming.register_plant("farming:beetroot", po_def)
+
+
 
