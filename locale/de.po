@@ -86,3 +86,15 @@ msgstr "Tomate"
 
 msgid "Hops"
 msgstr "Hopfen"
+
+msgid "Urtica"
+msgstr "Brennnessel"
+
+msgid "Hemp"
+msgstr "Hanf"
+
+msgid "Tobaco"
+msgstr "Tabak"
+
+msgid "Tea"
+msgstr "Tee"
