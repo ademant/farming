@@ -147,18 +147,18 @@ farming.register_infect=function(idef)
 		paramtype = "light",
 		walkable = false,
 		buildable_to = true,
+		on_dig = farming.plant_cured ,
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
 	}
-	for _,coln in ipairs({"plant_name","seed_name","harvest_name","place_param2","fertility","description","spawnon"}) do
+	for _,coln in ipairs({"plant_name","seed_name","step_name","harvest_name","place_param2","fertility","description","spawnon"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
-	if not infect_def.groups["ill"] then
-	  infect_def.groups["ill"] = 2
-	end
-	minetest.register_node(":" .. idef.harvest_name.."_infected", infect_def)
+	infect_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2,ill=2}
+	infect_def.groups[infect_def.plant_name] = -1
+	minetest.register_node(":" .. idef.plant_name.."_infected", infect_def)
 	print(dump(infect_def))
 	local abm_def = {
 		nodenames = {"group:"..idef.plant_name},
@@ -175,7 +175,7 @@ farming.register_infect=function(idef)
 				test_rate = test_rate * idef.infect.base_rate
 			end
 			if math.random(0,test_rate)<1 then
-				minetest.add_node(pos,{name=idef.harvest_name.."_infected"})
+				farming.plant_infect(pos)
 			end
 			end,
 		}
@@ -190,7 +190,7 @@ farming.register_infect=function(idef)
 			local infected_neighbours = #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:ill")
 			local test_rate = idef.infect.infect_rate * #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:"..idef.plant_name)
 			if math.random(0,test_rate)<1 then
-				minetest.add_node(pos,{name=idef.harvest_name.."_infected"})
+				farming.plant_infect(pos)
 			end
 			end,
 		}
@@ -225,6 +225,7 @@ farming.register_seed=function(sdef)
 	seed_def.tiles = {sdef.inventory_image}
 	seed_def.wield_image = {sdef.inventory_image}
 	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
+	seed_def.groups[sdef.plant_name] = 0
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
 	end
@@ -294,6 +295,9 @@ farming.register_steps = function(pname,sdef)
 			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
 			lbm_nodes[#lbm_nodes + 1] = sdef.step_name .. "_" .. i
 			ndef.on_timer = farming.step_on_timer
+			if sdef.infect then
+				ndef.on_punch = farming.plant_infect 
+			end
 		end
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
@@ -583,11 +587,49 @@ farming.register_tool = function(name, def)
 	})
 end
 
+farming.plant_infect = function(pos)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	local meta = minetest.get_meta(pos)
+	local infect_name=def.plant_name.."_infected"
+	if not minetest.registered_nodes[infect_name] then
+		return 
+	end
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:step",def.groups[def.plant_name])
+	local placenode = {name = infect_name}
+	if def.place_param2 then
+		placenode.param2 = def.place_param2
+	end
+	minetest.swap_node(pos, placenode)
+	meta:set_int("farming:step",def.groups[def.plant_name])
+	local placenode = {name = infect_name}
+end
+farming.plant_cured = function(pos)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+	local meta = minetest.get_meta(pos)
+	local cured_step=meta:get_int("farming:step")
+	print(cured_step)
+	local cured_name=def.step_name.."_"..cured_step
+	print(cured_name)
+	if not minetest.registered_nodes[cured_name] then
+		return 
+	end
+	local placenode = {name = cured_name}
+	if def.place_param2 then
+		placenode.param2 = def.place_param2
+	end
+	minetest.swap_node(pos, placenode)
+end
 
 farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
+	local meta = minetest.get_meta(pos)
 	-- grow
 	local pre_node = def.pre_step
 	local placenode = {name = pre_node}
@@ -604,6 +646,8 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	end
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:step",pre_def.groups[pre_def.plant_name])
 	if pre_def.next_step then
 		minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
 	end
@@ -642,6 +686,8 @@ farming.step_on_timer = function(pos, elapsed)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:step",def.groups[def.plant_name])
 	-- new timer needed?
 	if def.next_step then
 		local def_next=minetest.registered_nodes[def.next_step]
@@ -720,6 +766,8 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	-- add the node and remove 1 item from the itemstack
 	minetest.add_node(pt.above, {name = plantname, param2 = 1})
 	minetest.get_node_timer(pt.above):start(math.random(farming.wait_min, farming.wait_max))
+	local meta = minetest.get_meta(pt.above)
+	meta:set_int("farming:step",0)
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
@@ -754,6 +802,8 @@ farming.seed_on_timer = function(pos, elapsed)
 				placenode.param2 = def.place_param2
 			end
 			minetest.swap_node(pos, placenode)
+			local meta = minetest.get_meta(pos)
+			meta:set_int("farming:step",def.groups[def.plant_name])
 			if def.next_step then
 				local node_timer=math.random(def.min_grow_time or 100, def.max_grow_time or 200)
 				minetest.get_node_timer(pos):start(node_timer)
