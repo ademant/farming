@@ -53,8 +53,8 @@ minetest.register_lbm({
 minetest.register_abm({
 	nodenames = farming.change_soil,
 	neighbors = {"air"},
-	interval = 5+math.random(-1,1), -- little noise
-	chance = 1,
+	interval = 15+math.random(-1,1), -- little noise
+	chance = 2,
 	action = function(pos)
 		local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
 		local above = minetest.get_node(ptabove)
@@ -71,7 +71,7 @@ minetest.register_abm({
 		if #minetest.find_nodes_in_area(pos0,pos1,"group:farming") > 2 then
 			return
 		end
-		if math.random(0,10) < 1 then
+		if math.random(0,100) < 1 then
 			local node_temp=minetest.get_heat(pos)
 			local node_hum=minetest.get_humidity(pos)
 			local sc={}

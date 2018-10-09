@@ -13,7 +13,7 @@ local po_def={
 	place_param2 = 3,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 10,
-				spawn_max = 100,
+				spawn_max = 250,
 				spawnby = nil,
 				scale = 0.006, -- 0.006
 				spawn_num = -1},
@@ -29,9 +29,9 @@ local po_def={
 		intervall = 12,
 		change = 0.0001, --part of soil, which get plants
 		},
-	min_temp=10,
+	min_temp=20,
 	max_temp=50,
-	min_humidity=10,
+	min_humidity=30,
 	max_humidity=70,
 }
 farming.register_plant("farming:beetroot", po_def)

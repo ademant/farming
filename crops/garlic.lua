@@ -13,10 +13,14 @@ farming.register_plant("farming:garlic", {
 	place_param2 = 3,
 	spawnon = { spawnon = farming.change_soil or {"default:dirt_with_grass"},
 				spawn_min = 0,
-				spawn_max = 42,
+				spawn_max = 500,
 				spawnby = nil,
 				scale = 0.006, -- 0.006
-				spawn_num = -1}
+				spawn_num = -1},
+	min_temp=25,
+	max_temp=50,
+	min_humidity=30,
+	max_humidity=70,
 })
 
 
