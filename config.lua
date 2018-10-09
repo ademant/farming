@@ -8,7 +8,7 @@
 farming.crops = {"wheat","strawberry","potato","barley","blackberry","corn","coffee","raspberry","cocoa","spelt","mustard","cotton","tomato"}
 
 for i,crop in ipairs(farming.crops) do
-  print(crop.." - "..farming.config:get_string(crop))
+--  print(crop.." - "..farming.config:get_string(crop))
   if farming.config:get_string(crop) == "" then
     farming.config:set_int(crop,1)
   end

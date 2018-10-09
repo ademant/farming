@@ -1,0 +1,11 @@
+#name,enabled,next_plant,rarety,steps,harvest_max,eat_hp,to_culture,has_harvest,on_soil,punchable,infectable,snappy,temperature_min,temperature_max,humidity_min,humidity_max,elevation_min,elevation_max,light_min,light_max,infect_rate_base,infect_rate_monoculture,spread_rate
+default,1,,10,8,2,1,,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+barley,1,,10,7,2,1,,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+coffee,1,,20,5,2,1,,,,1,,3,25,50,10,50,50,1000,11,14,1e-5,1e-3,1e-3
+cocoa,1,,20,5,2,1,,,,1,,3,25,50,10,50,50,1000,11,14,1e-5,1e-3,1e-3
+corn,1,,10,8,2,1,,,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+culturewheat,1,,100,4,2,,11,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+mustard,1,,10,5,2,1,,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+potato,1,,10,4,2,1,,,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+spelt,1,,10,7,2,1,,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3
+wheat,1,culturewheat,10,8,2,1,,1,1,,1,3,15,50,10,50,0,100,11,14,1e-5,1e-3,1e-3

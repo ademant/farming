@@ -159,7 +159,6 @@ farming.register_infect=function(idef)
 	infect_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2,ill=2}
 	infect_def.groups[infect_def.plant_name] = -1
 	minetest.register_node(":" .. idef.plant_name.."_infected", infect_def)
-	print(dump(infect_def))
 	local abm_def = {
 		nodenames = {"group:"..idef.plant_name},
 		intervall = idef.infect.intervall + math.random(-1,1), -- little noise
@@ -194,7 +193,6 @@ farming.register_infect=function(idef)
 			end
 			end,
 		}
-	print(dump(abm_def))
 	minetest.register_abm(abm_def)
 end
 
@@ -612,9 +610,9 @@ farming.plant_cured = function(pos)
 	local def = minetest.registered_nodes[name]
 	local meta = minetest.get_meta(pos)
 	local cured_step=meta:get_int("farming:step")
-	print(cured_step)
+--	print(cured_step)
 	local cured_name=def.step_name.."_"..cured_step
-	print(cured_name)
+--	print(cured_name)
 	if not minetest.registered_nodes[cured_name] then
 		return 
 	end

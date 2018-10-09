@@ -20,7 +20,7 @@ dofile(farming.path .. "/nodes.lua")
 dofile(farming.path .. "/tools.lua")
 dofile(farming.path .. "/utensils.lua")
 dofile(farming.path .. "/craft.lua")
-
+dofile(farming.path .. "/crops.lua")
 
 for i,crop in ipairs(farming.crops) do
   if farming.config:get_int(crop) == 1 then
