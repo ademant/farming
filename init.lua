@@ -22,13 +22,8 @@ dofile(farming.path .. "/utensils.lua")
 dofile(farming.path .. "/craft.lua")
 dofile(farming.path .. "/crops.lua")
 
-for i,crop in ipairs(farming.crops) do
-  if farming.config:get_int(crop) == 1 then
-    dofile(farming.path.."/crops/"..crop..".lua")
-  end
-end
---print("dump registered plants")
---print(dump(farming.registered_plants))
+print("dump registered plants")
+print(dump(farming.registered_plants))
 
 --[[
 minetest.register_abm({
