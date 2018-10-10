@@ -21,7 +21,7 @@ minetest.register_craft({
 minetest.register_craftitem(modname..":flail", {
 	description = S("Threshing Flail"),
 	inventory_image = "farming_tool_flail.png",
-	groups = {food_flail = 1, flammable = 2},
+	groups = {farming_flail = 1, flammable = 2},
 })
 
 minetest.register_craft({
@@ -30,6 +30,21 @@ minetest.register_craft({
 		{"", "", "group:stick"},
 		{"", "group:stick", "group:stick"},
 		{"group:stick", "", ""},
+	}
+})
+-- Trellis
+minetest.register_craftitem(modname..":trellis", {
+	description = S("Trellis"),
+	inventory_image = "farming_tool_trellis.png",
+	groups = {farming_trellis = 1, flammable = 2},
+})
+
+minetest.register_craft({
+	output = modname..":trellis",
+	recipe = {
+		{"", "", ""},
+		{ "group:stick", "","group:stick"},
+		{ "","group:stick", ""},
 	}
 })
 

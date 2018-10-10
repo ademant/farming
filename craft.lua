@@ -1,8 +1,20 @@
 local S = farming.intllib
 local modname=minetest.get_current_modname()
 
+-- generate "seed" out of harvest and trellis
+farming.trellis_seed = function(grain_name)
+	local mname = grain_name:split(":")[1]
+	local pname = grain_name:split(":")[2]
+	minetest.register_craft({
+	type = "shapeless",
+	output = mname..":seed_"..pname.." 1",
+	recipe = {
+		modname..":trellis",grain_name
+	},
+  })
+end
 -- define seed crafting
-local function seed_craft(grain_name)
+function farming.seed_craft(grain_name)
   local mname = grain_name:split(":")[1]
   local pname = grain_name:split(":")[2]
 
@@ -14,16 +26,6 @@ local function seed_craft(grain_name)
 	},
 	replacements = {{"group:food_flail", modname..":flail"},
 				{"group:food_wheat","farming:straw"}},
-  })
-  minetest.register_craft({
-	type = "shapeless",
-	output = mname..":seed_"..pname.." 1",
-	recipe = {
-		grain_name, modname..":flail"
-	},
-	replacements = {{"group:food_flail", modname..":flail"},
-				{"group:food_wheat","farming:straw"}},
-	additional_wear=0.5,
   })
   minetest.register_craft({
 	type = "shapeless",
@@ -58,9 +60,6 @@ minetest.register_craft({
 	replacements = {{"group:food_mortar_pestle", modname..":mortar_pestle"}},
 })
 
-seed_craft("farming:wheat")
-seed_craft("farming:culturewheat")
-seed_craft("farming:barley")
 
 roast_seed("farming:seed_barley","farming:seed_barley_roasted")
 roast_seed("farming:seed_wheat","farming_grain:seed_wheat_roasted")
@@ -104,3 +103,14 @@ minetest.register_craftitem("farming:flour", {
 	groups = {food_flour = 1, flammable = 1},
 })
 
+minetest.register_craftitem(modname..":urtica_water",{
+	description = "Urtica Water",
+	inventory_image = "farming_tool_glass_urtica.png",
+	groups = {desinfect = 1}
+})
+minetest.register_craft({
+	output=modname..":urtica_water 10",
+	type = "shapeless",
+	recipe {"vessels:glass_bottle 10","bucket_water",modname..":urtica"}
+	replacements = {{"bucket_water", "bucket_empty"}}
+})

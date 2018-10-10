@@ -2,12 +2,18 @@ local S = farming.intllib
 -- function to check definition
 -- and set to defaults values
 local register_plant_check_def = function(def)
-	local default_def={temperature_min=0,temperature_max=100,humidity_min=0,humidity_max=100,
-		elevation_min=0,elevation_max=31000,light_min=10,light_max=default.LIGHT_MAX,rarety=10,harvest_max=2,
-		place_param2 = 3,grow_time_mean=120,mod_name=minetest.get_current_modname()}
+	local default_def={harvest_max=2,place_param2 = 3,mod_name=minetest.get_current_modname()}
 	for dn,dv in pairs(default_def) do
 		if def[dn] == nil then
 			def[dn] = dv
+		end
+	end
+	local default_env={temperature_min=0,temperature_max=100,humidity_min=0,humidity_max=100,
+		elevation_min=0,elevation_max=31000,light_min=10,light_max=default.LIGHT_MAX,rarety=10,
+		grow_time_mean=120}
+	for dn,dv in pairs(default_env) do
+		if def.environment[dn] == nil then
+			def.environment[dn] = dv
 		end
 	end
 	if not def.description then
@@ -35,8 +41,8 @@ local register_plant_check_def = function(def)
 	else
 		def.infect = nil
 	end
-	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
-	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
+	def.grow_time_min=math.floor(def.environment.grow_time_mean*0.75)
+	def.grow_time_max=math.floor(def.environment.grow_time_mean*1.2)
   return def
 end
 
@@ -72,15 +78,23 @@ farming.register_plant = function(def)
 --		farming.register_mapgen(def)
 --	end
 	if (def.spread) and (not def.groups["to_culture"]) then
+		edef=def.environment
 		local spread_def={name=def.step_name.."_1",
-				temp_min=def.temperature_min,temp_max=def.temperature_max,
-				hum_min=def.humidity_min,hum_max=def.humidity_max,
-				y_min=def.elevation_min,y_max=def.elevation_max,base_rate = def.spread.base_rate}
+				temp_min=edef.temperature_min,temp_max=edef.temperature_max,
+				hum_min=edef.humidity_min,hum_max=edef.humidity_max,
+				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread.base_rate}
 		table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
     if def.groups["infectable"] then
       farming.register_infect(def)
+    end
+    
+    if def.groups["use_flail"] then
+		farming.seed_craft(def.harvest_name)
+    end
+    if def.groups["use_trellis"] then
+		farming.trellis_seed(def.harvest_name)
     end
 end
 
@@ -138,6 +152,12 @@ farming.register_harvest=function(hdef)
 	for _,coln in ipairs({"name","seed_name","harvest_name"}) do
 	  harvest_def[coln] = hdef[coln]
 	end
+	if hdef.groups["use_flail"] then
+		harvest_def.groups["use_flail"]=hdef.groups["use_flail"]
+	end
+	if hdef.groups["use_trellis"] then
+		harvest_def.groups["use_trellis"]=hdef.groups["use_trellis"]
+	end
 
 	minetest.register_craftitem(":" .. hdef.harvest_name, harvest_def)
 end
@@ -190,8 +210,7 @@ farming.register_seed=function(sdef)
 		on_timer = farming.seed_on_timer,
 	}
 	for i,colu in ipairs({"inventory_image","place_param2","fertility","description","name","seed_name","harvest_name",
-		"light_min","light_max","temperature_min","temperature_max","humidity_min","humidity_max","elevation_min","elevation_max",
-		"grow_time_min","grow_time_max"}) do
+		"environment"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
@@ -223,6 +242,14 @@ farming.register_steps = function(sdef)
     if sdef.groups["punchable"] then
       is_punchable = true
     end
+    local seed_extractable = false
+    if sdef.groups["seed_extractable"] then
+      seed_extractable = true
+    end
+    local use_trellis = false
+    if sdef.groups["use_trellis"] then
+      use_trellis = true
+    end
     -- check if cultured plant exist
     local has_next_plant = false
     if sdef.next_plant then
@@ -241,8 +268,7 @@ farming.register_steps = function(sdef)
 		sounds = default.node_sound_leaves_defaults(),
 	}
 	-- copy some plant definition into definition of this steps
-	for _,colu in ipairs({"paramtype2","place_param2","seed_name","name","harvest_name","light_min","light_max",
-		"temperature_min","temperature_max","humidity_min","humidity_max"}) do
+	for _,colu in ipairs({"paramtype2","place_param2","seed_name","name","harvest_name","environment"}) do
 	  if sdef[colu] then
 	    node_def[colu] = sdef[colu]
 	  end
@@ -282,7 +308,9 @@ farming.register_steps = function(sdef)
 			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
 		end
 		ndef.drop={items={{items={drop_item}}}}
-
+		if use_trellis then
+			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
+		end
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
 			base_rarity =  sdef.steps - i + 1
@@ -555,7 +583,7 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",pre_def.groups[pre_def.plant_name])
 	if pre_def.next_step then
-		minetest.get_node_timer(pos):start(math.random(pre_def.min_grow_time or 100, pre_def.max_grow_time or 200))
+		minetest.get_node_timer(pos):start(math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200))
 	end
 	return 
 end
@@ -669,16 +697,17 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			if not is_correct_node then
 				return itemstack
 			end
+			local edef=pdef.environment
 			-- check for correct temperature
-			if pt.under.y < pdef.elevation_min or pt.under.y > pdef.elevation_max then
-				minetest.chat_send_player(player_name,"Elevation must be between "..pdef.elevation_min.." and "..pdef.elevation_max)
+			if pt.under.y < edef.elevation_min or pt.under.y > edef.elevation_max then
+				minetest.chat_send_player(player_name,"Elevation must be between "..edef.elevation_min.." and "..edef.elevation_max)
 				return
 			end
-			if minetest.get_heat(pt.under) < pdef.temperature_min or minetest.get_heat(pt.under) > pdef.temperature_max then
+			if minetest.get_heat(pt.under) < edef.temperature_min or minetest.get_heat(pt.under) > edef.temperature_max then
 				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
 				return
 			end
-			if minetest.get_humidity(pt.under) < pdef.humidity_min or minetest.get_humidity(pt.under) > pdef.humidity_max then
+			if minetest.get_humidity(pt.under) < edef.humidity_min or minetest.get_humidity(pt.under) > edef.humidity_max then
 				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
 				return
 			end
