@@ -111,6 +111,6 @@ minetest.register_craftitem(modname..":urtica_water",{
 minetest.register_craft({
 	output=modname..":urtica_water 10",
 	type = "shapeless",
-	recipe {"vessels:glass_bottle 10","bucket_water",modname..":urtica"}
+	recipe={"vessels:glass_bottle 10","bucket_water",modname..":urtica"},
 	replacements = {{"bucket_water", "bucket_empty"}}
 })
