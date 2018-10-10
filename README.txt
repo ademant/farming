@@ -37,8 +37,18 @@ Created by Gambit (CC BY 3.0):
 Created by Napiophelios (CC BY-SA 3.0):
   farming_cotton.png
 
+Created by Ten1Plus (CC BY-SA 3.0):
+  farming_hemp.png
+  farming_beetroot
+
 Created by ademant (CC BY 3.0):
   farming_tool_flail.png
   farming_tool_coffee_grinder.png (based on art by cactus_cowboy on openclipart.org)
   farming_tool_scythe
   farming_tool_billhook
+  farming_sugerbeet (based on farming_beetroot)
+  farming_blackberry (based on farming_blueberry)
+  farming_strawberry (based on farming_raspberry)
+  farming_mustard
+  farming_spelt (based on farming_barley)
+  farming_hop
