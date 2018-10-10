@@ -1,4 +1,88 @@
 local S = farming.intllib
+-- function to check definition
+-- and set to defaults values
+local register_plant_check_def = function(def)
+	local default_def={temperature_min=0,temperature_max=100,humidity_min=0,humidity_max=100,
+		elevation_min=0,elevation_max=31000,light_min=10,light_max=default.LIGHT_MAX,rarety=10,harvest_max=2,
+		place_param2 = 3,grow_time_mean=120,mod_name=minetest.get_current_modname()}
+	for dn,dv in pairs(default_def) do
+		if def[dn] == nil then
+			def[dn] = dv
+		end
+	end
+	if not def.description then
+		def.description = "Seed"
+	end
+	if not def.fertility then
+		def.fertility = {"grassland"}
+	end
+	if not def.spread then
+		def.groups["to_culture"] = 1
+	else
+		def.spread.spreadon=def.spread.spreadon or {"default:dirt_with_grass"}
+		def.spread.base_rate=def.spread.base_rate or 10
+	end
+	if not def.groups["infectable"] then
+		if def.infect == nil then
+			def.infect = {
+				base_rate = 1e-5,
+				mono_rate = 1e-3,
+				}
+		else
+			def.infect.base_rate=def.infect.base_rate or 1e-5
+			def.infect.mono_rate=def.infect.mono_rate or def.infect.base_rate*100
+		end
+	else
+		def.infect = nil
+	end
+	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
+	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
+  return def
+end
+
+-- Register plants
+farming.register_plant = function(def)
+	-- Check def table
+	if not def.steps then
+		return nil
+	end
+	-- check definition
+    def = register_plant_check_def(def)
+    
+	-- local definitions
+	def.harvest_name=def.mod_name..":"..def.name
+	def.step_name=def.mod_name..":"..def.name
+	def.seed_name=def.mod_name..":seed_"..def.name
+
+    -- if plant has harvest then registering
+    if def.groups["has_harvest"] ~= nil then
+      def.harvest_png=def.mod_name.."_"..def.name..".png"
+      farming.register_harvest(def)
+    else
+      def.harvest_name=def.seed_name
+    end
+    
+   	farming.registered_plants[def.name] = def
+    
+    farming.register_seed(def)
+
+	farming.register_steps(def)
+	
+--	if (def.spawnon) then
+--		farming.register_mapgen(def)
+--	end
+	if (def.spread) and (not def.groups["to_culture"]) then
+		local spread_def={name=def.step_name.."_1",
+				temp_min=def.temperature_min,temp_max=def.temperature_max,
+				hum_min=def.humidity_min,hum_max=def.humidity_max,
+				y_min=def.elevation_min,y_max=def.elevation_max,base_rate = def.spread.base_rate}
+		table.insert(farming.spreading_crops,1,spread_def)
+	end
+	
+    if def.groups["infectable"] then
+      farming.register_infect(def)
+    end
+end
 
 -- helping function for getting biomes
 farming.get_biomes = function(biom_def)
@@ -44,79 +128,6 @@ farming.get_biomes = function(biom_def)
 	return possible_biomes
 end
 
--- function to check definition
--- and set to defaults values
-local register_plant_check_def = function(def)
-	if not def.description then
-		def.description = "Seed"
-	end
-	if not def.inventory_image then
-		def.inventory_image = "unknown_item.png"
-	end
-	-- minimum of light needed for growing
-	if not def.minlight then
-		def.minlight = 1
-	end
-	if not def.maxlight then
-		def.maxlight = 14
-	end
-	if not def.fertility then
-		def.fertility = {}
-	end
-	if not def.max_harvest then
-	  def.max_harvest = 2
-	end
-	if not def.mean_grow_time then
-	  def.mean_grow_time=math.random(farming.wait_min,farming.wait_max)
-	end
-	if not def.range_grow_time then
-	  def.range_grow_time=math.random(0,farming.wait_max-farming.wait_min)
-	end
-	if def.range_grow_time > def.mean_grow_time then
-	  def.range_grow_time = math.floor(def.mean_grow_time / 2)
-	end
-	def.min_grow_time=math.floor(def.mean_grow_time-def.range_grow_time)
-	def.max_grow_time=math.floor(def.mean_grow_time+def.range_grow_time)
---	if not def.eat_hp then
---	  def.eat_hp = 1
---	end
-	local spawn = true
-    if (not def.spawnon) or (def.groups["no_spawn"]) then
-      def.spawnon = nil
-      def.groups["no_spawn"] = 1
-      spawn = false
-    end
-	if def.spawnon and spawn then
-		def.spawnon.spawnon=def.spawnon.spawnon or {"default:dirt_with_grass"}
-		def.spawnon.spawn_min = def.spawnon.spawn_min or 0
-		def.spawnon.spawn_max = def.spawnon.spawn_max or 42
-		def.spawnon.spawnby = def.spawnon.spawn_by or nil
-		def.spawnon.scale = def.spawnon.scale or farming.rarety
-		def.spawnon.offset = def.spawnon.offset or 0.02
-		def.spawnon.spawn_num = def.spawnon.spawn_num or -1
-	end
-	if def.spread then
-	  def.spread.spreadon = def.spread.spreadon or {"default:dirt_with_grass"}
-	  def.spread.base_rate = def.spread.base_rate or 10
-	  def.spread.spread = def.spread.spread or 5
-	  def.spread.intervall = def.spread.intervall or 120
-	  def.spread.change = def.spread.change or 0.00001
-	  def.spread.inv_change = math.ceil(1/def.spread.change)
-	end
-	local infect = false
-	if (def.infect) or (def.groups["infectable"]) then
-		def.infect = {}
-		def.groups["infectable"] = 1
-	end
-	if def.infect then
-	  def.infect.base_rate = def.infect.base_rate or 10
-	  def.infect.mono_rate = def.infect.mono_rate or 10
-	  def.infect.infect_rate = def.infect.infect_rate or 10
-	  def.infect.intervall = def.infect.intervall or 120
-	end
-  return def
-end
-
 
 farming.register_harvest=function(hdef)
 	local harvest_def={
@@ -124,24 +135,19 @@ farming.register_harvest=function(hdef)
 		inventory_image = hdef.harvest_png,
 		groups = hdef.groups or {flammable = 2},
 	}
-	for _,coln in ipairs({"plant_name","seed_name","harvest_name"}) do
+	for _,coln in ipairs({"name","seed_name","harvest_name"}) do
 	  harvest_def[coln] = hdef[coln]
 	end
 
-	if not harvest_def.groups["harvest"] then
-	  harvest_def.groups["harvest"] = 1
-	end
-	--print(dump(harvest_def))
 	minetest.register_craftitem(":" .. hdef.harvest_name, harvest_def)
 end
 
 farming.register_infect=function(idef)
 	local infect_def={
 		description = S(idef.description:gsub("^%l", string.upper)),
-		inventory_image = idef.mod_name.."_"..idef.plant_name.."_ill.png",
-		groups = idef.groups or {flammable = 2,ill=2},
-		tiles = {idef.mod_name.."_"..idef.plant_name.."_ill.png"},
-		wield_image = {idef.mod_name.."_"..idef.plant_name.."_ill.png"},
+		inventory_image = idef.mod_name.."_"..idef.name.."_ill.png",
+		tiles = {idef.mod_name.."_"..idef.name.."_ill.png"},
+		wield_image = {idef.mod_name.."_"..idef.name.."_ill.png"},
 		drawtype = "plantlike",
 		waving = 1,
 		paramtype = "light",
@@ -152,48 +158,14 @@ farming.register_infect=function(idef)
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
 	}
-	for _,coln in ipairs({"plant_name","seed_name","step_name","harvest_name","place_param2","fertility","description","spawnon"}) do
+	for _,coln in ipairs({"name","seed_name","step_name","harvest_name","place_param2","fertility","description"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
-	infect_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2,ill=2}
-	infect_def.groups[infect_def.plant_name] = -1
-	minetest.register_node(":" .. idef.plant_name.."_infected", infect_def)
-	local abm_def = {
-		nodenames = {"group:"..idef.plant_name},
-		intervall = idef.infect.intervall + math.random(-1,1), -- little noise
-		change = idef.infect.base_rate,
-		action = function(pos)
-			local base_rate = minetest.get_node_light(pos,0.5) -- get light at midday
-			local infected_neighbours = #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:ill")
-			local mono_rate = #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:"..idef.plant_name)
-			local test_rate = idef.infect.base_rate / infected_neighbours
-			if mono_rate > 2 then
-				test_rate = test_rate * idef.infect.mono_rate
-			else
-				test_rate = test_rate * idef.infect.base_rate
-			end
-			if math.random(0,test_rate)<1 then
-				farming.plant_infect(pos)
-			end
-			end,
-		}
-	minetest.register_abm(abm_def)
-	local abm_def = {
-		nodenames = {"group:"..idef.plant_name},
-		neighbors = {"group:ill"},
-		intervall = idef.infect.intervall + math.random(-1,1),
-		change = 1,
-		action = function(pos)
-			local base_rate = minetest.get_node_light(pos,0.5) -- get light at midday
-			local infected_neighbours = #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:ill")
-			local test_rate = idef.infect.infect_rate * #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:"..idef.plant_name)
-			if math.random(0,test_rate)<1 then
-				farming.plant_infect(pos)
-			end
-			end,
-		}
-	minetest.register_abm(abm_def)
+	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,infect=2}
+	infect_def.groups[infect_def.name] = -1
+	infect_def.groups["step"] = -1
+	minetest.register_node(":" .. idef.name.."_infected", infect_def)
 end
 
 
@@ -217,13 +189,17 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"inventory_image","minlight","maxlight","place_param2","fertility","description","spawnon","plant_name","seed_name","harvest_name"}) do
+	for i,colu in ipairs({"inventory_image","place_param2","fertility","description","name","seed_name","harvest_name",
+		"light_min","light_max","temperature_min","temperature_max","humidity_min","humidity_max","elevation_min","elevation_max",
+		"grow_time_min","grow_time_max"}) do
 	  seed_def[colu] = sdef[colu]
 	end
-	seed_def.tiles = {sdef.inventory_image}
-	seed_def.wield_image = {sdef.inventory_image}
+	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
+	seed_def.tiles = {seed_png}
+	seed_def.wield_image = {seed_png}
 	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
-	seed_def.groups[sdef.plant_name] = 0
+	seed_def.groups[sdef.name] = 0
+	seed_def.groups["step"] = 0
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
 	end
@@ -236,11 +212,11 @@ farming.register_seed=function(sdef)
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 end
 
-farming.register_steps = function(pname,sdef)
+farming.register_steps = function(sdef)
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
-    local has_harvest = true
-    if sdef.groups["no_harvest"] then 
-      has_harvest = false
+    local has_harvest = false
+    if sdef.groups["has_harvest"] then 
+      has_harvest = true
     end
     -- check if plant give seeds if punched. then drop table is quite simple
     local is_punchable = false
@@ -265,7 +241,8 @@ farming.register_steps = function(pname,sdef)
 		sounds = default.node_sound_leaves_defaults(),
 	}
 	-- copy some plant definition into definition of this steps
-	for _,colu in ipairs({"paramtype2","place_param2","minlight","maxlight","seed_name","plant_name","harvest_name"}) do
+	for _,colu in ipairs({"paramtype2","place_param2","seed_name","name","harvest_name","light_min","light_max",
+		"temperature_min","temperature_max","humidity_min","humidity_max"}) do
 	  if sdef[colu] then
 	    node_def[colu] = sdef[colu]
 	  end
@@ -279,23 +256,26 @@ farming.register_steps = function(pname,sdef)
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
 	    local ndef={}
-	    for _,colu in ipairs({"minlight","maxlight","sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2",
-				"walkable","buildable_to","seed_name","plant_name","harvest_name"}) do
+	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2",
+				"walkable","buildable_to","seed_name","name","harvest_name","light_min","light_max",
+		"temperature_min","temperature_max","humidity_min","humidity_max"}) do
 			ndef[colu]=node_def[colu]
 		end
-		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1, farming = 1}
-		if sdef["snappy"] then
-		  ndef.groups["snappy"] = sdef["snappy"]
+		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
+		for _,colu in ipairs({"infectable","snappy","seed_extractable"}) do
+			if sdef.groups[colu] then
+			  ndef.groups[colu] = sdef.groups[colu]
+			end
 		end
-		ndef.groups[pname] = i
-		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
+		ndef.groups[sdef.name] = i
+		ndef.groups["step"] = i
+		ndef.tiles={sdef.mod_name.."_"..sdef.name.."_"..i..".png"}
 		if i < sdef.steps then
 			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
-			lbm_nodes[#lbm_nodes + 1] = sdef.step_name .. "_" .. i
 			ndef.on_timer = farming.step_on_timer
-			if sdef.infect then
-				ndef.on_punch = farming.plant_infect 
-			end
+--			if sdef.groups["infectable"] ~= nil then
+--				ndef.on_punch = farming.plant_infect 
+--			end
 		end
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
@@ -309,7 +289,7 @@ farming.register_steps = function(pname,sdef)
 		end
 
 		-- with higher grow levels you harvest more
-		local step_harvest = math.floor(i*sdef.max_harvest/sdef.steps + 0.05)
+		local step_harvest = math.floor(i*sdef.harvest_max/sdef.steps + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
 			table.insert(ndef.drop.items,1,{items={drop_item},rarity=base_rarity*h})
@@ -321,7 +301,7 @@ farming.register_steps = function(pname,sdef)
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == sdef.steps and sdef.next_plant ~= nil) then
 		  sdef.next_plant_rarity = sdef.next_plant_rarity or base_rarity*2
-		  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity})
+		  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity or 10})
 		end
 		if i == sdef.steps and is_punchable then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
@@ -330,7 +310,7 @@ farming.register_steps = function(pname,sdef)
 --		print(dump(ndef))
 		minetest.register_node(":" .. sdef.step_name .. "_" .. i, ndef)
 	end
-	farming.register_lbm(lbm_nodes,sdef)
+--	farming.register_lbm(lbm_nodes,sdef)
 end
 
 farming.register_lbm = function(lbm_nodes,def)
@@ -447,77 +427,6 @@ farming.register_mapgen = function(mdef)
 	end
 end
 
--- Register plants
-farming.register_plant = function(name, def)
-	-- Check def table
-	if not def.steps then
-		return nil
-	end
-	-- check definition
-    def = register_plant_check_def(def)
-    
-	-- local definitions
-	def.mod_name = name:split(":")[1]
-	def.plant_name = name:split(":")[2]
-	def.harvest_name=def.mod_name..":"..def.plant_name
-	def.step_name=def.mod_name..":"..def.plant_name
-	def.seed_name=def.mod_name..":seed_"..def.plant_name
-
-	-- check if plant gives harvest, where seed can be extractet or gives directly seed
-    local has_harvest = true
-    if def.groups["no_harvest"] then 
-      has_harvest = false
-    end
-    -- check if plant give seeds if punched. then drop table is quite simple
-    local is_punchable = false
-    if def.groups["punchable"] then
-      is_punchable = true
-    end
-    -- check if plant can get ill
-    local is_infectable = false
-    if def.groups["infectable"] then
-      is_infectable = true
-    end
-    -- check if cultured plant exist
-    local has_next_plant = false
-    if def.next_plant then
-      has_next_plant = true
-    end
-    local spawns = true
-    
-    -- if plant has harvest then registering
-    if has_harvest then
-      def.harvest_png=def.mod_name.."_"..def.plant_name..".png"
-      farming.register_harvest(def)
-    else
-      def.harvest_name=def.seed_name
-    end
-    
-   	farming.registered_plants[def.plant_name] = def
-    
-    farming.register_seed(def)
-
-	farming.register_steps(def.plant_name,def)
-	
---	if (def.spawnon) then
---		farming.register_mapgen(def)
---	end
-	if (def.spread) and (not def.groups["no_spawn"]) then
-		local spread_def={name=def.step_name.."_1",
-				temp_min=def.min_temp,temp_max=def.max_temp,
-				hum_min=def.min_humidity,hum_max=def.max_humidity,
-				y_min=0,y_max=31000,base_rate = def.spread.base_rate}
-		if (def.spawnon) then
-			spread_def.y_min=def.spawnon.spawn_min
-			spread_def.y_max=def.spawnon.spawn_max
-		end
-		table.insert(farming.spreading_crops,1,spread_def)
-	end
-	
-    if is_infectable then
-      farming.register_infect(def)
-    end
-end
 
 farming.register_billhook = function(name,def)
   if not def.groups["billhook"] then
@@ -589,20 +498,19 @@ farming.plant_infect = function(pos)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
-	local meta = minetest.get_meta(pos)
-	local infect_name=def.plant_name.."_infected"
+	local infect_name=def.plant.."_infected"
 	if not minetest.registered_nodes[infect_name] then
 		return 
 	end
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups[def.plant_name])
+	meta:set_int("farming:step",def.groups["step"])
 	local placenode = {name = infect_name}
 	if def.place_param2 then
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
-	meta:set_int("farming:step",def.groups[def.plant_name])
-	local placenode = {name = infect_name}
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:step",def.groups["step"])
 end
 farming.plant_cured = function(pos)
 	local node = minetest.get_node(pos)
@@ -674,8 +582,8 @@ farming.step_on_timer = function(pos, elapsed)
 	if not def.next_step then
 		return
 	end
-	if not light or light < def.minlight or light > def.maxlight then
-		minetest.get_node_timer(pos):start(math.random(farming.wait_min, farming.wait_max))
+	if not light or light < def.light_min or light > def.light_max then
+		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
 		return
 	end
 	-- grow
@@ -685,11 +593,18 @@ farming.step_on_timer = function(pos, elapsed)
 	end
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups[def.plant_name])
+	meta:set_int("farming:step",def.groups["step"])
 	-- new timer needed?
 	if def.next_step then
 		local def_next=minetest.registered_nodes[def.next_step]
-		minetest.get_node_timer(pos):start(math.random(def_next.min_grow_time or 100, def_next.max_grow_time or 200))
+		-- using light at midday to increase or decrease growing time
+		local local_light_max = minetest.get_node_light(pos,0.5)
+		local wait_factor = math.max(0.75,def_next.light_min/local_light_max)
+		local wait_min = math.ceil(def_next.grow_time_min * wait_factor)
+		local wait_max = math.ceil(def_next.grow_time_max * wait_factor)
+		if wait_max <= wait_min then wait_max = 2*wait_min end
+		local node_timer=math.random(wait_min, wait_max)
+		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
 	end
 	return
 end
@@ -740,30 +655,47 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	end
 
 	-- check if pointing at soil and seed needs soil
-	if (minetest.get_item_group(under.name, "soil") < 2) and (minetest.get_item_group(plantname,"on_soil") >= 1) then
-		return itemstack
-	end
-	-- if not neet soil, check for other restrictions
-	if (minetest.get_item_group(plantname,"on_soil")<1) then
-	  --check for correct height as given in mapgen options
-	  if (pt.under.y < pdef.spawnon.spawn_min or pt.under.y > pdef.spawnon.spawn_max) then
-  	    return itemstack
-	  end
-	  -- check if node is in spawning list
-	  local is_correct_node = false
-	  for _,spawnon in ipairs(pdef.spawnon.spawnon) do
-	    if under.name == spawnon then
-	      is_correct_node = true
-	    end
-	  end
-	  if not is_correct_node then
-	    return itemstack
-	  end
+	if minetest.get_item_group(under.name,"soil") < 2 then
+		if minetest.get_item_group(plantname,"on_soil") >= 1 then
+			return
+		else
+			-- check if node is correct one
+			local is_correct_node = false
+			for _,spawnon in ipairs(pdef.spawnon) do
+				if under.name == spawnon then
+					is_correct_node = true
+				end
+			end
+			if not is_correct_node then
+				return itemstack
+			end
+			-- check for correct temperature
+			if pt.under.y < pdef.elevation_min or pt.under.y > pdef.elevation_max then
+				minetest.chat_send_player(player_name,"Elevation must be between "..pdef.elevation_min.." and "..pdef.elevation_max)
+				return
+			end
+			if minetest.get_heat(pt.under) < pdef.temperature_min or minetest.get_heat(pt.under) > pdef.temperature_max then
+				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
+				return
+			end
+			if minetest.get_humidity(pt.under) < pdef.humidity_min or minetest.get_humidity(pt.under) > pdef.humidity_max then
+				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
+				return
+			end
+		end
 	end
 
 	-- add the node and remove 1 item from the itemstack
 	minetest.add_node(pt.above, {name = plantname, param2 = 1})
-	minetest.get_node_timer(pt.above):start(math.random(farming.wait_min, farming.wait_max))
+	local wait_min=farming.wait_min or 120
+	local wait_max=farming.wait_max or 240
+	if pdef.grow_time_min then
+		wait_min=pdef.grow_time_min
+	end
+	if pdef.grow_time_max then
+		wait_max=pdef.grow_time_max
+	end
+	minetest.get_node_timer(pt.above):start(math.random(wait_min, wait_max))
 	local meta = minetest.get_meta(pt.above)
 	meta:set_int("farming:step",0)
 	if not (creative and creative.is_enabled_for
@@ -801,9 +733,15 @@ farming.seed_on_timer = function(pos, elapsed)
 			end
 			minetest.swap_node(pos, placenode)
 			local meta = minetest.get_meta(pos)
-			meta:set_int("farming:step",def.groups[def.plant_name])
+			meta:set_int("farming:step",def.groups[def.name])
 			if def.next_step then
-				local node_timer=math.random(def.min_grow_time or 100, def.max_grow_time or 200)
+				-- using light at midday to increase or decrease growing time
+				local local_light_max = minetest.get_node_light(pos,0.5)
+				local wait_factor = math.max(0.75,def.light_min/local_light_max)
+				local wait_min = math.ceil(def.grow_time_min * wait_factor)
+				local wait_max = math.ceil(def.grow_time_max * wait_factor)
+				if wait_max <= wait_min then wait_max = 2*wait_min end
+				local node_timer=math.random(wait_min, wait_max)
 				minetest.get_node_timer(pos):start(node_timer)
 				return
 			end
