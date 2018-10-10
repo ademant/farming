@@ -22,8 +22,8 @@ dofile(farming.path .. "/utensils.lua")
 dofile(farming.path .. "/craft.lua")
 dofile(farming.path .. "/crops.lua")
 
-print("dump registered plants")
-print(dump(farming.registered_plants))
+--print("dump registered plants")
+--print(dump(farming.registered_plants))
 
 --[[
 minetest.register_abm({
@@ -74,7 +74,7 @@ minetest.register_abm({
 			  if line.temp_min<=node_temp and line.temp_max>=node_temp then
 				if line.hum_min<=node_hum and line.hum_max>=node_hum then
 					if line.y_min<=pos.y and line.y_max>=pos.y then
-						for k=1,line.base_rate do
+						for k=1,math.floor(math.log(line.base_rate)*(-2)) do
 							table.insert(sc,1,line.name)
 						end
 					end
@@ -89,6 +89,5 @@ minetest.register_abm({
 		end
 	end,
 })
-
-
+print(dump(farming.spreading_crops))
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")

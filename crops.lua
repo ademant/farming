@@ -8,7 +8,10 @@ local crop_definition = {}
 local file = io.open(farming.path .. "/crops.csv", "r")
 for line in file:lines() do
 	local attribs = line:split(",", true)
-	local name,enabled,next_plant,rarety,steps,harvest_max,eat_hp,to_culture,to_dig,has_harvest,on_soil,punchable,infectable,seed_extractable,use_flail,use_trellis,snappy,temperature_min,temperature_max,humidity_min,humidity_max,elevation_min,elevation_max,light_min,light_max,infect_rate_base,infect_rate_monoculture,spread_rate = unpack(attribs)
+	local name,enabled,next_plant,rarety,steps,harvest_max,eat_hp,to_culture,to_dig,has_harvest,on_soil,
+		punchable,infectable,seed_extractable,use_flail,use_trellis,snappy,temperature_min,temperature_max,
+		humidity_min,humidity_max,elevation_min,elevation_max,light_min,light_max,
+		infect_rate_base,infect_rate_monoculture,spread_rate,grow_time_mean = unpack(attribs)
 	if #name > 0 and name:sub(1,1) ~= "#" and #enabled > 0 and #steps > 0 then
 		crop_definition[name]={
 			paramtype2 = "meshoptions",
@@ -105,7 +108,21 @@ if crop_definition["default"]~=nil then
 			spawnon={spawn_min=crop_definition[tdef_name].environment.elevation_min,
 				spawn_max=crop_definition[tdef_name].environment.elevation_max,
 				},}
-		crop_definition[tdef_name].biomes=farming.get_biomes(biom_def)
+		local crop_spawnon={}
+		local crop_biom = farming.get_biomes(biom_def)
+		for _,bio in pairs(crop_biom) do
+			local tbio=minetest.registered_biomes[bio]
+			if tbio.node_top then
+				crop_spawnon[tbio.node_top] = 1
+			end
+		end
+		local csp = {}
+		for nod,val in pairs(crop_spawnon) do
+			table.insert(csp,nod)
+		end
+		crop_definition[tdef_name].biomes=crop_biom
+		crop_definition[tdef_name].spawnon=csp
+		crop_definition[tdef_name].spread.spreadon=csp
 	end
   end
 end
