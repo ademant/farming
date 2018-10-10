@@ -59,7 +59,7 @@ farming.register_plant = function(def)
 	def.harvest_name=def.mod_name..":"..def.name
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":seed_"..def.name
-
+	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
       def.harvest_png=def.mod_name.."_"..def.name..".png"
@@ -210,7 +210,7 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"place_param2","fertility","description","name","seed_name","harvest_name"}) do
+	for i,colu in ipairs({"place_param2","fertility","description","plant_name","seed_name","harvest_name"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
@@ -219,6 +219,7 @@ farming.register_seed=function(sdef)
 	seed_def.wield_image = {seed_png}
 	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
 	seed_def.groups["step"] = 0
+	seed_def.groups[sdef.mod_name] = 1
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
 	end
@@ -268,7 +269,7 @@ farming.register_steps = function(sdef)
 		sounds = default.node_sound_leaves_defaults(),
 	}
 	-- copy some plant definition into definition of this steps
-	for _,colu in ipairs({"paramtype2","place_param2","seed_name","name","harvest_name","grow_time_min","grow_time_max","environment"}) do
+	for _,colu in ipairs({"paramtype2","place_param2","seed_name","plant_name","harvest_name","grow_time_min","grow_time_max"}) do
 	  if sdef[colu] then
 	    node_def[colu] = sdef[colu]
 	  end
@@ -283,7 +284,7 @@ farming.register_steps = function(sdef)
 	for i=1,sdef.steps do
 	    local ndef={}
 	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2",
-				"walkable","buildable_to","seed_name","name","harvest_name","environment","grow_time_min","grow_time_max"}) do
+				"walkable","buildable_to","seed_name","plant_name","harvest_name","grow_time_min","grow_time_max"}) do
 			ndef[colu]=node_def[colu]
 		end
 		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
@@ -292,8 +293,8 @@ farming.register_steps = function(sdef)
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
 		end
-		ndef.groups[sdef.name] = i
 		ndef.groups["step"] = i
+		ndef.groups[sdef.mod_name]=1
 		ndef.tiles={sdef.mod_name.."_"..sdef.name.."_"..i..".png"}
 		if i < sdef.steps then
 			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
@@ -608,7 +609,8 @@ farming.step_on_timer = function(pos, elapsed)
 	if not def.next_step then
 		return
 	end
-	if not light or light < def.environment.light_min or light > def.environment.light_max then
+	local pdef=farming.registered_plants[def.plant_name]
+	if not light or light < pdef.environment.light_min or light > pdef.environment.light_max then
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
 		return
 	end
@@ -622,12 +624,12 @@ farming.step_on_timer = function(pos, elapsed)
 	meta:set_int("farming:step",def.groups["step"])
 	-- new timer needed?
 	if def.next_step then
-		local def_next=minetest.registered_nodes[def.next_step]
+--		local def_next=minetest.registered_nodes[def.next_step]
 		-- using light at midday to increase or decrease growing time
 		local local_light_max = minetest.get_node_light(pos,0.5)
-		local wait_factor = math.max(0.75,def_next.environment.light_min/local_light_max)
-		local wait_min = math.ceil(def_next.grow_time_min * wait_factor)
-		local wait_max = math.ceil(def_next.grow_time_max * wait_factor)
+		local wait_factor = math.max(0.75,pdef.environment.light_min/local_light_max)
+		local wait_min = math.ceil(pdef.grow_time_min * wait_factor)
+		local wait_max = math.ceil(pdef.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
 		local node_timer=math.random(wait_min, wait_max)
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
@@ -679,15 +681,13 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		return itemstack
 	end
 
+	local pdef = minetest.registered_nodes[plantname]
+	local plant_def = farming.registered_plants[pdef.plant_name]
 	-- check if pointing at soil and seed needs soil
 	if minetest.get_item_group(under.name,"soil") < 2 then
 		if minetest.get_item_group(plantname,"on_soil") >= 1 then
 			return
 		else
-			local pdef = minetest.registered_nodes[plantname]
-			local plant_def = farming.registered_plants[pdef.name]
-			print(dump(pdef))
-			print(dump(plant_def))
 			-- check if node is correct one
 			local is_correct_node = false
 			for _,spawnon in ipairs(plant_def.spawnon) do
@@ -720,10 +720,10 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	local wait_min=farming.wait_min or 120
 	local wait_max=farming.wait_max or 240
 	if plant_def.grow_time_min then
-		wait_min=pdef.grow_time_min
+		wait_min=plant_def.grow_time_min
 	end
 	if plant_def.grow_time_max then
-		wait_max=pdef.grow_time_max
+		wait_max=plant_def.grow_time_max
 	end
 	minetest.get_node_timer(pt.above):start(math.random(wait_min, wait_max))
 	local meta = minetest.get_meta(pt.above)
@@ -754,6 +754,7 @@ farming.seed_on_timer = function(pos, elapsed)
 		  table.insert(spawnon,1,v)
 		end
 	end
+	local pdef=farming.registered_plants[def.plant_name]
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
 	for _, v in pairs(spawnon) do
 		if (minetest.get_item_group(soil_node.name, v) ~= 0) or (soil_node.name == v) then
@@ -767,9 +768,9 @@ farming.seed_on_timer = function(pos, elapsed)
 			if def.next_step then
 				-- using light at midday to increase or decrease growing time
 				local local_light_max = minetest.get_node_light(pos,0.5)
-				local wait_factor = math.max(0.75,def.environment.light_min/local_light_max)
-				local wait_min = math.ceil(def.grow_time_min * wait_factor)
-				local wait_max = math.ceil(def.grow_time_max * wait_factor)
+				local wait_factor = math.max(0.75,pdef.environment.light_min/local_light_max)
+				local wait_min = math.ceil(pdef.grow_time_min * wait_factor)
+				local wait_max = math.ceil(pdef.grow_time_max * wait_factor)
 				if wait_max <= wait_min then wait_max = 2*wait_min end
 				local node_timer=math.random(wait_min, wait_max)
 				minetest.get_node_timer(pos):start(node_timer)
