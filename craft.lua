@@ -14,10 +14,12 @@ farming.trellis_seed = function(grain_name)
   })
 end
 -- define seed crafting
-function farming.seed_craft(grain_name)
+function farming.seed_craft(grain_name,straw_name)
   local mname = grain_name:split(":")[1]
   local pname = grain_name:split(":")[2]
-
+  if straw_name == nil then
+	local straw_name = "farming:straw"
+  end
   minetest.register_craft({
 	type = "shapeless",
 	output = mname..":seed_"..pname.." 8",
@@ -25,7 +27,7 @@ function farming.seed_craft(grain_name)
 		grain_name,grain_name,grain_name,grain_name, modname..":flail",grain_name,grain_name,grain_name,grain_name
 	},
 	replacements = {{"group:farming_flail", modname..":flail"},
-				{"group:food_wheat","farming:straw"}},
+				{grain_name,straw_name}},
   })
   minetest.register_craft({
 	type = "shapeless",
@@ -34,7 +36,7 @@ function farming.seed_craft(grain_name)
 		modname..":flail",grain_name
 	},
 	replacements = {{"group:farming_flail", modname..":flail"},
-				{"group:food_wheat","farming:straw"}},
+				{grain_name,straw_name}},
   })
 end
 

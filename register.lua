@@ -35,9 +35,7 @@ farming.register_plant = function(def)
 	end
 	-- check definition
     def = register_plant_check_def(def)
-    print(dump(def))
 	-- local definitions
---	def.harvest_name=def.mod_name..":"..def.name
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":seed_"..def.name
 	def.plant_name = def.name
@@ -55,15 +53,12 @@ farming.register_plant = function(def)
 
 	farming.register_steps(def)
 	
---	if not def.groups["to_culture"] then
---		farming.register_mapgen(def)
---	end
 	if (not def.groups["to_culture"]) then
 		local edef=def
 		local spread_def={name=def.step_name.."_1",
 				temp_min=edef.temperature_min,temp_max=edef.temperature_max,
 				hum_min=edef.humidity_min,hum_max=edef.humidity_max,
-				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread.base_rate}
+				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread_rate}
 		table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
@@ -72,10 +67,14 @@ farming.register_plant = function(def)
     end
     
     if def.groups["use_flail"] then
-		farming.seed_craft(def.harvest_name)
+		local straw_name="farming:straw"
+		if def.straw then
+			straw_name=def.straw
+		end
+		farming.seed_craft(def.step_name,straw_name)
     end
     if def.groups["use_trellis"] then
-		farming.trellis_seed(def.harvest_name)
+		farming.trellis_seed(def.step_name)
     end
 end
 
@@ -189,7 +188,7 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"place_param2","fertility","description","plant_name","seed_name","grow_time_min","grow_time_max"}) do
+	for i,colu in ipairs({"place_param2","fertility","description","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
@@ -244,7 +243,7 @@ farming.register_steps = function(sdef)
 		sounds = default.node_sound_leaves_defaults(),
 	}
 	-- copy some plant definition into definition of this steps
-	for _,colu in ipairs({"paramtype2","place_param2","seed_name","plant_name","grow_time_min","grow_time_max"}) do
+	for _,colu in ipairs({"paramtype2","place_param2","seed_name","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  if sdef[colu] then
 	    node_def[colu] = sdef[colu]
 	  end
@@ -258,7 +257,7 @@ farming.register_steps = function(sdef)
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
 	    local ndef={}
-	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2",
+	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
 				"walkable","buildable_to","plant_name"}) do
 			ndef[colu]=node_def[colu]
 		end
@@ -420,8 +419,8 @@ farming.register_mapgen = function(mdef)
 				octaves = 3,
 				persist = 0.6
 			},
-			y_min = mdef.environment.elevation_min,
-			y_max = mdef.environment.elevation_max,
+			y_min = mdef.elevation_min,
+			y_max = mdef.elevation_max,
 			decoration = mdef.wildname or mdef.step_name.."_"..mdef.steps,
 --			spawn_by = mdef.spawnon.spawnby,
 --			num_spawn_by = mdef.spawnon.spawn_num,
@@ -592,7 +591,7 @@ farming.step_on_timer = function(pos, elapsed)
 		return
 	end
 	local pdef=farming.registered_plants[def.plant_name]
-	if not light or light < pdef.environment.light_min or light > pdef.environment.light_max then
+	if not light or light < pdef.light_min or light > pdef.light_max then
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
 		return
 	end
@@ -608,7 +607,7 @@ farming.step_on_timer = function(pos, elapsed)
 	if def.next_step then
 		-- using light at midday to increase or decrease growing time
 		local local_light_max = minetest.get_node_light(pos,0.5)
-		local wait_factor = math.max(0.75,def_next.light_min/local_light_max)
+		local wait_factor = math.max(0.75,def.light_min/local_light_max)
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end

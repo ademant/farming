@@ -89,5 +89,5 @@ minetest.register_abm({
 		end
 	end,
 })
-print(dump(farming.spreading_crops))
+--print(dump(farming.spreading_crops))
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")
