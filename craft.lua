@@ -24,7 +24,7 @@ function farming.seed_craft(grain_name)
 	recipe = {
 		grain_name,grain_name,grain_name,grain_name, modname..":flail",grain_name,grain_name,grain_name,grain_name
 	},
-	replacements = {{"group:food_flail", modname..":flail"},
+	replacements = {{"group:farming_flail", modname..":flail"},
 				{"group:food_wheat","farming:straw"}},
   })
   minetest.register_craft({
@@ -33,7 +33,7 @@ function farming.seed_craft(grain_name)
 	recipe = {
 		modname..":flail",grain_name
 	},
-	replacements = {{"group:food_flail", modname..":flail"},
+	replacements = {{"group:farming_flail", modname..":flail"},
 				{"group:food_wheat","farming:straw"}},
   })
 end
