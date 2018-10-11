@@ -13,7 +13,7 @@ end
 
 local crop_definition = {}
 local crop_numeric_values = {"rarety","steps","harvest_max","eat_hp","temperature_min","temperature_max","humidity_min","humidity_max","elevation_min","elevation_max","light_min","light_max","infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean"}
-local crop_groups = {"to_culture","to_dig","has_harvest","on_soil","punchable","infectable","seed_extractable","use_flail","use_trellis","snappy"}
+local crop_groups = {"to_culture","to_dig","has_harvest","on_soil","punchable","infectable","seed_extractable","use_flail","use_trellis","snappy","infection_defence"}
 
 -- import configurations from crops.csv
 local file = io.open(farming.path .. "/crops.csv", "r")

@@ -52,3 +52,4 @@ Created by ademant (CC BY 3.0):
   farming_mustard
   farming_spelt (based on farming_barley)
   farming_hop
+  farming_tobaco (based on pictures of wikimedia)
