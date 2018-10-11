@@ -165,9 +165,9 @@ end
 farming.register_infect=function(idef)
 	local infect_def={
 		description = S(idef.description:gsub("^%l", string.upper)),
-		inventory_image = idef.mod_name.."_"..idef.name.."_ill.png",
+--		inventory_image = idef.mod_name.."_"..idef.name.."_ill.png",
 		tiles = {idef.mod_name.."_"..idef.name.."_ill.png"},
-		wield_image = {idef.mod_name.."_"..idef.name.."_ill.png"},
+--		wield_image = {idef.mod_name.."_"..idef.name.."_ill.png"},
 		drawtype = "plantlike",
 		waving = 1,
 		paramtype = "light",
@@ -178,12 +178,11 @@ farming.register_infect=function(idef)
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
 	}
-	for _,coln in ipairs({"name","seed_name","step_name","harvest_name","place_param2","fertility","description"}) do
+	for _,coln in ipairs({"name","seed_name","step_name","place_param2","fertility","description"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
 	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,infect=2}
-	infect_def.groups[infect_def.name] = -1
 	infect_def.groups["step"] = -1
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
 end
@@ -563,8 +562,13 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
-	local meta = minetest.get_meta(pos)
 	-- grow
+	if def.groups.punchable == nil then
+		return
+	end
+	if def.pre_step == nil then
+		return
+	end
 	local pre_node = def.pre_step
 	local placenode = {name = pre_node}
 	if def.place_param2 then
@@ -581,7 +585,7 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",pre_def.groups[pre_def.plant_name])
+	meta:set_int("farming:step",pre_def.groups.step)
 	if pre_def.next_step then
 		minetest.get_node_timer(pos):start(math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200))
 	end
@@ -595,7 +599,7 @@ farming.harvest_on_dig = function(pos, node, digger)
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) then
 	  local plant_def=farming.registered_plants[def.plant_name]
-   	  digger:get_inventory():add_item('main',plant_def.harvest_name)
+   	  digger:get_inventory():add_item('main',plant_def.plant_name)
 	end
   minetest.node_dig(pos,node,digger)
 end
@@ -621,15 +625,14 @@ farming.step_on_timer = function(pos, elapsed)
 	end
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups["step"])
+	meta:set_int("farming:step",def.groups.step)
 	-- new timer needed?
 	if def.next_step then
-		local def_next=minetest.registered_nodes[def.next_step]
 		-- using light at midday to increase or decrease growing time
 		local local_light_max = minetest.get_node_light(pos,0.5)
 		local wait_factor = math.max(0.75,def_next.light_min/local_light_max)
-		local wait_min = math.ceil(def_next.grow_time_min * wait_factor)
-		local wait_max = math.ceil(def_next.grow_time_max * wait_factor)
+		local wait_min = math.ceil(def.grow_time_min * wait_factor)
+		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
 		local node_timer=math.random(wait_min, wait_max)
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
@@ -651,8 +654,6 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 
 	local under = minetest.get_node(pt.under)
 	local above = minetest.get_node(pt.above)
-	local udef = minetest.registered_nodes[under.name]
-	local pdef = minetest.registered_nodes[plantname]
 	local player_name = placer and placer:get_player_name() or ""
 
 	if minetest.is_protected(pt.under, player_name) then
@@ -682,6 +683,9 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		return itemstack
 	end
 
+	local udef = minetest.registered_nodes[under.name]
+	local pdef = minetest.registered_nodes[plantname]
+	
 	-- check if pointing at soil and seed needs soil
 	if minetest.get_item_group(under.name,"soil") < 2 then
 		if minetest.get_item_group(plantname,"on_soil") >= 1 then
@@ -697,17 +701,16 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			if not is_correct_node then
 				return itemstack
 			end
-			local edef=pdef.environment
 			-- check for correct temperature
-			if pt.under.y < edef.elevation_min or pt.under.y > edef.elevation_max then
-				minetest.chat_send_player(player_name,"Elevation must be between "..edef.elevation_min.." and "..edef.elevation_max)
+			if pt.under.y < pdef.elevation_min or pt.under.y > pdef.elevation_max then
+				minetest.chat_send_player(player_name,"Elevation must be between "..pdef.elevation_min.." and "..pdef.elevation_max)
 				return
 			end
-			if minetest.get_heat(pt.under) < edef.temperature_min or minetest.get_heat(pt.under) > edef.temperature_max then
+			if minetest.get_heat(pt.under) < pdef.temperature_min or minetest.get_heat(pt.under) > pdef.temperature_max then
 				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
 				return
 			end
-			if minetest.get_humidity(pt.under) < edef.humidity_min or minetest.get_humidity(pt.under) > edef.humidity_max then
+			if minetest.get_humidity(pt.under) < pdef.humidity_min or minetest.get_humidity(pt.under) > pdef.humidity_max then
 				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
 				return
 			end
@@ -754,27 +757,23 @@ farming.seed_on_timer = function(pos, elapsed)
 		end
 	end
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
-	for _, v in pairs(spawnon) do
-		if (minetest.get_item_group(soil_node.name, v) ~= 0) or (soil_node.name == v) then
-			local placenode = {name = def.next_step}
-			if def.place_param2 then
-				placenode.param2 = def.place_param2
-			end
-			minetest.swap_node(pos, placenode)
-			local meta = minetest.get_meta(pos)
-			meta:set_int("farming:step",def.groups[def.name])
-			if def.next_step then
-				-- using light at midday to increase or decrease growing time
-				local local_light_max = minetest.get_node_light(pos,0.5)
-				local wait_factor = math.max(0.75,def.light_min/local_light_max)
-				local wait_min = math.ceil(def.grow_time_min * wait_factor)
-				local wait_max = math.ceil(def.grow_time_max * wait_factor)
-				if wait_max <= wait_min then wait_max = 2*wait_min end
-				local node_timer=math.random(wait_min, wait_max)
-				minetest.get_node_timer(pos):start(node_timer)
-				return
-			end
-		end
+	local placenode = {name = def.next_step}
+	if def.place_param2 then
+		placenode.param2 = def.place_param2
+	end
+	minetest.swap_node(pos, placenode)
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:step",def.groups.step)
+	if def.next_step then
+		-- using light at midday to increase or decrease growing time
+		local local_light_max = minetest.get_node_light(pos,0.5)
+		local wait_factor = math.max(0.75,def.light_min/local_light_max)
+		local wait_min = math.ceil(def.grow_time_min * wait_factor)
+		local wait_max = math.ceil(def.grow_time_max * wait_factor)
+		if wait_max <= wait_min then wait_max = 2*wait_min end
+		local node_timer=math.random(wait_min, wait_max)
+		minetest.get_node_timer(pos):start(node_timer)
+		return
 	end
 end
 			
