@@ -170,6 +170,7 @@ end
 
 farming.register_seed=function(sdef)
     local seed_def = {
+		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		drawtype = "signlike",
 		paramtype = "light",
 		paramtype2 = "wallmounted",
@@ -249,20 +250,20 @@ farming.register_steps = function(sdef)
 	  end
 	end
 	-- define drop item: normal drop the seed
-	local drop_item = sdef.seed_name
+	node_def.drop_item = sdef.seed_name
 	-- if plant has to be harvested, drop harvest instead
 	if has_harvest then
-	  drop_item = sdef.step_name
+	  node_def.drop_item = sdef.step_name
 	end
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
 	    local ndef={}
 	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
-				"walkable","buildable_to","plant_name"}) do
+				"walkable","buildable_to","plant_name","drop_item"}) do
 			ndef[colu]=node_def[colu]
 		end
 		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		for _,colu in ipairs({"infectable","snappy","seed_extractable"}) do
+		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
@@ -283,7 +284,7 @@ farming.register_steps = function(sdef)
 		if sdef.steps ~= 1 then
 			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
 		end
-		ndef.drop={items={{items={drop_item}}}}
+		ndef.drop={items={{items={ndef.drop_item}}}}
 		if use_trellis then
 			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
@@ -296,7 +297,7 @@ farming.register_steps = function(sdef)
 		local step_harvest = math.floor(i*sdef.harvest_max/sdef.steps + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
-			table.insert(ndef.drop.items,1,{items={drop_item},rarity=base_rarity*h})
+			table.insert(ndef.drop.items,1,{items={ndef.drop_item},rarity=base_rarity*h})
 		  end
 		end
 		if i == sdef.steps then
@@ -309,6 +310,7 @@ farming.register_steps = function(sdef)
 		end
 		if i == sdef.steps and is_punchable and i > 1 then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
+		    print(ndef.pre_step)
 			ndef.on_punch = farming.step_on_punch
 		end
 --		print(dump(ndef))
@@ -539,6 +541,8 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
+	print(name)
+	print(dump(def))
 	-- grow
 	if def.groups.punchable == nil then
 		return
@@ -557,7 +561,7 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local tool_def = puncher:get_wielded_item():get_definition()
 --	print(tool_def.max_uses)
 	if tool_def.groups["billhook"] then
-  	  puncher:get_inventory():add_item('main',def.seed_name)
+  	  puncher:get_inventory():add_item('main',def.drop_item)
 	end
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
@@ -571,13 +575,12 @@ end
 
 farming.harvest_on_dig = function(pos, node, digger)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
+	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
-	if (def.next_plant == nil) and (tool_def.groups["scythe"]) then
-   	  digger:get_inventory():add_item('main',def.plant_name)
+	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
+   	  digger:get_inventory():add_item('main',def.drop_item)
 	end
-  minetest.node_dig(pos,node,digger)
+	minetest.node_dig(pos,node,digger)
 end
 
 farming.step_on_timer = function(pos, elapsed)
@@ -698,11 +701,11 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	minetest.add_node(pt.above, {name = plantname, param2 = 1})
 	local wait_min=farming.wait_min or 120
 	local wait_max=farming.wait_max or 240
-	if plant_def.grow_time_min then
-		wait_min=plant_def.grow_time_min
+	if pdef.grow_time_min then
+		wait_min=pdef.grow_time_min
 	end
-	if plant_def.grow_time_max then
-		wait_max=plant_def.grow_time_max
+	if pdef.grow_time_max then
+		wait_max=pdef.grow_time_max
 	end
 	minetest.get_node_timer(pt.above):start(math.random(wait_min, wait_max))
 	local meta = minetest.get_meta(pt.above)
