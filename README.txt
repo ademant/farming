@@ -2,6 +2,13 @@ Minetest Game mod: farming
 ==========================
 See license.txt for license information.
 
+Mod for extending the farming capabilities of minetest. 
+You have wild crops, which you can cultivate to get faster and more harvest.
+The crops can be infected, where you get nothing. And the infection spreads to nearby crops.
+A culture of crops can be destroyed by the infection, where the cultured variant of crops 
+are easier infected than the wild form.
+With special plants you can make a curing mixture. And other plants can protect the culture.
+
 Authors of source code
 ----------------------
 Originally by PilzAdam (MIT)
