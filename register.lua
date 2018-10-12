@@ -169,6 +169,7 @@ end
 
 
 farming.register_seed=function(sdef)
+	print(sdef.name:gsub("^%l", string.upper))
     local seed_def = {
 		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		drawtype = "signlike",
@@ -189,7 +190,8 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"place_param2","fertility","description","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
+	print(seed_def.description)
+	for i,colu in ipairs({"place_param2","fertility","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
@@ -208,6 +210,7 @@ farming.register_seed=function(sdef)
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
+	print(dump(seed_def))
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 end
 
@@ -257,7 +260,7 @@ farming.register_steps = function(sdef)
 	end
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
-	    local ndef={}
+	    local ndef={description=sdef.step_name.."_"..i}
 	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
 				"walkable","buildable_to","plant_name","drop_item"}) do
 			ndef[colu]=node_def[colu]
@@ -559,7 +562,6 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	puncher:get_inventory():add_item('main',def.seed_name)
 	-- getting one more when using billhook
 	local tool_def = puncher:get_wielded_item():get_definition()
---	print(tool_def.max_uses)
 	if tool_def.groups["billhook"] then
   	  puncher:get_inventory():add_item('main',def.drop_item)
 	end
