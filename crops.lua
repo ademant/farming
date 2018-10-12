@@ -55,6 +55,9 @@ Actual columns:
 	grow_time_mean			mean grow time to next step
 	straw		text		extension for using flail: item name of fibre to craft out of harvest beside seeds
 	culture_rate			rate to get cultured variant out of wild form.
+	seed_drop				name of seed you get from plant: grapes drops seed which normally lead to wild wine.
+							Only with a trellis you get cultured whine with higher harvest.
+							With normal grapes and a trellis you get the "seed" for cultured wine.
 ]]
 
 local S = farming.intllib
@@ -80,7 +83,7 @@ local crop_groups =
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence"}
 
 -- import configurations from crops.csv
-local file = io.open(farming.path .. "/crops.csv", "r")
+local file = io.open(farming.path .. "/crops.txt", "r")
 -- reading header with column names
 local header = file:read():split(",",true)
 -- read each line, split in separat fields and stores in array

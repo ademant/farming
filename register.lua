@@ -38,6 +38,9 @@ farming.register_plant = function(def)
 	-- local definitions
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":seed_"..def.name
+	if def.seed_drop ~= nil then
+		def.drop_seed_name = def.mod_name..":seed_"..def.seed_drop
+	end
 	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
@@ -74,7 +77,7 @@ farming.register_plant = function(def)
 		farming.seed_craft(def.step_name,straw_name)
     end
     if def.groups["use_trellis"] then
-		farming.trellis_seed(def.step_name)
+		farming.trellis_seed(def.step_name,def.drop_seed_name or def.seed_name)
     end
 end
 
@@ -256,7 +259,11 @@ farming.register_steps = function(sdef)
 	node_def.drop_item = sdef.seed_name
 	-- if plant has to be harvested, drop harvest instead
 	if has_harvest then
-	  node_def.drop_item = sdef.step_name
+		node_def.drop_item = sdef.step_name
+	else
+		if sdef.drop_seed_name ~= nil then
+			node_def.drop_item = sdef.drop_seed_name
+		end
 	end
 	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do

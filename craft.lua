@@ -2,14 +2,14 @@ local S = farming.intllib
 local modname=minetest.get_current_modname()
 
 -- generate "seed" out of harvest and trellis
-farming.trellis_seed = function(grain_name)
+farming.trellis_seed = function(grain_name,seed_name)
 	local mname = grain_name:split(":")[1]
 	local pname = grain_name:split(":")[2]
 	minetest.register_craft({
 	type = "shapeless",
 	output = mname..":seed_"..pname.." 1",
 	recipe = {
-		modname..":trellis",grain_name
+		modname..":trellis",seed_name
 	},
   })
 end
