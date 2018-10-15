@@ -63,15 +63,7 @@ Actual columns:
 local S = farming.intllib
 farming.path = minetest.get_modpath("farming")
 
-local function has_value (tab, val)
--- test if val is in tab
-    for index, value in ipairs(tab) do
-        if value == val then
-            return true
-        end
-    end
-    return false
-end
+local has_value = farming.has_value 
 
 local crop_definition = {}
 local crop_numeric_values = {"rarety","steps","harvest_max","eat_hp",

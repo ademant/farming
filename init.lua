@@ -13,6 +13,7 @@ minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loadi
 
 
 dofile(farming.path .. "/config.lua")
+dofile(farming.path .. "/functions.lua")
 
 dofile(farming.path .. "/api.lua")
 dofile(farming.path .. "/register.lua")
