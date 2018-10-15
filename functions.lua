@@ -8,6 +8,8 @@ farming.has_value = function(tab, val)
     return false
 end
 
+local has_value=farming.has_value
+
 farming.import_csv = function(infile,def)
 	-- import configurations from crops.csv
 	local file = io.open(infile, "r")
@@ -22,18 +24,21 @@ farming.import_csv = function(infile,def)
 		for i,d in ipairs(attribs) do
 			if d ~= "" then
 				local th=header[i]
+				local dsaved = false
 				if def.col_num then
 					if has_value(def.col_num,th) then
 						nrow[th] = tonumber(d)
+						dsaved = true
 					end
-				else
-					if def.groups_num then
-						if has_value(crop_groups,th) then
-							nrow.groups[th]=tonumber(d)
-						end
-					else
-						nrow[header[i]]=d
+				end
+				if def.groups_num then
+					if has_value(def.groups_num,th) then
+						nrow.groups[th]=tonumber(d)
+						dsaved = true
 					end
+				end
+				if not dsaved then
+					nrow[ th ]=d
 				end
 			end
 		end

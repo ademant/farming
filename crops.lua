@@ -74,6 +74,13 @@ local crop_groups =
 	{"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence"}
 
+local crop_definition = farming.import_csv(farming.path.."/crops.txt",{
+	col_num=crop_numeric_values,
+	groups_num=crop_groups})
+
+print(dump(crop_definition))
+
+--[[
 -- import configurations from crops.csv
 local file = io.open(farming.path .. "/crops.txt", "r")
 -- reading header with column names
@@ -92,7 +99,7 @@ for line in file:lines() do
 				if has_value(crop_groups,th) then
 					nrow.groups[th]=tonumber(d)
 				else
-					nrow[header[i]]=d
+					nrow[header[i] ]=d
 				end
 			end
 		end
@@ -102,7 +109,7 @@ for line in file:lines() do
 	end
 end
 file:close()
-
+]]
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
 if crop_definition["default"] ~= nil then
