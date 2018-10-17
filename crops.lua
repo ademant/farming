@@ -42,6 +42,8 @@ Actual columns:
 							You get the trellis back by digging the plant at any stage.
 	for_coffee	void
 				any value	extension to define crafting recipes to brew coffee out of seed
+	for_flour	void
+				any value	extension to define crafting recipes to craft normal flour out of seed
 	seed_roastable
 				any value	seed can be roasted in a oven, needs "crop_roasted.png"
 							value is used as roast time
@@ -76,7 +78,8 @@ local crop_cols={
 	"elevation_min","elevation_max","light_min","light_max",
 	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time"},
 	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
-	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable","seed_grindable"}}
+	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
+	"seed_grindable","for_flour","for_coffee"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
 print(dump(crop_definition))

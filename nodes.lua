@@ -98,8 +98,8 @@ minetest.register_node("farming:hemp_fibre", {
 })
 minetest.register_node("farming:nettle_fibre", {
 	description = ("Nettle Fibre"),
-	tiles = {"farming_urtica_fibre.png"},
-	inventory_image = {"farming_urtica_fibre.png"},
+	tiles = {"farming_nettle_fibre.png"},
+	inventory_image = {"farming_nettle_fibre.png"},
 	is_ground_content = false,
 	groups = {snappy=3, flammable=4, fall_damage_add_percent=-30},
 	sounds = default.node_sound_leaves_defaults(),

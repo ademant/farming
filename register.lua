@@ -25,6 +25,16 @@ local register_plant_check_def = function(def)
 	if not def.fertility then
 		def.fertility = {"grassland"}
 	end
+	if def.groups["seed_grindable"] then
+		if def.grind == nil then
+			def.grind = "Grinded "..def.description
+		end
+	end
+	if def.groups["seed_roastable"] then
+		if def.roast == nil then
+			def.roast = "Roasted "..def.description
+		end
+	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
 	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
   return def
@@ -83,6 +93,12 @@ farming.register_plant = function(def)
     end
     if def.groups["use_trellis"] then
 		farming.trellis_seed(def.step_name,def.drop_seed_name or def.seed_name)
+    end
+    if def.groups["seed_grindable"] then
+		farming.register_grind(def)
+    end
+    if def.groups["seed_roastable"] then
+		farming.register_roast(def)
     end
 end
 
@@ -212,8 +228,10 @@ farming.register_seed=function(sdef)
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
 	end
-	if sdef.groups["on_soil"] then
-	  seed_def.groups["on_soil"] = sdef.groups["on_soil"]
+	for i,colu in ipairs({"on_soil","for_flour"}) do 
+		if sdef.groups[colu] then
+		  seed_def.groups[colu] = sdef.groups[colu]
+		end
 	end
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
@@ -888,7 +906,7 @@ function farming.register_roast(rdef)
 	if rdef.mod_name then
 		mname = rdef.mod_name
 	end
-	local roast_png = mname.."_"..rdef.plant_name.."_roasted.png"
+	local roast_png = roastitem:gsub(":","_")..".pnd"
 	
 	local roast_def={
 		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
@@ -921,3 +939,53 @@ function farming.register_roast(rdef)
 	})
 end
 
+function farming.register_grind(rdef)
+	if rdef.seed_name == nil then
+		return
+	end
+	if rdef.step_name == nil then
+		return
+	end
+	local grinditem = rdef.step_name.."_flour"
+	if rdef.grind_name then
+		grinditem = rdef.grind_name
+	end
+	local mname = minetest.get_current_modname()
+	if rdef.mod_name then
+		mname = rdef.mod_name
+	end
+	local grind_png = grinditem:gsub(":","_")..".png"
+	
+	local grind_def={
+		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
+		inventory_image = grind_png,
+		groups = rdef.groups or {flammable = 2},
+	}
+	for _,coln in ipairs({"plant_name"}) do
+	  grind_def[coln] = rdef[coln]
+	end
+	for _,coln in ipairs({"seed_roastable"}) do
+		if rdef.groups[coln] then
+			grind_def.groups[coln] = rdef.groups[coln]
+		end
+	end
+	
+	if rdef.eat_hp then
+	  grind_def.on_use=minetest.item_eat(rdef.eat_hp)
+	end
+	
+	minetest.register_craftitem(":" .. grinditem, grind_def)
+	
+	local cooktime = 3
+	if rdef.roast_time then
+		cooktime = rdef.roast_time
+	end
+	minetest.register_craft({
+		type = "shapeless",
+		output = grinditem,
+		recipe = {rdef.seed_name.." "..rdef.groups["seed_grindable"],
+				farming.modname..":mortar_pestle"},
+	replacements = {{"group:food_mortar_pestle", farming.modname..":mortar_pestle"}},
+
+	})
+end

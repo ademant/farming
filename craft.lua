@@ -67,14 +67,14 @@ minetest.register_craftitem("farming:flour", {
 	groups = {food_flour = 1, flammable = 1},
 })
 
-minetest.register_craftitem(modname..":urtica_water",{
-	description = "Urtica Water",
-	inventory_image = "farming_tool_glass_urtica.png",
+minetest.register_craftitem(modname..":nettle_water",{
+	description = "Nettle Water",
+	inventory_image = "farming_tool_glass_nettle.png",
 	groups = {desinfect = 1}
 })
 minetest.register_craft({
-	output=modname..":urtica_water 10",
+	output=modname..":nettle_water 10",
 	type = "shapeless",
-	recipe={"vessels:glass_bottle 10","bucket_water",modname..":urtica"},
+	recipe={"vessels:glass_bottle 10","bucket_water",farming.modname..":nettle"},
 	replacements = {{"bucket_water", "bucket_empty"}}
 })
