@@ -42,6 +42,11 @@ Actual columns:
 							You get the trellis back by digging the plant at any stage.
 	for_coffee	void
 				any value	extension to define crafting recipes to brew coffee out of seed
+	seed_roastable
+				any value	seed can be roasted in a oven, needs "crop_roasted.png"
+							value is used as roast time
+	seed_grindable
+				any value	seed can be grinded, e.g. in a coffee grinder, needs "crop_grind.png" or value in grind
 	temperature_min/_max	Range of temperature inside the crop can grow.
 	humidity_min/_max		Range of humidity
 	elevation_min/_max		Height range the crop can be found
@@ -58,64 +63,31 @@ Actual columns:
 	seed_drop				name of seed you get from plant: grapes drops seed which normally lead to wild wine.
 							Only with a trellis you get cultured whine with higher harvest.
 							With normal grapes and a trellis you get the "seed" for cultured wine.
+	grind					name of item for grinded seed
 ]]
 
 local S = farming.intllib
 farming.path = minetest.get_modpath("farming")
 
 local has_value = farming.has_value 
-
-local crop_definition = {}
-local crop_numeric_values = {"rarety","steps","harvest_max","eat_hp",
+local crop_cols={
+	col_num={"rarety","steps","harvest_max","eat_hp",
 	"temperature_min","temperature_max","humidity_min","humidity_max",
 	"elevation_min","elevation_max","light_min","light_max",
-	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean"}
-local crop_groups = 
-	{"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
-	"seed_extractable","use_flail","use_trellis","snappy","infection_defence"}
-
-local crop_definition = farming.import_csv(farming.path.."/crops.txt",{
-	col_num=crop_numeric_values,
-	groups_num=crop_groups})
+	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time"},
+	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
+	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable","seed_grindable"}}
+local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
 print(dump(crop_definition))
 
---[[
--- import configurations from crops.csv
-local file = io.open(farming.path .. "/crops.txt", "r")
--- reading header with column names
-local header = file:read():split(",",true)
--- read each line, split in separat fields and stores in array
--- by header the value is stored as numeric, in the group environment or as text
-for line in file:lines() do
-	local attribs = line:split(",",true)
-	local nrow={groups={}}
-	for i,d in ipairs(attribs) do
-		if d ~= "" then
-			local th=header[i]
-			if has_value(crop_numeric_values,th) then
-				nrow[th] = tonumber(d)
-			else
-				if has_value(crop_groups,th) then
-					nrow.groups[th]=tonumber(d)
-				else
-					nrow[header[i] ]=d
-				end
-			end
-		end
-	end
-	if nrow.enabled then
-		crop_definition[nrow.name]=nrow
-	end
-end
-file:close()
-]]
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
 if crop_definition["default"] ~= nil then
 	default_crop = crop_definition["default"]
 	local test_values = {}
-	for i,d in pairs(crop_numeric_values) do
+	-- check, which numeric columns exist in default entry
+	for i,d in pairs(crop_cols.col_num) do
 		if default_crop[d] ~= nil then
 			table.insert(test_values,1,d)
 		end
@@ -143,3 +115,4 @@ for i,tdef in pairs(crop_definition) do
 		end
 	end
 end
+

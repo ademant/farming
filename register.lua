@@ -18,6 +18,9 @@ local register_plant_check_def = function(def)
 	end
 	if not def.description then
 		def.description = "Seed"
+		if def.name then
+			def.description = def.name
+		end
 	end
 	if not def.fertility then
 		def.fertility = {"grassland"}
@@ -38,13 +41,15 @@ farming.register_plant = function(def)
 	-- local definitions
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":seed_"..def.name
+	-- check if seed to drop exist
 	if def.seed_drop ~= nil then
-		def.drop_seed_name = def.mod_name..":seed_"..def.seed_drop
+		def.seed_name = def.mod_name..":seed_"..def.seed_drop
 	end
 	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
 --      def.harvest_png=def.mod_name.."_"..def.name..".png"
+      def.harvest_name = def.step_name
       farming.register_harvest(def)
     else
       def.harvest_name=def.seed_name
@@ -829,3 +834,90 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 	end
 	return itemstack
 end
+
+-- generate "seed" out of harvest and trellis
+farming.trellis_seed = function(gdef)
+	if gdef.seed_name == nil then
+		return
+	end
+	
+	minetest.register_craft({
+	type = "shapeless",
+	output = gdef.seed_name.." 1",
+	recipe = {
+		farming.modname..":trellis",seed_name
+	},
+  })
+end
+
+-- define seed crafting
+function farming.seed_craft(gdef)
+	if gdef.seed_name == nil then
+		return
+	end
+	if gdef.harvest_name == nil then
+		return
+	end
+	local straw_name = "farming:straw"
+	if gdef.straw_name ~= nil then
+		straw_name = gdef.straw_name
+	end
+	minetest.register_craft({
+		type = "shapeless",
+		output = gdef.seed_name.." 1",
+		recipe = {
+			farming.modname..":flail",gdef.harvest_name
+		},
+		replacements = {{"group:farming_flail", farming.modname..":flail"},
+				{gdef.harvest_name,straw_name}},
+	})
+end
+
+function farming.register_roast(rdef)
+	if rdef.seed_name == nil then
+		return
+	end
+	if rdef.step_name == nil then
+		return
+	end
+	local roastitem = rdef.step_name.."_roasted"
+	if rdef.roast_name then
+		roastitem = rdef.roast_name
+	end
+	local mname = minetest.get_current_modname()
+	if rdef.mod_name then
+		mname = rdef.mod_name
+	end
+	local roast_png = mname.."_"..rdef.plant_name.."_roasted.png"
+	
+	local roast_def={
+		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
+		inventory_image = roast_png,
+		groups = rdef.groups or {flammable = 2},
+	}
+	for _,coln in ipairs({"plant_name"}) do
+	  roast_def[coln] = rdef[coln]
+	end
+	for _,coln in ipairs({"seed_roastable"}) do
+		if rdef.groups[coln] then
+			roast_def.groups[coln] = rdef.groups[coln]
+		end
+	end
+	if rdef.eat_hp then
+	  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
+	end
+	
+	minetest.register_craftitem(":" .. roastitem, roast_def)
+	
+	local cooktime = 3
+	if rdef.roast_time then
+		cooktime = rdef.roast_time
+	end
+	minetest.register_craft({
+		type = "cooking",
+		cooktime = cooktime or 3,
+		output = roastitem,
+		recipe = rdef.seed_name
+	})
+end
+

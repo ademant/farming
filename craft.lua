@@ -1,44 +1,6 @@
 local S = farming.intllib
 local modname=minetest.get_current_modname()
 
--- generate "seed" out of harvest and trellis
-farming.trellis_seed = function(grain_name,seed_name)
-	local mname = grain_name:split(":")[1]
-	local pname = grain_name:split(":")[2]
-	minetest.register_craft({
-	type = "shapeless",
-	output = mname..":seed_"..pname.." 1",
-	recipe = {
-		modname..":trellis",seed_name
-	},
-  })
-end
--- define seed crafting
-function farming.seed_craft(grain_name,straw_name)
-  local mname = grain_name:split(":")[1]
-  local pname = grain_name:split(":")[2]
-  if straw_name == nil then
-	local straw_name = "farming:straw"
-  end
-  minetest.register_craft({
-	type = "shapeless",
-	output = mname..":seed_"..pname.." 8",
-	recipe = {
-		grain_name,grain_name,grain_name,grain_name, modname..":flail",grain_name,grain_name,grain_name,grain_name
-	},
-	replacements = {{"group:farming_flail", modname..":flail"},
-				{grain_name,straw_name}},
-  })
-  minetest.register_craft({
-	type = "shapeless",
-	output = mname..":seed_"..pname.." 1",
-	recipe = {
-		modname..":flail",grain_name
-	},
-	replacements = {{"group:farming_flail", modname..":flail"},
-				{grain_name,straw_name}},
-  })
-end
 
 -- defining template for roasting
 local function roast_seed(seed_name,roast_name,cooktime)

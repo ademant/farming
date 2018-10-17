@@ -3,6 +3,7 @@
 farming = {}
 farming.path = minetest.get_modpath("farming")
 farming.config = minetest.get_mod_storage()
+farming.modname=minetest.get_current_modname()
 
 local S = dofile(farming.path .. "/intllib.lua")
 farming.intllib = S
