@@ -85,11 +85,11 @@ farming.register_plant = function(def)
     end
     
     if def.groups["use_flail"] then
-		local straw_name="farming:straw"
+		def.straw_name="farming:straw"
 		if def.straw then
-			straw_name=def.straw
+			def.straw_name=def.straw
 		end
-		farming.seed_craft(def.step_name,straw_name)
+		farming.seed_craft(def)
     end
     if def.groups["use_trellis"] then
 		farming.trellis_seed(def.step_name,def.drop_seed_name or def.seed_name)
@@ -899,8 +899,8 @@ function farming.register_roast(rdef)
 		return
 	end
 	local roastitem = rdef.step_name.."_roasted"
-	if rdef.roast_name then
-		roastitem = rdef.roast_name
+	if rdef.roast then
+		roastitem = rdef.roast
 	end
 	local mname = minetest.get_current_modname()
 	if rdef.mod_name then
@@ -924,6 +924,8 @@ function farming.register_roast(rdef)
 	if rdef.eat_hp then
 	  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
 	end
+	print(roastitem)
+	print(dump(roast_def))
 	
 	minetest.register_craftitem(":" .. roastitem, roast_def)
 	
@@ -947,8 +949,8 @@ function farming.register_grind(rdef)
 		return
 	end
 	local grinditem = rdef.step_name.."_flour"
-	if rdef.grind_name then
-		grinditem = rdef.grind_name
+	if rdef.grind then
+		grinditem = rdef.grind
 	end
 	local mname = minetest.get_current_modname()
 	if rdef.mod_name then
