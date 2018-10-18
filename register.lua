@@ -92,7 +92,9 @@ farming.register_plant = function(def)
 		farming.seed_craft(def)
     end
     if def.groups["use_trellis"] then
-		farming.trellis_seed(def.step_name,def.drop_seed_name or def.seed_name)
+		print(dump(def))
+--		print(dump(def))
+		farming.trellis_seed(def)
     end
     if def.groups["seed_grindable"] then
 		farming.register_grind(def)
@@ -193,7 +195,7 @@ end
 
 
 farming.register_seed=function(sdef)
-	print(sdef.name:gsub("^%l", string.upper))
+--	print(sdef.name:gsub("^%l", string.upper))
     local seed_def = {
 		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		drawtype = "signlike",
@@ -214,7 +216,7 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	print(seed_def.description)
+--	print(seed_def.description)
 	for i,colu in ipairs({"place_param2","fertility","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
@@ -343,7 +345,7 @@ farming.register_steps = function(sdef)
 		end
 		if i == sdef.steps and is_punchable and i > 1 then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
-		    print(ndef.pre_step)
+--		    print(ndef.pre_step)
 			ndef.on_punch = farming.step_on_punch
 		end
 --		print(dump(ndef))
@@ -863,7 +865,7 @@ farming.trellis_seed = function(gdef)
 	type = "shapeless",
 	output = gdef.seed_name.." 1",
 	recipe = {
-		farming.modname..":trellis",seed_name
+		farming.modname..":trellis",gdef.seed_name
 	},
   })
 end
@@ -924,8 +926,8 @@ function farming.register_roast(rdef)
 	if rdef.eat_hp then
 	  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
 	end
-	print(roastitem)
-	print(dump(roast_def))
+--	print(roastitem)
+--	print(dump(roast_def))
 	
 	minetest.register_craftitem(":" .. roastitem, roast_def)
 	
@@ -952,7 +954,7 @@ function farming.register_grind(rdef)
 	if rdef.grind then
 		grinditem = rdef.grind
 	end
-	print(grinditem)
+--	print(grinditem)
 	local desc = grinditem:split(":")[2]
 	desc = desc:gsub("_"," ")
 	local mname = minetest.get_current_modname()

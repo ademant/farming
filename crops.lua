@@ -82,7 +82,7 @@ local crop_cols={
 	"seed_grindable","for_flour","for_coffee"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
-print(dump(crop_definition))
+--print(dump(crop_definition))
 
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
