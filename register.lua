@@ -27,12 +27,12 @@ local register_plant_check_def = function(def)
 	end
 	if def.groups["seed_grindable"] then
 		if def.grind == nil then
-			def.grind = "Grinded "..def.description
+			def.grind = minetest.get_current_modname()..":"..def.description.."_grinded"
 		end
 	end
 	if def.groups["seed_roastable"] then
 		if def.roast == nil then
-			def.roast = "Roasted "..def.description
+			def.roast = minetest.get_current_modname()..":"..def.description.."_roasted"
 		end
 	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
@@ -236,7 +236,7 @@ farming.register_seed=function(sdef)
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
-	print(dump(seed_def))
+--	print(dump(seed_def))
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 end
 
@@ -574,8 +574,8 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
-	print(name)
-	print(dump(def))
+--	print(name)
+--	print(dump(def))
 	-- grow
 	if def.groups.punchable == nil then
 		return
@@ -906,7 +906,7 @@ function farming.register_roast(rdef)
 	if rdef.mod_name then
 		mname = rdef.mod_name
 	end
-	local roast_png = roastitem:gsub(":","_")..".pnd"
+	local roast_png = roastitem:gsub(":","_")..".png"
 	
 	local roast_def={
 		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
@@ -952,6 +952,9 @@ function farming.register_grind(rdef)
 	if rdef.grind then
 		grinditem = rdef.grind
 	end
+	print(grinditem)
+	local desc = grinditem:split(":")[2]
+	desc = desc:gsub("_"," ")
 	local mname = minetest.get_current_modname()
 	if rdef.mod_name then
 		mname = rdef.mod_name
@@ -959,7 +962,7 @@ function farming.register_grind(rdef)
 	local grind_png = grinditem:gsub(":","_")..".png"
 	
 	local grind_def={
-		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
+		description = S(desc:gsub("^%l", string.upper).." roasted"),
 		inventory_image = grind_png,
 		groups = rdef.groups or {flammable = 2},
 	}

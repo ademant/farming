@@ -15,13 +15,14 @@ farming.import_csv = function(infile,def)
 	local file = io.open(infile, "r")
 	local outdata = {}
 	-- reading header with column names
-	local header = file:read():split(",",true)
+	local header = file:read():gsub("\r",""):split(",",true)
 	-- read each line, split in separat fields and stores in array
 	-- by header the value is stored as numeric, in the group environment or as text
 	for line in file:lines() do
-		local attribs = line:split(",",true)
+		local attribs = line:gsub("\r",""):split(",",true)
 		local nrow={groups={}}
 		for i,d in ipairs(attribs) do
+			
 			if d ~= "" then
 				local th=header[i]
 				local dsaved = false
@@ -38,7 +39,7 @@ farming.import_csv = function(infile,def)
 					end
 				end
 				if not dsaved then
-					nrow[ th ]=d
+					nrow[th]=d
 				end
 			end
 		end
