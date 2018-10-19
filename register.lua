@@ -35,6 +35,16 @@ local register_plant_check_def = function(def)
 			def.roast = minetest.get_current_modname()..":"..def.description.."_roasted"
 		end
 	end
+	-- check if seed_drop is set and check if it is a node name
+	if def.seed_drop then
+		local mname=def.seed_drop:split(":")[1]
+		local sname=def.seed_drop:split(":")[2]
+		if mname=="" then
+			mname=minetest.get_current_modname()
+			def.seed_drop=mname..":"..sname
+		end
+		def.groups["has_harvest"] = 1
+	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
 	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
   return def
@@ -51,15 +61,15 @@ farming.register_plant = function(def)
 	-- local definitions
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":seed_"..def.name
-	-- check if seed to drop exist
-	if def.seed_drop ~= nil then
-		def.seed_name = def.mod_name..":seed_"..def.seed_drop
-	end
 	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
 --      def.harvest_png=def.mod_name.."_"..def.name..".png"
-      def.harvest_name = def.step_name
+		if def.seed_drop ~= nil then
+			def.harvest_name = def.seed_drop
+		else
+			def.harvest_name = def.step_name
+		end
       farming.register_harvest(def)
     else
       def.harvest_name=def.seed_name
@@ -286,8 +296,8 @@ farming.register_steps = function(sdef)
 	if has_harvest then
 		node_def.drop_item = sdef.step_name
 	else
-		if sdef.drop_seed_name ~= nil then
-			node_def.drop_item = sdef.drop_seed_name
+		if sdef.seed_drop ~= nil then
+			node_def.drop_item = sdef.seed_drop
 		end
 	end
 	local lbm_nodes = {sdef.seed_name}
@@ -860,12 +870,16 @@ farming.trellis_seed = function(gdef)
 	if gdef.seed_name == nil then
 		return
 	end
+	if gdef.harvest_name == nil then
+		return
+	end
+	
 	
 	minetest.register_craft({
 	type = "shapeless",
 	output = gdef.seed_name.." 1",
 	recipe = {
-		farming.modname..":trellis",gdef.seed_name
+		farming.modname..":trellis",gdef.harvest_name
 	},
   })
 end
