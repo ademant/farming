@@ -605,10 +605,8 @@ end
 
 farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
---	print(name)
---	print(dump(def))
+--	local name = node.name
+	local def = minetest.registered_nodes[node.name]
 	-- grow
 	if def.groups.punchable == nil then
 		return
