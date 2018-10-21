@@ -507,6 +507,14 @@ farming.register_billhook = function(name,def)
   if not def.material then
     return
   end
+  if def.max_uses == nil then
+	def.max_uses = 30
+  end
+  if def.on_use == nil then
+	def.on_use = function(itemstack, user, pointed_thing)
+			return farming.billhook_on_use(itemstack, user, pointed_thing, def.max_uses)
+		end
+  end
   if not def.recipe then
 	def.recipe = {
 		{"", def.material, def.material},
@@ -553,9 +561,6 @@ farming.register_tool = function(name, def)
 		def.max_uses = 30
 	end
 	def.sound={breaks = "default_tool_breaks"}
---	def.on_dig = function(itemstack, user, pointed_thing)
---		return farming.tool_on_dig(itemstack, user, pointed_thing, def.max_uses)
---	end
 
 	-- Register the tool
 	minetest.register_tool(name, def)
@@ -637,7 +642,7 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 end
 
 farming.harvest_on_dig = function(pos, node, digger)
-	local node = minetest.get_node(pos)
+	--local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
@@ -1028,4 +1033,49 @@ function farming.register_grind(rdef)
 	replacements = {{"group:food_mortar_pestle", farming.modname..":mortar_pestle"}},
 
 	})
+end
+
+farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
+	local pt = pointed_thing
+	-- check if pointing at a node
+	if not pt then
+		return
+	end
+	if pt.type ~= "node" then
+		return
+	end
+
+	local under = minetest.get_node(pt.under)
+
+	-- return if any of the nodes is not registered
+	if not minetest.registered_nodes[under.name] then
+		return
+	end
+
+	-- check if pointing at soil
+	if minetest.get_item_group(under.name, "punchable") == nil then
+		return
+	end
+
+	if minetest.is_protected(pt.under, user:get_player_name()) then
+		minetest.record_protection_violation(pt.under, user:get_player_name())
+		return
+	end
+	if minetest.is_protected(pt.above, user:get_player_name()) then
+		minetest.record_protection_violation(pt.above, user:get_player_name())
+		return
+	end
+
+	if not (creative and creative.is_enabled_for
+			and creative.is_enabled_for(user:get_player_name())) then
+		-- wear tool
+		local wdef = itemstack:get_definition()
+		itemstack:add_wear(65535/(uses-1))
+		-- tool break sound
+		if itemstack:get_count() == 0 and wdef.sound and wdef.sound.breaks then
+			minetest.sound_play(wdef.sound.breaks, {pos = pt.above, gain = 0.5})
+		end
+	end
+	minetest.node_punch(pt.under, under, user, pointed_thing)
+	return itemstack
 end
