@@ -64,15 +64,15 @@ farming.register_plant = function(def)
 	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
---      def.harvest_png=def.mod_name.."_"..def.name..".png"
+		-- if plant drops seed of wild crop, set the wild seed as harvest
 		if def.seed_drop ~= nil then
 			def.harvest_name = def.seed_drop
 		else
 			def.harvest_name = def.step_name
 		end
-      farming.register_harvest(def)
+		farming.register_harvest(def)
     else
-      def.harvest_name=def.seed_name
+		def.harvest_name=def.seed_name
     end
     
    	farming.registered_plants[def.name] = def
@@ -160,21 +160,22 @@ end
 
 
 farming.register_harvest=function(hdef)
+	-- base definition of harvest
 	local harvest_def={
 		description = S(hdef.description:gsub("^%l", string.upper)),
 		inventory_image = hdef.mod_name.."_"..hdef.plant_name..".png",
 		groups = hdef.groups or {flammable = 2},
 	}
---	for _,coln in ipairs({"name","seed_name","harvest_name"}) do
+	-- copy fields from plant definition
 	for _,coln in ipairs({"plant_name"}) do
 	  harvest_def[coln] = hdef[coln]
 	end
+	-- some existing groups are copied
 	for _,coln in ipairs({"use_flail","use_trellis"}) do
 		if hdef.groups[coln] then
 			harvest_def.groups[coln] = hdef.groups[coln]
 		end
 	end
-
 	minetest.register_craftitem(":" .. hdef.step_name, harvest_def)
 end
 
