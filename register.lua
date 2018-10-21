@@ -294,10 +294,10 @@ farming.register_steps = function(sdef)
 	node_def.drop_item = sdef.seed_name
 	-- if plant has to be harvested, drop harvest instead
 	if has_harvest then
-		node_def.drop_item = sdef.step_name
-	else
 		if sdef.seed_drop ~= nil then
 			node_def.drop_item = sdef.seed_drop
+		else
+			node_def.drop_item = sdef.step_name
 		end
 	end
 	local lbm_nodes = {sdef.seed_name}
@@ -330,7 +330,7 @@ farming.register_steps = function(sdef)
 			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
 		end
 		ndef.drop={items={{items={ndef.drop_item}}}}
-		if use_trellis then
+		if sdef.groups["use_trellis"] then
 			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
 		local base_rarity = 1
@@ -601,7 +601,7 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
-	puncher:get_inventory():add_item('main',def.seed_name)
+	puncher:get_inventory():add_item('main',def.drop_item)
 	-- getting one more when using billhook
 	local tool_def = puncher:get_wielded_item():get_definition()
 	if tool_def.groups["billhook"] then
