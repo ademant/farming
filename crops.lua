@@ -49,6 +49,10 @@ Actual columns:
 							value is used as roast time
 	seed_grindable
 				any value	seed can be grinded, e.g. in a coffee grinder, needs "crop_grind.png" or value in grind
+	damage_per_second
+				any value	damage a player get while in a node with this crop, e.g. thorns of raspberries
+	liquid_viscosity
+				any value	resistance a player sees while walking through a field
 	temperature_min/_max	Range of temperature inside the crop can grow.
 	humidity_min/_max		Range of humidity
 	elevation_min/_max		Height range the crop can be found
@@ -79,7 +83,7 @@ local crop_cols={
 	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time"},
 	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
-	"seed_grindable","for_flour","for_coffee"}}
+	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
 --print(dump(crop_definition))

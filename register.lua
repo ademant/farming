@@ -308,7 +308,7 @@ farming.register_steps = function(sdef)
 			ndef[colu]=node_def[colu]
 		end
 		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable"}) do
+		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable","damage_per_second","liquid_viscosity"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
@@ -317,6 +317,7 @@ farming.register_steps = function(sdef)
 		ndef.groups[sdef.mod_name]=1
 		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
 		if i < sdef.steps then
+			ndef.groups["farming_grows"]=1 -- plant is growing
 			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
 			ndef.on_timer = farming.step_on_timer
 			ndef.grow_time_min=sdef.grow_time_min or 120
@@ -333,6 +334,24 @@ farming.register_steps = function(sdef)
 		if sdef.groups["use_trellis"] then
 			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
+		-- check if plant hurts while going through
+		if ndef.groups["damage_per_second"] then
+			-- calculate damage as part of growing: Full damage only for full grown plant
+			local step_damage=math.ceil(ndef.groups["damage_per_second"]*i/sdef.steps)
+			if step_damage > 0 then
+				ndef.damage_per_second = step_damage
+			end
+		end
+		-- for some crops you should walk slowly through like a wheat field
+		if ndef.groups["liquid_viscosity"] then
+			local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
+			if step_viscosity > 0 then
+				ndef.liquid_viscosity= step_viscosity
+				ndef.liquidtype="source"
+				ndef.liquid_renewable=false
+				ndef.liquid_range=0
+			end
+		end
 		local base_rarity = 1
 		if sdef.steps ~= 1 then
 			base_rarity =  sdef.steps - i + 1
@@ -346,7 +365,8 @@ farming.register_steps = function(sdef)
 		  end
 		end
 		if i == sdef.steps then
-		  ndef.on_dig = farming.harvest_on_dig
+			ndef.groups["farming_fullgrown"]=1
+			ndef.on_dig = farming.harvest_on_dig
 		end
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == sdef.steps and sdef.next_plant ~= nil) then
