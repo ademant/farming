@@ -345,7 +345,7 @@ farming.register_steps = function(sdef)
 		-- for some crops you should walk slowly through like a wheat field
 		if ndef.groups["liquid_viscosity"] then
 			local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
-			if step_viscosity > 0 then
+			if step_viscosity > 0 then 
 				ndef.liquid_viscosity= step_viscosity
 				ndef.liquidtype="source"
 				ndef.liquid_renewable=false
