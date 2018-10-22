@@ -76,6 +76,8 @@ Created by ademant (CC BY 3.0):
   farming_sugerbeet (based on farming_beetroot)
   farming_blackberry (based on farming_blueberry)
   farming_strawberry (based on farming_raspberry)
+  farming_strawberry_seed (based on gif from Nicke L on wikimedia)
+  farming_raspberry_seed (based on jpg from AlbertCahalan on wikimedia)
   farming_mustard
   farming_spelt (based on farming_barley)
   farming_hop
