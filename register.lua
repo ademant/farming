@@ -335,22 +335,25 @@ farming.register_steps = function(sdef)
 		if sdef.groups["use_trellis"] then
 			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
-		-- check if plant hurts while going through
-		if ndef.groups["damage_per_second"] then
-			-- calculate damage as part of growing: Full damage only for full grown plant
-			local step_damage=math.ceil(ndef.groups["damage_per_second"]*i/sdef.steps)
-			if step_damage > 0 then
-				ndef.damage_per_second = step_damage
+		-- hurting and viscosity not for first step, which is used for random generation
+		if i > 1 then
+			-- check if plant hurts while going through
+			if ndef.groups["damage_per_second"] then
+				-- calculate damage as part of growing: Full damage only for full grown plant
+				local step_damage=math.ceil(ndef.groups["damage_per_second"]*i/sdef.steps)
+				if step_damage > 0 then
+					ndef.damage_per_second = step_damage
+				end
 			end
-		end
-		-- for some crops you should walk slowly through like a wheat field
-		if ndef.groups["liquid_viscosity"] then
-			local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
-			if step_viscosity > 0 then 
-				ndef.liquid_viscosity= step_viscosity
-				ndef.liquidtype="source"
-				ndef.liquid_renewable=false
-				ndef.liquid_range=0
+			-- for some crops you should walk slowly through like a wheat field
+			if ndef.groups["liquid_viscosity"] then
+				local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
+				if step_viscosity > 0 then 
+					ndef.liquid_viscosity= step_viscosity
+					ndef.liquidtype="source"
+					ndef.liquid_renewable=false
+					ndef.liquid_range=0
+				end
 			end
 		end
 		local base_rarity = 1
