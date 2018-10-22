@@ -51,8 +51,8 @@ Created by Ten1Plus (CC BY-SA 3.0):
 Created by ademant (CC BY 3.0):
   farming_tool_flail.png
   farming_tool_coffee_grinder.png (based on art by cactus_cowboy on openclipart.org)
-  farming_tool_scythe
-  farming_tool_billhook
+  farming_tool_scythe (based on svg by Rinaldum on wikimedia)
+  farming_tool_billhook (based on svg by Henrysalome on wikimedia)
   farming_sugerbeet (based on farming_beetroot)
   farming_blackberry (based on farming_blueberry)
   farming_strawberry (based on farming_raspberry)

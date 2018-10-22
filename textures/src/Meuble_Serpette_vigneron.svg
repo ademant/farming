@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="450"
+   height="450"
+   id="svg1403"
+   sodipodi:version="0.32"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="Meuble_Serpette_vigneron.svg">
+  <metadata
+     id="metadata2647">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:window-height="573"
+     inkscape:window-width="957"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     inkscape:zoom="0.70139535"
+     inkscape:cx="204.8488"
+     inkscape:cy="268.75"
+     inkscape:window-x="22"
+     inkscape:window-y="29"
+     inkscape:current-layer="svg1403"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     height="450px"
+     showgrid="false"
+     inkscape:window-maximized="0" />
+  <defs
+     id="defs1405" />
+  <g
+     id="g21214"
+     transform="matrix(1.402468,0,0,1.402468,105.3521,-176.4884)">
+    <g
+       id="g21210">
+      <path
+         style="opacity:1;color:black;fill:white;fill-opacity:1;fill-rule:evenodd;stroke:black;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible"
+         d="M 35.655879,187.73374 C 46.289611,160.5332 104.32956,160.21248 101.01525,202.00778 L 93.419169,274.36216 L 72.490552,274.27413 L 72.723007,270.69444 L 68.369609,270.03696 C 68.91814,255.90851 69.072011,225.38808 71.901154,210.31775 C 73.802917,187.59666 47.349857,178.73738 35.655879,187.73374 z "
+         id="path18533"
+         sodipodi:nodetypes="cccccccc" />
+      <path
+         style="opacity:1;color:black;fill:black;fill-opacity:1;fill-rule:evenodd;stroke:black;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible"
+         d="M 95.512643,194.03693 C 92.276589,203.5241 91.552199,208.44098 93.883974,216.14603 L 95.512643,194.03693 z "
+         id="path19428"
+         sodipodi:nodetypes="ccc" />
+    </g>
+    <g
+       id="g21206">
+      <path
+         style="opacity:1;color:black;fill:#fcef3c;fill-opacity:1;fill-rule:evenodd;stroke:black;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible"
+         d="M 72.547274,274.17784 L 94.714504,274.45844 C 96.829964,351.20816 96.951994,347.55814 139.61018,351.90346 L 118.56534,383.61104 C 63.572794,372.21622 64.641824,312.23938 72.547274,274.17784 z "
+         id="path20319"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         sodipodi:type="arc"
+         style="opacity:1;color:black;fill:black;fill-opacity:1;fill-rule:evenodd;stroke:black;stroke-width:1.95770311;stroke-linecap:butt;stroke-linejoin:round;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible"
+         id="path18537"
+         sodipodi:cx="82.936508"
+         sodipodi:cy="264.36508"
+         sodipodi:rx="1.1904762"
+         sodipodi:ry="1.1904762"
+         d="m 84.126984,264.36508 a 1.1904762,1.1904762 0 0 1 -1.190476,1.19048 1.1904762,1.1904762 0 0 1 -1.190476,-1.19048 1.1904762,1.1904762 0 0 1 1.190476,-1.19047 1.1904762,1.1904762 0 0 1 1.190476,1.19047 z"
+         transform="matrix(1.532408,0,0,1.532408,-47.71024,-123.5303)" />
+    </g>
+  </g>
+</svg>
