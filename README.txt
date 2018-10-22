@@ -75,6 +75,8 @@ Created by ademant (CC BY 3.0):
   farming_tool_billhook (based on svg by Henrysalome on wikimedia)
   farming_sugerbeet (based on farming_beetroot)
   farming_blackberry (based on farming_blueberry)
+  farming_blackberry_seed (based on jpg from AlbertCahalan on wikimedia)
+  farming_blueberry_seed (based on jpg from Bateau ivre on wikimedia)
   farming_strawberry (based on farming_raspberry)
   farming_strawberry_seed (based on gif from Nicke L on wikimedia)
   farming_raspberry_seed (based on jpg from AlbertCahalan on wikimedia)
