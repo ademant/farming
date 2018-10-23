@@ -677,7 +677,6 @@ end
 
 farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
---	local name = node.name
 	local def = minetest.registered_nodes[node.name]
 	-- grow
 	if def.groups.punchable == nil then
@@ -692,11 +691,16 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
-	puncher:get_inventory():add_item('main',def.drop_item)
+	print(dump(puncher))
+	print(dump(puncher:get_player_name()))
+	
+	if puncher ~= nil and puncher:get_player_name() ~= "" then
+		puncher:get_inventory():add_item('main',def.drop_item)
 	-- getting one more when using billhook
-	local tool_def = puncher:get_wielded_item():get_definition()
-	if tool_def.groups["billhook"] then
-  	  puncher:get_inventory():add_item('main',def.drop_item)
+		local tool_def = puncher:get_wielded_item():get_definition()
+		if tool_def.groups["billhook"] then
+		  puncher:get_inventory():add_item('main',def.drop_item)
+		end
 	end
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
@@ -1167,25 +1171,19 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	if pt.type ~= "node" then
 		return
 	end
-
 	local under = minetest.get_node(pt.under)
-
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
 		return
 	end
 
-	-- check if pointing at soil
-	if minetest.get_item_group(under.name, "punchable") == nil then
+	local pdef=minetest.registered_nodes[under.name]
+	-- check if pointing at punchable crop
+	if pdef.groups.punchable == nil then
 		return
 	end
-
 	if minetest.is_protected(pt.under, user:get_player_name()) then
 		minetest.record_protection_violation(pt.under, user:get_player_name())
-		return
-	end
-	if minetest.is_protected(pt.above, user:get_player_name()) then
-		minetest.record_protection_violation(pt.above, user:get_player_name())
 		return
 	end
 
@@ -1199,6 +1197,9 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 			minetest.sound_play(wdef.sound.breaks, {pos = pt.above, gain = 0.5})
 		end
 	end
-	minetest.node_punch(pt.under, under, user, pointed_thing)
+	user:get_inventory():add_item('main',pdef.drop_item)
+	user:get_inventory():add_item('main',pdef.drop_item)
+--	minetest.node_punch(pt.under, under, user, pointed_thing)
+	minetest.punch_node(pt.under)
 	return itemstack
 end
