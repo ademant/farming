@@ -691,8 +691,6 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
-	print(dump(puncher))
-	print(dump(puncher:get_player_name()))
 	
 	if puncher ~= nil and puncher:get_player_name() ~= "" then
 		puncher:get_inventory():add_item('main',def.drop_item)
@@ -903,33 +901,26 @@ farming.wilt_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
---	print(dump(def))
 	if def.groups.wiltable <= 2 then -- normal crop
 		minetest.swap_node(pos, {name="air"})
 	end
 	if def.groups.wiltable == 3 then -- nettle or weed
-		print("nettle")
 		-- determine all nearby nodes with soil
 		local pos0=vector.subtract(pos,2)
 		local pos1=vector.add(pos,2)
 		local neighb=minetest.find_nodes_in_area(pos0,pos1,"group:soil")
---		print(dump(neighb))
 		if neighb ~= nil then
 			local freen={}
 			-- get soil nodes with air above
 			for j=1,#neighb do
 				local jpos=neighb[j]
---				print(dump(minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z})))
 				if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
 					table.insert(freen,1,jpos)
 				end
 			end
 			-- randomly pick one and spread
 			if #freen >= 1 then
-				print(#freen)
 				local jpos=freen[math.random(1,#freen)]
-				print(name.." spread "..dump(jpos))
---				print(dump(def))
 				minetest.add_node({x=jpos.x,y=jpos.y+1,z=jpos.z}, {name = def.seed_name, param2 = 1})
 				minetest.get_node_timer({x=jpos.x,y=jpos.y+1,z=jpos.z}):start(def.grow_time_min or 10)
 			end
@@ -937,13 +928,10 @@ farming.wilt_on_timer = function(pos, elapsed)
 		-- after spreading the source has a one third change to be removed, to go one step back or stay
 		local wran=math.random(1,3)
 		if wran == 1 then
-			print("remove")
 			minetest.swap_node(pos, {name="air"})
 		end
 		if wran == 2 then
-			print("try to go one step back")
 			if def.pre_step ~= nil then
-				print("done")
 				minetest.swap_node(pos, {name=def.pre_step, param2=1})
 				minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 			end
@@ -1187,18 +1175,22 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 		return
 	end
 
+	local tdef=itemstack:get_definition()
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(user:get_player_name())) then
 		-- wear tool
-		local wdef = itemstack:get_definition()
 		itemstack:add_wear(65535/(uses-1))
 		-- tool break sound
-		if itemstack:get_count() == 0 and wdef.sound and wdef.sound.breaks then
-			minetest.sound_play(wdef.sound.breaks, {pos = pt.above, gain = 0.5})
+		if itemstack:get_count() == 0 and tdef.sound and tdef.sound.breaks then
+			minetest.sound_play(tdef.sound.breaks, {pos = pt.above, gain = 0.5})
 		end
 	end
 	user:get_inventory():add_item('main',pdef.drop_item)
-	user:get_inventory():add_item('main',pdef.drop_item)
+	if tdef.farming_change ~= nil then
+		if math.random(1,tdef.farming_change)==1 then
+			user:get_inventory():add_item('main',pdef.drop_item)
+		end
+	end
 --	minetest.node_punch(pt.under, under, user, pointed_thing)
 	minetest.punch_node(pt.under)
 	return itemstack
