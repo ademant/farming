@@ -810,25 +810,17 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			return
 		else
 			-- check if node is correct one
-			local is_correct_node = false
-			for _,spawnon in ipairs(plant_def.spawnon) do
-				if under.name == spawnon then
-					is_correct_node = true
-				end
-			end
-			if not is_correct_node then
-				return itemstack
-			end
+			local plant_def=farming.registered_plants[pdef.plant_name]
 			-- check for correct temperature
-			if pt.under.y < pdef.elevation_min or pt.under.y > pdef.elevation_max then
-				minetest.chat_send_player(player_name,"Elevation must be between "..pdef.elevation_min.." and "..pdef.elevation_max)
+			if pt.under.y < plant_def.elevation_min or pt.under.y > plant_def.elevation_max then
+				minetest.chat_send_player(player_name,"Elevation must be between "..plant_def.elevation_min.." and "..plant_def.elevation_max)
 				return
 			end
-			if minetest.get_heat(pt.under) < pdef.temperature_min or minetest.get_heat(pt.under) > pdef.temperature_max then
+			if minetest.get_heat(pt.under) < plant_def.temperature_min or minetest.get_heat(pt.under) > plant_def.temperature_max then
 				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
 				return
 			end
-			if minetest.get_humidity(pt.under) < pdef.humidity_min or minetest.get_humidity(pt.under) > pdef.humidity_max then
+			if minetest.get_humidity(pt.under) < plant_def.humidity_min or minetest.get_humidity(pt.under) > plant_def.humidity_max then
 				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
 				return
 			end
@@ -908,26 +900,29 @@ farming.wilt_on_timer = function(pos, elapsed)
 		-- determine all nearby nodes with soil
 		local pos0=vector.subtract(pos,2)
 		local pos1=vector.add(pos,2)
-		local neighb=minetest.find_nodes_in_area(pos0,pos1,"group:soil")
-		if neighb ~= nil then
-			local freen={}
-			-- get soil nodes with air above
-			for j=1,#neighb do
-				local jpos=neighb[j]
-				if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
-					table.insert(freen,1,jpos)
+		local farming_nearby=minetest.find_nodes_in_area(pos0,pos1,"group:farming")
+		if #farming_nearby <= 4 then
+			local neighb=minetest.find_nodes_in_area(pos0,pos1,"group:soil")
+			if neighb ~= nil then
+				local freen={}
+				-- get soil nodes with air above
+				for j=1,#neighb do
+					local jpos=neighb[j]
+					if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
+						table.insert(freen,1,jpos)
+					end
 				end
-			end
-			-- randomly pick one and spread
-			if #freen >= 1 then
-				local jpos=freen[math.random(1,#freen)]
-				minetest.add_node({x=jpos.x,y=jpos.y+1,z=jpos.z}, {name = def.seed_name, param2 = 1})
-				minetest.get_node_timer({x=jpos.x,y=jpos.y+1,z=jpos.z}):start(def.grow_time_min or 10)
+				-- randomly pick one and spread
+				if #freen >= 1 then
+					local jpos=freen[math.random(1,#freen)]
+					minetest.add_node({x=jpos.x,y=jpos.y+1,z=jpos.z}, {name = def.seed_name, param2 = 1})
+					minetest.get_node_timer({x=jpos.x,y=jpos.y+1,z=jpos.z}):start(def.grow_time_min or 10)
+				end
 			end
 		end
 		-- after spreading the source has a one third change to be removed, to go one step back or stay
-		local wran=math.random(1,3)
-		if wran == 1 then
+		local wran=math.random(1,math.max(3,#farming_nearby))
+		if wran >= 3 then
 			minetest.swap_node(pos, {name="air"})
 		end
 		if wran == 2 then
@@ -936,7 +931,7 @@ farming.wilt_on_timer = function(pos, elapsed)
 				minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 			end
 		end
-		if wran == 3 then
+		if wran == 1 then
 			minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 		end
 	end
