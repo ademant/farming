@@ -85,6 +85,18 @@ minetest.register_abm({
 			end
 			if #sc > 0 then
 				local rand_plant = math.random(1,#sc)
+				--[[
+				local pdef = minetest.registered_nodes[ sc[rand_plant] ]
+				local day_start=99999
+				local light_amount=0
+				for i=50,120 do
+					if minetest.get_node_light(ptabove,(i)/240)>pdef.light_min then
+						light_amount=light_amount+minetest.get_node_light(ptabove,i/240)
+						day_start=math.min(day_start,i)
+					end
+				end
+				print(pdef.light_min,day_start,light_amount)
+				]]
 				minetest.add_node(ptabove, {name=sc[rand_plant],param2=1})
 				minetest.get_node_timer(ptabove):start(math.random(10, 15))
 			end
