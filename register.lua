@@ -1190,3 +1190,11 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	minetest.punch_node(pt.under)
 	return itemstack
 end
+
+farming.set_node_metadata=function(pos)
+	local node = minetest.get_node(pos)
+	local def = minetest.registered_nodes[node.name]
+	local pdef = farming.registered_plants[def.plant_name]
+	local ill_rate=(pdef.light_max-minetest.get_node_light(pos,0.5))/(pdef.light_max-pdef.light_min)
+	
+end
