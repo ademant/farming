@@ -5,23 +5,16 @@
 	world folder for map specific settings.
 --]]
 
-farming.crops = {"wheat","strawberry","potato","barley","blackberry","corn","coffee","raspberry","cocoa","spelt","mustard","cotton","tomato"}
+local viscosity=1
+local wilt_removal_time=20
 
-for i,crop in ipairs(farming.crops) do
---  print(crop.." - "..farming.config:get_string(crop))
-  if farming.config:get_string(crop) == "" then
-    farming.config:set_int(crop,1)
-  end
-  if minetest.settings:get("farming."..crop) ~= nil then
-    if minetest.settings:get_bool("farming."..crop) then
-      farming.config:set_int(crop,1)
-    else
-      farming.config:set_int(crop,0)
-    end
-  end
-end
 if minetest.settings:get("farming.rarety") then
   farming.config:set_float("rarety",minetest.settings:get("farming.rarety"))
+end
+if minetest.settings:get("farming.viscosity") then
+	farming.config:set_int("viscosity",minetest.settings:get("farming.viscosity"))
+else
+	farming.config:set_int("viscosity",viscosity)
 end
 
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
@@ -29,6 +22,8 @@ farming.rarety = farming.config:get_float("rarety") or 0.002
 -- random waiting time for growing
 farming.wait_min = farming.config:get_int("wati_min") or 40
 farming.wait_max = farming.config:get_int("wati_max") or 80
+farming.wilt_removal_time = wilt_removal_time or 60
+farming.wilt_time = 5
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}

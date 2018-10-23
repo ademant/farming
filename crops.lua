@@ -28,6 +28,11 @@ Actual columns:
 	infectable	void		
 				any value	the plant can be infected, where the crop does not give any seed or harvest 
 							and may infect other crops nearby
+	wiltable	void		
+				1			Wilt is going one step back, like Berries: They loose the fruits, but grow again
+				2			Plant wilt and remove itself after time. During wilt you can harvest straw if defined.
+							For grain
+				3			crop is spreading seed around and go one step back or dies like nettles
 	infection_defense
 				any value	can protect nearby crop against infection. value give range of protection
 	seed_extractable
@@ -64,6 +69,7 @@ Actual columns:
 	infect_rate_monoculture	Infect rate if many crops are standing nearby.
 	spread_rate				Full grown crops can spread to neighbor block
 	grow_time_mean			mean grow time to next step
+	wilt_time				Time for wilt of a crop
 	straw		text		extension for using flail: item name of fibre to craft out of harvest beside seeds
 	culture_rate			rate to get cultured variant out of wild form.
 	seed_drop				name of seed you get from plant: grapes drops seed which normally lead to wild wine.
@@ -80,10 +86,10 @@ local crop_cols={
 	col_num={"rarety","steps","harvest_max","eat_hp",
 	"temperature_min","temperature_max","humidity_min","humidity_max",
 	"elevation_min","elevation_max","light_min","light_max",
-	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time"},
+	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time","wilt_time"},
 	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
-	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity"}}
+	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity","wiltable"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
 --print(dump(crop_definition))

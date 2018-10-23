@@ -45,6 +45,11 @@ local register_plant_check_def = function(def)
 		end
 		def.groups["has_harvest"] = 1
 	end
+	if def.groups["wiltable"] ~= nil then
+		if def.wilt_time == nil then
+			def.wilt_time = farming.wilt_time
+		end
+	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
 	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
   return def
@@ -75,6 +80,11 @@ farming.register_plant = function(def)
 		def.harvest_name=def.seed_name
     end
     
+    if def.groups["wiltable"] == 2 then
+		def.wilt_name=def.mod_name..":wilt_"..def.name
+		print(def.wilt_name)
+		farming.register_wilt(def)
+	end
    	farming.registered_plants[def.name] = def
 
     farming.register_seed(def)
@@ -202,6 +212,33 @@ farming.register_infect=function(idef)
 	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,infect=2}
 	infect_def.groups["step"] = -1
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
+end
+farming.register_wilt=function(idef)
+	if idef.wilt_name == nil then
+		return
+	end
+	local wilt_def={
+		description = S(idef.description:gsub("^%l", string.upper).." wilted"),
+		tiles = {idef.mod_name.."_"..idef.name.."_wilt.png"},
+		drawtype = "plantlike",
+		waving = 1,
+		paramtype = "light",
+		walkable = false,
+		buildable_to = true,
+		selection_box = {type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
+		sounds = default.node_sound_leaves_defaults(),
+	}
+	if idef.straw ~= nil then
+		wilt_def.drop={items={{items={idef.straw}}}}
+	end
+	for _,coln in ipairs({"name","seed_name","step_name","place_param2","fertility","description"}) do
+	  wilt_def[coln] = idef[coln]
+	end
+
+	wilt_def.groups = {snappy = 3, attached_node = 1, flammable = 2,farming_wilt=1}
+	wilt_def.groups["step"] = -1
+	minetest.register_node(":" .. idef.wilt_name, wilt_def)
 end
 
 
@@ -346,11 +383,14 @@ farming.register_steps = function(sdef)
 				end
 			end
 			-- for some crops you should walk slowly through like a wheat field
-			if ndef.groups["liquid_viscosity"] then
+			if ndef.groups["liquid_viscosity"] and farming.config:get_int("viscosity") > 0 then
+--			if ndef.groups["liquid_viscosity"] then
 				local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
 				if step_viscosity > 0 then 
 					ndef.liquid_viscosity= step_viscosity
 					ndef.liquidtype="source"
+					ndef.liquid_alternative_source=ndef.description
+					ndef.liquid_alternative_flowing=ndef.description
 					ndef.liquid_renewable=false
 					ndef.liquid_range=0
 				end
@@ -371,6 +411,17 @@ farming.register_steps = function(sdef)
 		if i == sdef.steps then
 			ndef.groups["farming_fullgrown"]=1
 			ndef.on_dig = farming.harvest_on_dig
+			if sdef.groups.wiltable ~= nil then
+				print(sdef.wilt_name)
+				if sdef.wilt_name then
+					ndef.next_step=sdef.wilt_name
+				else
+					ndef.next_step = sdef.step_name .. "_" .. (i - 1)
+				end
+				ndef.on_timer = farming.step_on_timer
+				ndef.grow_time_min=sdef.wilt_time or 10
+				ndef.grow_time_max=math.ceil(ndef.grow_time_min*1.1)
+			end
 		end
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == sdef.steps and sdef.next_plant ~= nil) then
@@ -383,7 +434,7 @@ farming.register_steps = function(sdef)
 			ndef.on_punch = farming.step_on_punch
 		end
 --		print(dump(ndef))
-		minetest.register_node(":" .. sdef.step_name .. "_" .. i, ndef)
+		minetest.register_node(":" .. ndef.description, ndef)
 	end
 --	farming.register_lbm(lbm_nodes,sdef)
 end
@@ -674,6 +725,7 @@ farming.step_on_timer = function(pos, elapsed)
 	if def.place_param2 then
 		placenode.param2 = def.place_param2
 	end
+--	minetest.set_node(pos, {name = def.next_step, param2 = 1})
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups.step)
@@ -767,7 +819,6 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			end
 		end
 	end
-
 	-- add the node and remove 1 item from the itemstack
 	minetest.add_node(pt.above, {name = plantname, param2 = 1})
 	local wait_min=farming.wait_min or 120
