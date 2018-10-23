@@ -59,14 +59,23 @@ minetest.register_abm({
 			return
 		end
 		local ptlight=minetest.get_node_light(ptabove)
-		if ptlight < 5 then
+		if ptlight < farming.min_light then
 			return
 		end
-		local pos0 = vector.subtract(pos,4)
-		local pos1 = vector.add(pos,4)
-		-- only for positions, where not too many plants are nearby
-		if #minetest.find_nodes_in_area(pos0,pos1,"group:farming") > 2 then
+		local ptlight=minetest.get_node_light(ptabove,.5)
+		if ptlight < farming.min_light then
 			return
+		end
+		-- only for positions, where not too many plants are nearby
+		-- first check if any crops are nearby, because the counting
+		-- of nearby crops is time consuming
+		if minetest.find_node_near(pos,4,"group:farming") ~= nil then
+			local pos0 = vector.subtract(pos,4)
+			local pos1 = vector.add(pos,4)
+			if #minetest.find_nodes_in_area(pos0,pos1,"group:farming") > 2 then
+--				print("ping")
+				return
+			end
 		end
 		if math.random(0,100) < 1 then
 			local node_temp=minetest.get_heat(pos)
@@ -76,8 +85,10 @@ minetest.register_abm({
 			  if line.temp_min<=node_temp and line.temp_max>=node_temp then
 				if line.hum_min<=node_hum and line.hum_max>=node_hum then
 					if line.y_min<=pos.y and line.y_max>=pos.y then
-						for k=1,math.floor(math.log(line.base_rate)*(-2)) do
-							table.insert(sc,1,line.name)
+						if line.light_min<=ptlight and line.light_max >= ptlight then
+							for k=1,math.floor(math.log(line.base_rate*1e10)) do
+								table.insert(sc,1,line.name)
+							end
 						end
 					end
 				end
@@ -85,6 +96,7 @@ minetest.register_abm({
 			end
 			if #sc > 0 then
 				local rand_plant = math.random(1,#sc)
+--				print(sc[rand_plant])
 				--[[
 				local pdef = minetest.registered_nodes[ sc[rand_plant] ]
 				local day_start=99999

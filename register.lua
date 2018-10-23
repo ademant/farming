@@ -96,7 +96,9 @@ farming.register_plant = function(def)
 		local spread_def={name=def.step_name.."_1",
 				temp_min=edef.temperature_min,temp_max=edef.temperature_max,
 				hum_min=edef.humidity_min,hum_max=edef.humidity_max,
-				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread_rate}
+				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread_rate,
+				light_min=edef.light_min,light_max=edef.light_max}
+		farming.min_light = math.min(farming.min_light,edef.light_min)
 		table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
@@ -228,6 +230,7 @@ farming.register_wilt=function(idef)
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
+		on_timer = farming.wilt_on_timer,
 	}
 	if idef.straw ~= nil then
 		wilt_def.drop={items={{items={idef.straw}}}}
@@ -238,6 +241,7 @@ farming.register_wilt=function(idef)
 
 	wilt_def.groups = {snappy = 3, attached_node = 1, flammable = 2,farming_wilt=1}
 	wilt_def.groups["step"] = -1
+	wilt_def.groups["wiltable"]=idef.groups.wiltable
 	minetest.register_node(":" .. idef.wilt_name, wilt_def)
 end
 
@@ -346,7 +350,7 @@ farming.register_steps = function(sdef)
 			ndef[colu]=node_def[colu]
 		end
 		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable","damage_per_second","liquid_viscosity"}) do
+		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
@@ -413,12 +417,21 @@ farming.register_steps = function(sdef)
 			ndef.on_dig = farming.harvest_on_dig
 			if sdef.groups.wiltable ~= nil then
 				print(sdef.wilt_name)
-				if sdef.wilt_name then
+				if sdef.groups.wiltable == 2 then
 					ndef.next_step=sdef.wilt_name
-				else
+				end
+				if sdef.groups.wiltable == 1 then
 					ndef.next_step = sdef.step_name .. "_" .. (i - 1)
 				end
+				if sdef.groups.wiltable == 3 then
+					ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
+				end
+				print(sdef.wilt_name)
 				ndef.on_timer = farming.step_on_timer
+				if sdef.groups.wiltable == 3 then
+					ndef.on_timer = farming.wilt_on_timer
+					ndef.seed_name=sdef.seed_name
+				end
 				ndef.grow_time_min=sdef.wilt_time or 10
 				ndef.grow_time_max=math.ceil(ndef.grow_time_min*1.1)
 			end
@@ -878,6 +891,62 @@ farming.seed_on_timer = function(pos, elapsed)
 		local node_timer=math.random(wait_min, wait_max)
 		minetest.get_node_timer(pos):start(node_timer)
 		return
+	end
+end
+
+-- actuall quite easy function to remove wilt plants
+farming.wilt_on_timer = function(pos, elapsed)
+	local node = minetest.get_node(pos)
+	local name = node.name
+	local def = minetest.registered_nodes[name]
+--	print(dump(def))
+	if def.groups.wiltable <= 2 then -- normal crop
+		minetest.swap_node(pos, {name="air"})
+	end
+	if def.groups.wiltable == 3 then -- nettle or weed
+		print("nettle")
+		-- determine all nearby nodes with soil
+		local pos0=vector.subtract(pos,2)
+		local pos1=vector.add(pos,2)
+		local neighb=minetest.find_nodes_in_area(pos0,pos1,"group:soil")
+--		print(dump(neighb))
+		if neighb ~= nil then
+			local freen={}
+			-- get soil nodes with air above
+			for j=1,#neighb do
+				local jpos=neighb[j]
+--				print(dump(minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z})))
+				if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
+					table.insert(freen,1,jpos)
+				end
+			end
+			-- randomly pick one and spread
+			if #freen >= 1 then
+				print(#freen)
+				local jpos=freen[math.random(1,#freen)]
+				print(name.." spread "..dump(jpos))
+--				print(dump(def))
+				minetest.add_node({x=jpos.x,y=jpos.y+1,z=jpos.z}, {name = def.seed_name, param2 = 1})
+				minetest.get_node_timer({x=jpos.x,y=jpos.y+1,z=jpos.z}):start(def.grow_time_min or 10)
+			end
+		end
+		-- after spreading the source has a one third change to be removed, to go one step back or stay
+		local wran=math.random(1,3)
+		if wran == 1 then
+			print("remove")
+			minetest.swap_node(pos, {name="air"})
+		end
+		if wran == 2 then
+			print("try to go one step back")
+			if def.pre_step ~= nil then
+				print("done")
+				minetest.swap_node(pos, {name=def.pre_step, param2=1})
+				minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
+			end
+		end
+		if wran == 3 then
+			minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
+		end
 	end
 end
 			
