@@ -203,8 +203,10 @@ farming.register_infect=function(idef)
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
+		on_timer=farming.infect_on_timer,
 	}
-	for _,coln in ipairs({"name","seed_name","step_name","place_param2","fertility","description"}) do
+	for _,coln in ipairs({"name","seed_name","step_name","plant_name",
+		"place_param2","fertility","description","infect_rate_base","infect_rate_monoculture"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
@@ -345,7 +347,7 @@ farming.register_steps = function(sdef)
 			ndef[colu]=node_def[colu]
 		end
 		ndef.groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1}
-		for _,colu in ipairs({"infectable","snappy","seed_extractable","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
+		for _,colu in ipairs({"infectable","snappy","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
@@ -532,6 +534,8 @@ farming.plant_infect = function(pos)
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups["step"])
+	minetest.get_node_timer(pos):start(math.random(farming.wait_min or 10,farming.wait_max or 20))
+
 end
 farming.plant_cured = function(pos)
 	local node = minetest.get_node(pos)
@@ -614,7 +618,7 @@ farming.infect_on_timer = function(pos,elapsed)
 		local monoculture=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:"..def.plant_name)
 		if monoculture ~= nil then
 			for i = 1,#monoculture do
-				if math.random(1,max(2,def.infect_rate_monoculture))==1 then
+				if math.random(1,math.max(2,def.infect_rate_monoculture))==1 then
 					farming.plant_infect(monoculture[i])
 					print("infection spread")
 					infected=infected+1
@@ -623,13 +627,15 @@ farming.infect_on_timer = function(pos,elapsed)
 		end
 	end
 	if infected == 0 then
-		local culture=minetest.find_nodes_in_area(vector.subtract(pos,3),vector.add(pos,3),"group:infectable")
-		if culture ~= nil then
-			for i = 1,#culture do
-				if math.random(1,max(2,def.infect_rate_base))==1 then
-					farming.plant_infect(culture[i])
-					print("infection spread")
-					infected=infected+1
+		if def.infect_rate_base ~= nil then
+			local culture=minetest.find_nodes_in_area(vector.subtract(pos,3),vector.add(pos,3),"group:infectable")
+			if culture ~= nil then
+				for i = 1,#culture do
+					if math.random(1,math.max(2,def.infect_rate_base))==1 then
+						farming.plant_infect(culture[i])
+						print("infection spread")
+						infected=infected+1
+					end
 				end
 			end
 		end

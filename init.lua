@@ -54,7 +54,7 @@ minetest.register_abm({
 	change=1,
 	action = function(pos)
 		local node=minetest.get_node(pos)
-		print(dump(node))
+--		print(dump(node))
 		if node.name == "air" or node.name == "ignore" then
 			return
 		end
@@ -67,10 +67,8 @@ minetest.register_abm({
 		if ill_rate == nil then
 			return
 		end
-		print(ill_rate)
 --		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
-			print("infect at "..dump(pos))
 --		end
 	end
 })
@@ -102,7 +100,6 @@ minetest.register_abm({
 			local pos0 = vector.subtract(pos,4)
 			local pos1 = vector.add(pos,4)
 			if #minetest.find_nodes_in_area(pos0,pos1,"group:farming") > 2 then
---				print("ping")
 				return
 			end
 		end
