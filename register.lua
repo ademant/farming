@@ -518,15 +518,12 @@ end
 
 farming.plant_infect = function(pos)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
+	local def = minetest.registered_nodes[node.name]
 --	print(dump(def))
 	local infect_name=def.plant_name.."_infected"
 	if not minetest.registered_nodes[infect_name] then
 		return 
 	end
-	local meta = minetest.get_meta(pos)
---	meta:set_int("farming:step",def.groups["step"])
 	local placenode = {name = infect_name}
 	if def.place_param2 then
 		placenode.param2 = def.place_param2
@@ -535,7 +532,6 @@ farming.plant_infect = function(pos)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups["step"])
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min or 10,farming.wait_max or 20))
-
 end
 farming.plant_cured = function(pos)
 	local node = minetest.get_node(pos)
@@ -685,25 +681,30 @@ end
 -- Seed placement
 -- adopted from minetest-game
 farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
-	local pt = pointed_thing
+--	local pt = pointed_thing
 	-- check if pointing at a node
-	if not pt then
+	if not pointed_thing then
 		return itemstack
 	end
-	if pt.type ~= "node" then
+	if pointed_thing.type ~= "node" then
 		return itemstack
 	end
 
-	local under = minetest.get_node(pt.under)
-	local above = minetest.get_node(pt.above)
+	-- check if pointing at the top of the node
+	if pointed_thing.above.y ~= pointed_thing.under.y+1 then
+		return itemstack
+	end
+	
+	local under = minetest.get_node(pointed_thing.under)
+	local above = minetest.get_node(pointed_thing.above)
 	local player_name = placer and placer:get_player_name() or ""
 
-	if minetest.is_protected(pt.under, player_name) then
-		minetest.record_protection_violation(pt.under, player_name)
+	if minetest.is_protected(pointed_thing.under, player_name) then
+		minetest.record_protection_violation(pointed_thing.under, player_name)
 		return
 	end
-	if minetest.is_protected(pt.above, player_name) then
-		minetest.record_protection_violation(pt.above, player_name)
+	if minetest.is_protected(pointed_thing.above, player_name) then
+		minetest.record_protection_violation(pointed_thing.above, player_name)
 		return
 	end
 
@@ -712,11 +713,6 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		return itemstack
 	end
 	if not minetest.registered_nodes[above.name] then
-		return itemstack
-	end
-
-	-- check if pointing at the top of the node
-	if pt.above.y ~= pt.under.y+1 then
 		return itemstack
 	end
 
@@ -736,22 +732,22 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			-- check if node is correct one
 			local plant_def=farming.registered_plants[pdef.plant_name]
 			-- check for correct temperature
-			if pt.under.y < plant_def.elevation_min or pt.under.y > plant_def.elevation_max then
+			if pointed_thing.under.y < plant_def.elevation_min or pointed_thing.under.y > plant_def.elevation_max then
 				minetest.chat_send_player(player_name,"Elevation must be between "..plant_def.elevation_min.." and "..plant_def.elevation_max)
 				return
 			end
-			if minetest.get_heat(pt.under) < plant_def.temperature_min or minetest.get_heat(pt.under) > plant_def.temperature_max then
+			if minetest.get_heat(pointed_thing.under) < plant_def.temperature_min or minetest.get_heat(pointed_thing.under) > plant_def.temperature_max then
 				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
 				return
 			end
-			if minetest.get_humidity(pt.under) < plant_def.humidity_min or minetest.get_humidity(pt.under) > plant_def.humidity_max then
+			if minetest.get_humidity(pointed_thing.under) < plant_def.humidity_min or minetest.get_humidity(pointed_thing.under) > plant_def.humidity_max then
 				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
 				return
 			end
 		end
 	end
 	-- add the node and remove 1 item from the itemstack
-	minetest.add_node(pt.above, {name = plantname, param2 = 1})
+	minetest.add_node(pointed_thing.above, {name = plantname, param2 = 1})
 	local wait_min=farming.wait_min or 120
 	local wait_max=farming.wait_max or 240
 	if pdef.grow_time_min then
@@ -760,10 +756,10 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	if pdef.grow_time_max then
 		wait_max=pdef.grow_time_max
 	end
-	minetest.get_node_timer(pt.above):start(math.random(wait_min, wait_max))
-	local meta = minetest.get_meta(pt.above)
+	minetest.get_node_timer(pointed_thing.above):start(math.random(wait_min, wait_max))
+	local meta = minetest.get_meta(pointed_thing.above)
 	meta:set_int("farming:step",0)
-	farming.set_node_metadata(pt.above)
+	farming.set_node_metadata(pointed_thing.above)
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
