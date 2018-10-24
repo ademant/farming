@@ -123,95 +123,50 @@ farming.register_plant = function(def)
     end
 end
 
--- helping function for getting biomes
-farming.get_biomes = function(biom_def)
---[[
-  catch all biomes out of minetest.registered_biomes which fit definition
-]]
-	local possible_biomes={}
-	local count_def=0
-	if (biom_def.min_temp ~= nil or biom_def.max_temp ~= nil) then
-	  count_def = count_def + 1
-	end
-	if (biom_def.min_humidity ~= nil or biom_def.max_humidity ~= nil) then
-	  count_def = count_def + 1
-	end
-	if biom_def.spawnon then
-		if (biom_def.min_humidity ~= nil or biom_def_max_humidity ~= nil) then
-		  count_def = count_def + 1
-		end
-	end
-	
-	-- check definition: if not set, choose values, which should fit all biomes
-	local mintemp = biom_def.min_temp or -100
-	local maxtemp = biom_def.max_temp or 1000
-	local minhum = biom_def.min_humidity or -100
-	local maxhum = biom_def.max_humidity or 1000
-	local minelev = biom_def.spawnon.spawn_min or 0
-	local maxelev = biom_def.spawnon.spawn_max or 31000
-	for name,def in pairs(minetest.registered_biomes) do
-	  local bpossible = 0
-	  if def.heat_point >= mintemp and def.heat_point <= maxtemp then
-	    bpossible = bpossible + 1
-	  end
-	  if def.humidity_point >= minhum and def.humidity_point <= maxhum then
-	    bpossible = bpossible + 1
-	  end
-	  if def.y_min <= maxelev and def.y_max >= minelev then
-	    bpossible = bpossible + 1
-	  end
-	  if bpossible == count_def then
-	    table.insert(possible_biomes,1,name)
-	  end
-	end
-	return possible_biomes
-end
-
-
 farming.register_harvest=function(hdef)
 	-- base definition of harvest
 	local harvest_def={
 		description = S(hdef.description:gsub("^%l", string.upper)),
 		inventory_image = hdef.mod_name.."_"..hdef.plant_name..".png",
-		groups = hdef.groups or {flammable = 2},
+		groups = {flammable = 2,farming_harvest=1},
 	}
 	-- copy fields from plant definition
 	for _,coln in ipairs({"plant_name"}) do
 	  harvest_def[coln] = hdef[coln]
 	end
 	-- some existing groups are copied
-	for _,coln in ipairs({"use_flail","use_trellis"}) do
-		if hdef.groups[coln] then
-			harvest_def.groups[coln] = hdef.groups[coln]
-		end
-	end
+--	for _,coln in ipairs({"use_flail","use_trellis"}) do
+--		if hdef.groups[coln] then
+--			harvest_def.groups[coln] = hdef.groups[coln]
+--		end
+--	end
 	minetest.register_craftitem(":" .. hdef.step_name, harvest_def)
 end
 
 farming.register_infect=function(idef)
 	local infect_def={
 		description = S(idef.description:gsub("^%l", string.upper)),
---		inventory_image = idef.mod_name.."_"..idef.name.."_ill.png",
+		inventory_image = idef.mod_name.."_"..idef.name.."_ill.png",
 		tiles = {idef.mod_name.."_"..idef.name.."_ill.png"},
---		wield_image = {idef.mod_name.."_"..idef.name.."_ill.png"},
+		wield_image = {idef.mod_name.."_"..idef.name.."_ill.png"},
 		drawtype = "plantlike",
 		waving = 1,
 		paramtype = "light",
 		walkable = false,
 		buildable_to = true,
-		on_dig = farming.plant_cured ,
+		on_dig = farming.plant_cured , -- why digging fails?
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
 		on_timer=farming.infect_on_timer,
 	}
-	for _,coln in ipairs({"name","seed_name","step_name","plant_name",
-		"place_param2","fertility","description","infect_rate_base","infect_rate_monoculture"}) do
+	for _,coln in ipairs({"name","seed_name","plant_name",
+		"place_param2","infect_rate_base","infect_rate_monoculture"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
-	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,infect=2}
-	infect_def.groups["step"] = -1
+	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,farming_infect=2}
+--	infect_def.groups["step"] = -1
 	infect_def.groups[idef.plant_name] = 0
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
 end
@@ -235,13 +190,15 @@ farming.register_wilt=function(idef)
 	if idef.straw ~= nil then
 		wilt_def.drop={items={{items={idef.straw}}}}
 	end
-	for _,coln in ipairs({"name","seed_name","step_name","place_param2","fertility","description"}) do
+	for _,coln in ipairs({"name","seed_name","plant_name","place_param2","fertility"}) do
 	  wilt_def[coln] = idef[coln]
 	end
 
 	wilt_def.groups = {snappy = 3, attached_node = 1, flammable = 2,farming_wilt=1}
 	wilt_def.groups["step"] = -1
-	wilt_def.groups["wiltable"]=idef.groups.wiltable
+	if idef.groups.wiltable ~= nil then
+		wilt_def.groups["wiltable"]=idef.groups.wiltable
+	end
 	minetest.register_node(":" .. idef.wilt_name, wilt_def)
 end
 
@@ -267,14 +224,13 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
-	for i,colu in ipairs({"place_param2","fertility","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
+	for i,colu in ipairs({"place_param2","fertility","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
-	local seed_png = sdef.mod_name.."_"..sdef.name.."_seed.png"
-	seed_def.tiles = {seed_png}
-	seed_def.inventory_image = seed_png
-	seed_def.wield_image = {seed_png}
-	seed_def.groups = {seed = 1, snappy = 3, attached_node = 1, flammable = 2}
+	seed_def.inventory_image = sdef.mod_name.."_"..sdef.name.."_seed.png"
+	seed_def.tiles = {seed_def.inventory_image}
+	seed_def.wield_image = {seed_def.inventory_image}
+	seed_def.groups = {farming_seed = 1, snappy = 3, attached_node = 1, flammable = 2}
 	seed_def.groups["step"] = 0
 	seed_def.groups[sdef.mod_name] = 1
 	for k, v in pairs(sdef.fertility) do
@@ -293,24 +249,24 @@ end
 
 farming.register_steps = function(sdef)
 	-- check if plant gives harvest, where seed can be extractet or gives directly seed
-    local has_harvest = false
-    if sdef.groups["has_harvest"] then 
-      has_harvest = true
-    end
+--    local has_harvest = false
+ --   if sdef.groups["has_harvest"] then 
+--      has_harvest = true
+--    end
     -- check if plant give seeds if punched. then drop table is quite simple
-    local is_punchable = false
-    if sdef.groups["punchable"] then
-      is_punchable = true
-    end
-    local seed_extractable = false
-    if sdef.groups["seed_extractable"] then
-      seed_extractable = true
-    end
+--    local is_punchable = false
+--    if sdef.groups["punchable"] then
+--      is_punchable = true
+--    end
+--    local seed_extractable = false
+--    if sdef.groups["seed_extractable"] then
+--      seed_extractable = true
+--    end
     -- check if cultured plant exist
-    local has_next_plant = false
-    if sdef.next_plant then
-      has_next_plant = true
-    end
+--    local has_next_plant = false
+--    if sdef.next_plant then
+--      has_next_plant = true
+--    end
 
     -- base configuration of all steps
 	local node_def = {
@@ -324,7 +280,7 @@ farming.register_steps = function(sdef)
 		sounds = default.node_sound_leaves_defaults(),
 	}
 	-- copy some plant definition into definition of this steps
-	for _,colu in ipairs({"paramtype2","place_param2","seed_name","plant_name","grow_time_min","grow_time_max","light_min"}) do
+	for _,colu in ipairs({"paramtype2","place_param2","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  if sdef[colu] then
 	    node_def[colu] = sdef[colu]
 	  end
@@ -332,14 +288,13 @@ farming.register_steps = function(sdef)
 	-- define drop item: normal drop the seed
 	node_def.drop_item = sdef.seed_name
 	-- if plant has to be harvested, drop harvest instead
-	if has_harvest then
+	if sdef.groups["has_harvest"] ~= nil then
 		if sdef.seed_drop ~= nil then
 			node_def.drop_item = sdef.seed_drop
 		else
 			node_def.drop_item = sdef.step_name
 		end
 	end
-	local lbm_nodes = {sdef.seed_name}
 	for i=1,sdef.steps do
 	    local ndef={description=sdef.step_name.."_"..i}
 	    for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
@@ -362,13 +317,6 @@ farming.register_steps = function(sdef)
 			ndef.on_timer = farming.step_on_timer
 			ndef.grow_time_min=sdef.grow_time_min or 120
 			ndef.grow_time_max=sdef.grow_time_max or 180
---			if sdef.groups["infectable"] ~= nil then
---				ndef.on_punch = farming.plant_infect 
---			end
-		end
-		local base_rarity = 1
-		if sdef.steps ~= 1 then
-			base_rarity =  8 - (i - 1) * 7 / (sdef.steps - 1)
 		end
 		ndef.drop={items={{items={ndef.drop_item}}}}
 		if sdef.groups["use_trellis"] then
@@ -386,7 +334,6 @@ farming.register_steps = function(sdef)
 			end
 			-- for some crops you should walk slowly through like a wheat field
 			if ndef.groups["liquid_viscosity"] and farming.config:get_int("viscosity") > 0 then
---			if ndef.groups["liquid_viscosity"] then
 				local step_viscosity=math.ceil(ndef.groups["liquid_viscosity"]*i/sdef.steps)
 				if step_viscosity > 0 then 
 					ndef.liquid_viscosity= step_viscosity
@@ -398,16 +345,12 @@ farming.register_steps = function(sdef)
 				end
 			end
 		end
-		local base_rarity = 1
-		if sdef.steps ~= 1 then
-			base_rarity =  sdef.steps - i + 1
-		end
 
 		-- with higher grow levels you harvest more
 		local step_harvest = math.floor(i*sdef.harvest_max/sdef.steps + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
-			table.insert(ndef.drop.items,1,{items={ndef.drop_item},rarity=base_rarity*h})
+			table.insert(ndef.drop.items,1,{items={ndef.drop_item},rarity=(sdef.steps - i + 1)*h})
 		  end
 		end
 		if i == sdef.steps then
@@ -422,22 +365,20 @@ farming.register_steps = function(sdef)
 				end
 				if sdef.groups.wiltable == 3 then
 					ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
-				end
-				ndef.on_timer = farming.step_on_timer
-				if sdef.groups.wiltable == 3 then
 					ndef.on_timer = farming.wilt_on_timer
 					ndef.seed_name=sdef.seed_name
 				end
+				ndef.on_timer = farming.step_on_timer
 				ndef.grow_time_min=sdef.wilt_time or 10
 				ndef.grow_time_max=math.ceil(ndef.grow_time_min*1.1)
 			end
 		end
 		-- at the end stage you can harvest by change a cultured seed (if defined)
 		if (i == sdef.steps and sdef.next_plant ~= nil) then
-		  sdef.next_plant_rarity = base_rarity*2
+		  sdef.next_plant_rarity = (sdef.steps - i + 1)*2
 		  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=sdef.next_plant_rarity or 10})
 		end
-		if i == sdef.steps and is_punchable and i > 1 then
+		if i == sdef.steps and sdef.groups["punchable"] and i > 1 then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
 			ndef.on_punch = farming.step_on_punch
 		end
@@ -519,10 +460,15 @@ end
 farming.plant_infect = function(pos)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
---	print(dump(def))
 	local infect_name=def.plant_name.."_infected"
 	if not minetest.registered_nodes[infect_name] then
 		return 
+	end
+	if not def.groups.infectable then
+		return
+	end
+	if not def.groups.step then
+		return
 	end
 	local placenode = {name = infect_name}
 	if def.place_param2 then
@@ -562,8 +508,8 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	end
 	local pre_node = def.pre_step
 	local placenode = {name = pre_node}
-	if def.place_param2 then
-		placenode.param2 = def.place_param2
+	if pre_node.place_param2 then
+		placenode.param2 = pre_node.place_param2
 	end
 	minetest.swap_node(pos, placenode)
 	
@@ -599,12 +545,12 @@ farming.infect_on_timer = function(pos,elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local meta = minetest.get_meta(pos)
-	local actual_step=meta:get_int("farming:step")
-	if actual_step == nil then
+--	local actual_step=meta:get_int("farming:step")
+	if meta:get_int("farming:step") == nil then
 		minetest.swap_node(pos, {name="air"})
 		return
 	end
-	if actual_step == 0 then
+	if meta:get_int("farming:step") == 0 then
 		print("plant dies")
 		minetest.swap_node(pos, {name="air"})
 		return
@@ -636,16 +582,15 @@ farming.infect_on_timer = function(pos,elapsed)
 			end
 		end
 	end
-	meta:set_int("farming:step",actual_step-1)
+	meta:set_int("farming:step",meta:get_int("farming:step")-1)
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
 end
 
 farming.step_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
+--	local name = node.name
+	local def = minetest.registered_nodes[node.name]
 	-- check for enough light
-	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
 	local light = minetest.get_node_light(pos)
 	if not def.next_step then
 		return
@@ -655,6 +600,7 @@ farming.step_on_timer = function(pos, elapsed)
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
 		return
 	end
+--	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
 	-- grow
 	local placenode = {name = def.next_step}
 	if def.place_param2 then
@@ -667,12 +613,12 @@ farming.step_on_timer = function(pos, elapsed)
 	-- new timer needed?
 	if def.next_step then
 		-- using light at midday to increase or decrease growing time
-		local local_light_max = minetest.get_node_light(pos,0.5)
-		local wait_factor = math.max(0.75,def.light_min/local_light_max)
+--		local local_light_max = minetest.get_node_light(pos,0.5)
+		local wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
-		local node_timer=math.random(wait_min, wait_max)
+--		local node_timer=math.random(wait_min, wait_max)
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
 	end
 	return
@@ -681,7 +627,6 @@ end
 -- Seed placement
 -- adopted from minetest-game
 farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
---	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pointed_thing then
 		return itemstack
@@ -695,8 +640,6 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		return itemstack
 	end
 	
-	local under = minetest.get_node(pointed_thing.under)
-	local above = minetest.get_node(pointed_thing.above)
 	local player_name = placer and placer:get_player_name() or ""
 
 	if minetest.is_protected(pointed_thing.under, player_name) then
@@ -708,6 +651,8 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		return
 	end
 
+	local under = minetest.get_node(pointed_thing.under)
+	local above = minetest.get_node(pointed_thing.above)
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
 		return itemstack
@@ -769,24 +714,24 @@ end
 
 farming.seed_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
+--	local name = node.name
+	local def = minetest.registered_nodes[node.name]
 	-- grow seed
 	local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
 	if not soil_node then
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min, farming.wait_max))
 		return
 	end
-	local pdef=farming.registered_plants[def.plant_name]
-	local spawnon={}
-	for _,v in pairs(def.fertility) do
-	  table.insert(spawnon,1,v)
-	end
-	if def.spawnon then
-		for _,v in pairs(pdef.spawnon) do
-		  table.insert(spawnon,1,v)
-		end
-	end
+--	local pdef=farming.registered_plants[def.plant_name]
+--	local spawnon={}
+--	for _,v in pairs(def.fertility) do
+--	  table.insert(spawnon,1,v)
+--	end
+--	if def.spawnon then
+--		for _,v in pairs(pdef.spawnon) do
+--		  table.insert(spawnon,1,v)
+--		end
+--	end
 --	local pdef=farming.registered_plants[def.plant_name]
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
 	local placenode = {name = def.next_step}
@@ -812,18 +757,18 @@ end
 -- actuall quite easy function to remove wilt plants
 farming.wilt_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
-	local name = node.name
-	local def = minetest.registered_nodes[name]
+--	local name = node.name
+	local def = minetest.registered_nodes[node.name]
 	if def.groups.wiltable <= 2 then -- normal crop
 		minetest.swap_node(pos, {name="air"})
 	end
 	if def.groups.wiltable == 3 then -- nettle or weed
 		-- determine all nearby nodes with soil
-		local pos0=vector.subtract(pos,2)
-		local pos1=vector.add(pos,2)
-		local farming_nearby=minetest.find_nodes_in_area(pos0,pos1,"group:farming")
+--		local pos0=vector.subtract(pos,2)
+--		local pos1=vector.add(pos,2)
+		local farming_nearby=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:farming")
 		if #farming_nearby <= 4 then
-			local neighb=minetest.find_nodes_in_area(pos0,pos1,"group:soil")
+			local neighb=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:soil")
 			if neighb ~= nil then
 				local freen={}
 				-- get soil nodes with air above
@@ -859,14 +804,14 @@ farming.wilt_on_timer = function(pos, elapsed)
 end
 			
 farming.seed_on_place = function(itemstack, placer, pointed_thing)
-	local under = pointed_thing.under
-	local node = minetest.get_node(under)
+--	local under = pointed_thing.under
+	local node = minetest.get_node(pointed_thing.under)
 	local udef = minetest.registered_nodes[node.name]
 	local plantname = itemstack:get_name()
 	if udef and udef.on_rightclick and
 			not (placer and placer:is_player() and
 			placer:get_player_control().sneak) then
-		return udef.on_rightclick(under, node, placer, itemstack,
+		return udef.on_rightclick(pointed_thing.under, node, placer, itemstack,
 			pointed_thing) or itemstack
 	end
 	return farming.place_seed(itemstack, placer, pointed_thing, plantname)
@@ -875,14 +820,14 @@ end
 -- using tools
 -- adopted from minetest-games
 farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
-	local pt = pointed_thing
+--	local pt = pointed_thing
 	-- check if pointing at a node
-	if not pt then
+	if not pointed_thing then
 		return
 	end
 
-	local under = minetest.get_node(pt.under)
-	local p = {x=pt.under.x, y=pt.under.y+1, z=pt.under.z}
+	local under = minetest.get_node(pointed_thing.under)
+	local p = {x=pointed_thing.under.x, y=pointed_thing.under.y+1, z=pointed_thing.under.z}
 	local above = minetest.get_node(p)
 
 	-- return if any of the nodes is not registered
@@ -898,12 +843,12 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 		return
 	end
 
-	if minetest.is_protected(pt.under, user:get_player_name()) then
-		minetest.record_protection_violation(pt.under, user:get_player_name())
+	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
+		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
 		return
 	end
-	if minetest.is_protected(pt.above, user:get_player_name()) then
-		minetest.record_protection_violation(pt.above, user:get_player_name())
+	if minetest.is_protected(pointed_thing.above, user:get_player_name()) then
+		minetest.record_protection_violation(pointed_thing.above, user:get_player_name())
 		return
 	end
 	if not (creative and creative.is_enabled_for
@@ -914,7 +859,7 @@ farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
 		minetest.node_dig(pt.under,under,user)
 		-- tool break sound
 		if itemstack:get_count() == 0 and wdef.sound and wdef.sound.breaks then
-			minetest.sound_play(wdef.sound.breaks, {pos = pt.above, gain = 0.5})
+			minetest.sound_play(wdef.sound.breaks, {pos = pointed_thing.above, gain = 0.5})
 		end
 	end
 	return itemstack
@@ -1064,15 +1009,15 @@ function farming.register_grind(rdef)
 end
 
 farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
-	local pt = pointed_thing
+--	local pt = pointed_thing
 	-- check if pointing at a node
-	if not pt then
+	if not pointed_thing then
 		return
 	end
-	if pt.type ~= "node" then
+	if pointed_thing.type ~= "node" then
 		return
 	end
-	local under = minetest.get_node(pt.under)
+	local under = minetest.get_node(pointed_thing.under)
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
 		return
@@ -1083,8 +1028,8 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	if pdef.groups.punchable == nil then
 		return
 	end
-	if minetest.is_protected(pt.under, user:get_player_name()) then
-		minetest.record_protection_violation(pt.under, user:get_player_name())
+	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
+		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
 		return
 	end
 
@@ -1095,7 +1040,7 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 		itemstack:add_wear(65535/(uses-1))
 		-- tool break sound
 		if itemstack:get_count() == 0 and tdef.sound and tdef.sound.breaks then
-			minetest.sound_play(tdef.sound.breaks, {pos = pt.above, gain = 0.5})
+			minetest.sound_play(tdef.sound.breaks, {pos = pointed_thing.above, gain = 0.5})
 		end
 	end
 	user:get_inventory():add_item('main',pdef.drop_item)
@@ -1105,7 +1050,7 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 		end
 	end
 --	minetest.node_punch(pt.under, under, user, pointed_thing)
-	minetest.punch_node(pt.under)
+	minetest.punch_node(pointed_thing.under)
 	return itemstack
 end
 
