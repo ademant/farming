@@ -13,7 +13,10 @@
    version="1.1"
    viewBox="0 0 1105.5529 1128.004"
    sodipodi:docname="farmin_culturewheat_5.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="/home/ademant/src/mt5/mods/farming/textures/src/farmin_culturewheat_5.png"
+   inkscape:export-xdpi="65.386299"
+   inkscape:export-ydpi="65.386299">
   <defs
      id="defs9" />
   <sodipodi:namedview
@@ -25,15 +28,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1087"
+     inkscape:window-width="1366"
+     inkscape:window-height="714"
      id="namedview7"
      showgrid="false"
      inkscape:zoom="0.5501109"
-     inkscape:cx="912.44852"
+     inkscape:cx="428.90966"
      inkscape:cy="783.28888"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg4136"
      fit-margin-top="0"
@@ -48,7 +51,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

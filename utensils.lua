@@ -13,7 +13,7 @@ minetest.register_craft({
 	output = modname..":coffee_grinder",
 	recipe = {
 		{"group:wood", "group:stick", "group:wood"},
-		{"", "default:stone", ""},
+		{"", "group:stone", ""},
 	}
 })
 
@@ -58,7 +58,7 @@ minetest.register_craftitem(modname..":mortar_pestle", {
 minetest.register_craft({
 	output = modname..":mortar_pestle",
 	recipe = {
-		{"default:stone", "group:stick", "default:stone"},
-		{"", "default:stone", ""},
+		{"group:stone", "group:stick", "group:stone"},
+		{"", "group:stone", ""},
 	}
 })

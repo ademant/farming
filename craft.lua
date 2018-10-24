@@ -18,8 +18,8 @@ minetest.register_craft({
 	type = "shapeless",
 	output = "farming:flour",
 	recipe = {
-		"group:seed", "group:seed", "group:seed",
-		"group:seed", modname..":mortar_pestle"
+		"group:for_flour", "group:for_flour", "group:for_flour",
+		"group:for_flour", modname..":mortar_pestle"
 	},
 	replacements = {{"group:food_mortar_pestle", modname..":mortar_pestle"}},
 })

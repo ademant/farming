@@ -51,7 +51,7 @@ minetest.register_abm({
 	label="crops getting ill",
 	nodenames="group:infectable",
 	intervall = 5,
-	change=1,
+	change=5,
 	action = function(pos)
 		local node=minetest.get_node(pos)
 --		print(dump(node))
@@ -67,9 +67,9 @@ minetest.register_abm({
 		if ill_rate == nil then
 			return
 		end
---		if math.random(1,ill_rate)==1 then
+		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
---		end
+		end
 	end
 })
 

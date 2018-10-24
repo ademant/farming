@@ -199,6 +199,9 @@ farming.register_wilt=function(idef)
 	if idef.groups.wiltable ~= nil then
 		wilt_def.groups["wiltable"]=idef.groups.wiltable
 	end
+	if idef.groups.infectable ~= nil then
+		wilt_def.groups["infectable"]=idef.groups.infectable
+	end
 	minetest.register_node(":" .. idef.wilt_name, wilt_def)
 end
 
@@ -248,25 +251,6 @@ farming.register_seed=function(sdef)
 end
 
 farming.register_steps = function(sdef)
-	-- check if plant gives harvest, where seed can be extractet or gives directly seed
---    local has_harvest = false
- --   if sdef.groups["has_harvest"] then 
---      has_harvest = true
---    end
-    -- check if plant give seeds if punched. then drop table is quite simple
---    local is_punchable = false
---    if sdef.groups["punchable"] then
---      is_punchable = true
---    end
---    local seed_extractable = false
---    if sdef.groups["seed_extractable"] then
---      seed_extractable = true
---    end
-    -- check if cultured plant exist
---    local has_next_plant = false
---    if sdef.next_plant then
---      has_next_plant = true
---    end
 
     -- base configuration of all steps
 	local node_def = {
@@ -532,7 +516,6 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 end
 
 farming.harvest_on_dig = function(pos, node, digger)
-	--local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
@@ -545,7 +528,6 @@ farming.infect_on_timer = function(pos,elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local meta = minetest.get_meta(pos)
---	local actual_step=meta:get_int("farming:step")
 	if meta:get_int("farming:step") == nil then
 		minetest.swap_node(pos, {name="air"})
 		return
@@ -562,7 +544,6 @@ farming.infect_on_timer = function(pos,elapsed)
 			for i = 1,#monoculture do
 				if math.random(1,math.max(2,def.infect_rate_monoculture))==1 then
 					farming.plant_infect(monoculture[i])
-					print("infection spread")
 					infected=infected+1
 				end
 			end
@@ -575,7 +556,6 @@ farming.infect_on_timer = function(pos,elapsed)
 				for i = 1,#culture do
 					if math.random(1,math.max(2,def.infect_rate_base))==1 then
 						farming.plant_infect(culture[i])
-						print("infection spread")
 						infected=infected+1
 					end
 				end
@@ -588,7 +568,6 @@ end
 
 farming.step_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
---	local name = node.name
 	local def = minetest.registered_nodes[node.name]
 	-- check for enough light
 	local light = minetest.get_node_light(pos)
@@ -600,25 +579,28 @@ farming.step_on_timer = function(pos, elapsed)
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
 		return
 	end
---	local below = minetest.get_node({x = pos.x, y = pos.y - 1, z = pos.z})
 	-- grow
 	local placenode = {name = def.next_step}
+	local next_def=minetest.registered_nodes[def.next_step]
 	if def.place_param2 then
 		placenode.param2 = def.place_param2
 	end
---	minetest.set_node(pos, {name = def.next_step, param2 = 1})
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups.step)
+	if next_def.groups.farming_wilt ~= nil then
+		if meta:get_int("farming:weakness") == nil then
+			farming.set_node_metadata(pos)
+		end
+		meta:set_int("farming:weakness",math.ceil(meta:get_int("farming:weakness")/2))
+	end
 	-- new timer needed?
 	if def.next_step then
 		-- using light at midday to increase or decrease growing time
---		local local_light_max = minetest.get_node_light(pos,0.5)
 		local wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
---		local node_timer=math.random(wait_min, wait_max)
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
 	end
 	return
@@ -714,7 +696,6 @@ end
 
 farming.seed_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
---	local name = node.name
 	local def = minetest.registered_nodes[node.name]
 	-- grow seed
 	local soil_node = minetest.get_node_or_nil({x = pos.x, y = pos.y - 1, z = pos.z})
@@ -722,17 +703,6 @@ farming.seed_on_timer = function(pos, elapsed)
 		minetest.get_node_timer(pos):start(math.random(farming.wait_min, farming.wait_max))
 		return
 	end
---	local pdef=farming.registered_plants[def.plant_name]
---	local spawnon={}
---	for _,v in pairs(def.fertility) do
---	  table.insert(spawnon,1,v)
---	end
---	if def.spawnon then
---		for _,v in pairs(pdef.spawnon) do
---		  table.insert(spawnon,1,v)
---		end
---	end
---	local pdef=farming.registered_plants[def.plant_name]
 	-- omitted is a check for light, we assume seeds can germinate in the dark.
 	local placenode = {name = def.next_step}
 	if def.place_param2 then
@@ -757,15 +727,12 @@ end
 -- actuall quite easy function to remove wilt plants
 farming.wilt_on_timer = function(pos, elapsed)
 	local node = minetest.get_node(pos)
---	local name = node.name
 	local def = minetest.registered_nodes[node.name]
 	if def.groups.wiltable <= 2 then -- normal crop
 		minetest.swap_node(pos, {name="air"})
 	end
 	if def.groups.wiltable == 3 then -- nettle or weed
 		-- determine all nearby nodes with soil
---		local pos0=vector.subtract(pos,2)
---		local pos1=vector.add(pos,2)
 		local farming_nearby=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:farming")
 		if #farming_nearby <= 4 then
 			local neighb=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:soil")
@@ -804,7 +771,6 @@ farming.wilt_on_timer = function(pos, elapsed)
 end
 			
 farming.seed_on_place = function(itemstack, placer, pointed_thing)
---	local under = pointed_thing.under
 	local node = minetest.get_node(pointed_thing.under)
 	local udef = minetest.registered_nodes[node.name]
 	local plantname = itemstack:get_name()
@@ -820,7 +786,6 @@ end
 -- using tools
 -- adopted from minetest-games
 farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
---	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -918,10 +883,10 @@ function farming.register_roast(rdef)
 	if rdef.roast then
 		roastitem = rdef.roast
 	end
-	local mname = minetest.get_current_modname()
-	if rdef.mod_name then
-		mname = rdef.mod_name
-	end
+--	local mname = minetest.get_current_modname()
+--	if rdef.mod_name then
+--		mname = rdef.mod_name
+--	end
 	local roast_png = roastitem:gsub(":","_")..".png"
 	
 	local roast_def={
@@ -944,8 +909,8 @@ function farming.register_roast(rdef)
 	minetest.register_craftitem(":" .. roastitem, roast_def)
 	
 	local cooktime = 3
-	if rdef.roast_time then
-		cooktime = rdef.roast_time
+	if rdef.groups.seed_roastable then
+		cooktime = rdef.groups.seed_roastable
 	end
 	minetest.register_craft({
 		type = "cooking",
@@ -968,10 +933,10 @@ function farming.register_grind(rdef)
 	end
 	local desc = grinditem:split(":")[2]
 	desc = desc:gsub("_"," ")
-	local mname = minetest.get_current_modname()
-	if rdef.mod_name then
-		mname = rdef.mod_name
-	end
+--	local mname = minetest.get_current_modname()
+--	if rdef.mod_name then
+--		mname = rdef.mod_name
+--	end
 	local grind_png = grinditem:gsub(":","_")..".png"
 	
 	local grind_def={
@@ -982,7 +947,7 @@ function farming.register_grind(rdef)
 	for _,coln in ipairs({"plant_name"}) do
 	  grind_def[coln] = rdef[coln]
 	end
-	for _,coln in ipairs({"seed_roastable"}) do
+	for _,coln in ipairs({"seed_grindable"}) do
 		if rdef.groups[coln] then
 			grind_def.groups[coln] = rdef.groups[coln]
 		end
@@ -1009,7 +974,6 @@ function farming.register_grind(rdef)
 end
 
 farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
---	local pt = pointed_thing
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -1049,7 +1013,6 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 			user:get_inventory():add_item('main',pdef.drop_item)
 		end
 	end
---	minetest.node_punch(pt.under, under, user, pointed_thing)
 	minetest.punch_node(pointed_thing.under)
 	return itemstack
 end
