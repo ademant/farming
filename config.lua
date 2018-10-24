@@ -20,8 +20,8 @@ end
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
 farming.rarety = farming.config:get_float("rarety") or 0.002
 -- random waiting time for growing
-farming.wait_min = farming.config:get_int("wati_min") or 40
-farming.wait_max = farming.config:get_int("wati_max") or 80
+farming.wait_min = farming.config:get_int("wati_min") or 20
+farming.wait_max = farming.config:get_int("wati_max") or 40
 farming.wilt_removal_time = wilt_removal_time or 60
 farming.wilt_time = 5
 farming.min_light = 14

@@ -48,10 +48,39 @@ minetest.register_lbm({
 })
 
 minetest.register_abm({
+	label="crops getting ill",
+	nodenames="group:infectable",
+	intervall = 5,
+	change=1,
+	action = function(pos)
+		local node=minetest.get_node(pos)
+		print(dump(node))
+		if node.name == "air" or node.name == "ignore" then
+			return
+		end
+		local ndef = minetest.registered_nodes[node.name]
+		if ndef.groups.infectable == nil then
+			return
+		end
+		local meta = minetest.get_meta(pos)
+		local ill_rate=meta:get_int("farming:weakness")
+		if ill_rate == nil then
+			return
+		end
+		print(ill_rate)
+--		if math.random(1,ill_rate)==1 then
+			farming.plant_infect(pos)
+			print("infect at "..dump(pos))
+--		end
+	end
+})
+
+minetest.register_abm({
+	label="Planting crops",
 	nodenames = farming.change_soil,
 	neighbors = {"air"},
 	interval = 15+math.random(-1,1), -- little noise
-	chance = 2,
+	chance = 200,
 	action = function(pos)
 		local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
 		local above = minetest.get_node(ptabove)
@@ -77,7 +106,7 @@ minetest.register_abm({
 				return
 			end
 		end
-		if math.random(0,100) < 1 then
+--		if math.random(0,100) < 1 then
 			local node_temp=minetest.get_heat(pos)
 			local node_hum=minetest.get_humidity(pos)
 			local sc={}
@@ -96,23 +125,11 @@ minetest.register_abm({
 			end
 			if #sc > 0 then
 				local rand_plant = math.random(1,#sc)
---				print(sc[rand_plant])
-				--[[
-				local pdef = minetest.registered_nodes[ sc[rand_plant] ]
-				local day_start=99999
-				local light_amount=0
-				for i=50,120 do
-					if minetest.get_node_light(ptabove,(i)/240)>pdef.light_min then
-						light_amount=light_amount+minetest.get_node_light(ptabove,i/240)
-						day_start=math.min(day_start,i)
-					end
-				end
-				print(pdef.light_min,day_start,light_amount)
-				]]
 				minetest.add_node(ptabove, {name=sc[rand_plant],param2=1})
 				minetest.get_node_timer(ptabove):start(math.random(10, 15))
+				farming.set_node_metadata(ptabove)
 			end
-		end
+--		end
 	end,
 })
 --print(dump(farming.spreading_crops))

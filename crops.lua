@@ -28,6 +28,7 @@ Actual columns:
 	infectable	void		
 				any value	the plant can be infected, where the crop does not give any seed or harvest 
 							and may infect other crops nearby
+							Higher values means more infectable
 	wiltable	void		
 				1			Wilt is going one step back, like Berries: They loose the fruits, but grow again
 				2			Plant wilt and remove itself after time. During wilt you can harvest straw if defined.

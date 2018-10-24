@@ -82,7 +82,6 @@ farming.register_plant = function(def)
     
     if def.groups["wiltable"] == 2 then
 		def.wilt_name=def.mod_name..":wilt_"..def.name
-		print(def.wilt_name)
 		farming.register_wilt(def)
 	end
    	farming.registered_plants[def.name] = def
@@ -114,8 +113,6 @@ farming.register_plant = function(def)
 		farming.seed_craft(def)
     end
     if def.groups["use_trellis"] then
-		print(dump(def))
---		print(dump(def))
 		farming.trellis_seed(def)
     end
     if def.groups["seed_grindable"] then
@@ -213,6 +210,7 @@ farming.register_infect=function(idef)
 
 	infect_def.groups = {snappy = 3, attached_node = 1, flammable = 2,infect=2}
 	infect_def.groups["step"] = -1
+	infect_def.groups[idef.plant_name] = 0
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
 end
 farming.register_wilt=function(idef)
@@ -247,7 +245,6 @@ end
 
 
 farming.register_seed=function(sdef)
---	print(sdef.name:gsub("^%l", string.upper))
     local seed_def = {
 		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		drawtype = "signlike",
@@ -268,7 +265,6 @@ farming.register_seed=function(sdef)
 		on_place = farming.seed_on_place,
 		on_timer = farming.seed_on_timer,
 	}
---	print(seed_def.description)
 	for i,colu in ipairs({"place_param2","fertility","plant_name","seed_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
@@ -290,7 +286,6 @@ farming.register_seed=function(sdef)
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
---	print(dump(seed_def))
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 end
 
@@ -357,6 +352,7 @@ farming.register_steps = function(sdef)
 		end
 		ndef.groups["step"] = i
 		ndef.groups[sdef.mod_name]=1
+		ndef.groups[sdef.plant_name]=1
 		ndef.tiles={sdef.mod_name.."_"..sdef.plant_name.."_"..i..".png"}
 		if i < sdef.steps then
 			ndef.groups["farming_grows"]=1 -- plant is growing
@@ -416,7 +412,6 @@ farming.register_steps = function(sdef)
 			ndef.groups["farming_fullgrown"]=1
 			ndef.on_dig = farming.harvest_on_dig
 			if sdef.groups.wiltable ~= nil then
-				print(sdef.wilt_name)
 				if sdef.groups.wiltable == 2 then
 					ndef.next_step=sdef.wilt_name
 				end
@@ -426,7 +421,6 @@ farming.register_steps = function(sdef)
 				if sdef.groups.wiltable == 3 then
 					ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
 				end
-				print(sdef.wilt_name)
 				ndef.on_timer = farming.step_on_timer
 				if sdef.groups.wiltable == 3 then
 					ndef.on_timer = farming.wilt_on_timer
@@ -443,129 +437,11 @@ farming.register_steps = function(sdef)
 		end
 		if i == sdef.steps and is_punchable and i > 1 then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
---		    print(ndef.pre_step)
 			ndef.on_punch = farming.step_on_punch
 		end
---		print(dump(ndef))
 		minetest.register_node(":" .. ndef.description, ndef)
 	end
---	farming.register_lbm(lbm_nodes,sdef)
 end
-
-farming.register_lbm = function(lbm_nodes,def)
-	-- replacement LBM for pre-nodetimer plants
-	minetest.register_lbm({
-		name = ":" .. def.mod_name .. ":start_nodetimer_" .. def.plant_name,
-		nodenames = lbm_nodes,
-		action = function(pos, node)
-				minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
-		end,
-	})
-end
-
-farming.register_abm = function(mdef)
-	local rand_change = 50
-	if mdef.spread then
-	  if mdef.spread.base_rate then
-	    rand_change = mdef.spread.base_rate
-	  end
-	end
-	if mdef.spread then
-		-- random spread of plant on surface.
-		minetest.register_abm({
-			nodenames = mdef.spread.spreadon,
-			neighbors = {"air"},
-			interval = mdef.spread.intervall+math.random(-1,1), -- little noise
-			chance = rand_change,
-			action = function(pos)
-				local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
-				local above = minetest.get_node(ptabove)
-				if above.name ~= "air" then
-					return
-				end
-				if minetest.get_node_light(ptabove) < mdef.minlight then
-					return
-				end
-				local ymin=0
-				local ymax=31000
-				if mdef.spawnon then
-					ymin=mdef.spawnon.spawn_min or 0
-					ymax=mdef.spawnon.spawn_max or 31000
-				end
-				if (ptabove.y < ymin or ptabove.y > ymax ) then
-					return
-				end
-				local pos0 = vector.subtract(pos,4)
-				local pos1 = vector.add(pos,4)
-				-- only for positions, where not too many plants are nearby
-				if #minetest.find_nodes_in_area(pos0,pos1,"group:"..mdef.plant_name) > 2 then
-					return
-				end
-				if math.random(0,mdef.spread.inv_change) < 1 then
-					minetest.add_node(ptabove, {name=mdef.harvest_name.."_1"})
-					minetest.get_node_timer(pos):start(math.random(mdef.min_grow_time or 100, mdef.max_grow_time or 200))
-				end
-			end,
-		})
-		-- spread for full-grown plant
-		minetest.register_abm({
-			nodenames =mdef.spread.spreadon ,
-			neighbours=mdef.harvest_name.."_"..mdef.steps,
-			interval = mdef.spread.intervall + math.random(-1,1), --little noise
-			chance = mdef.spread.spread,
-			action = function(pos)
-				local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
-				local above = minetest.get_node(ptabove)
-				if above.name ~= "air" then
-					return
-				end
-				if minetest.get_node_light(ptabove) < mdef.minlight then
-					return
-				end
-				local ymin=0
-				local ymax=31000
-				if mdef.spawnon then
-					ymin=mdef.spawnon.spawn_min or 0
-					ymax=mdef.spawnon.spawn_max or 31000
-				end
-				if (ptabove.y < ymin or ptabove.y > ymax ) then
-					return
-				end
-				if math.random(0,mdef.spread.inv_change) < 1 then
-					minetest.add_node(ptabove, {name=mdef.harvest_name.."_1"})
-					minetest.get_node_timer(pos):start(math.random(mdef.min_grow_time or 100, mdef.max_grow_time or 200))
-				end
-			end,
-		})
-	end
-end
-farming.register_mapgen = function(mdef)
-    -- register mapgen
-    if mdef.groups.to_culture == nil then
-		local deco_def={
-			deco_type = "simple",
-			place_on = mdef.spawnon,
-			sidelen = 16,
-			noise_params = {
-				offset = 0.012,
-				scale = 0.006,
-				spread = {x = 200, y = 200, z = 200},
-				seed = 329,
-				octaves = 3,
-				persist = 0.6
-			},
-			y_min = mdef.elevation_min,
-			y_max = mdef.elevation_max,
-			decoration = mdef.wildname or mdef.step_name.."_"..mdef.steps,
---			spawn_by = mdef.spawnon.spawnby,
---			num_spawn_by = mdef.spawnon.spawn_num,
---			biomes = farming.get_biomes(def)
-		}
-		minetest.register_decoration(deco_def)
---	  end
-	end
-end
-
 
 farming.register_billhook = function(name,def)
   if not def.groups["billhook"] then
@@ -642,12 +518,13 @@ farming.plant_infect = function(pos)
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
-	local infect_name=def.plant.."_infected"
+--	print(dump(def))
+	local infect_name=def.plant_name.."_infected"
 	if not minetest.registered_nodes[infect_name] then
 		return 
 	end
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups["step"])
+--	meta:set_int("farming:step",def.groups["step"])
 	local placenode = {name = infect_name}
 	if def.place_param2 then
 		placenode.param2 = def.place_param2
@@ -662,9 +539,7 @@ farming.plant_cured = function(pos)
 	local def = minetest.registered_nodes[name]
 	local meta = minetest.get_meta(pos)
 	local cured_step=meta:get_int("farming:step")
---	print(cured_step)
 	local cured_name=def.step_name.."_"..cured_step
---	print(cured_name)
 	if not minetest.registered_nodes[cured_name] then
 		return 
 	end
@@ -718,6 +593,49 @@ farming.harvest_on_dig = function(pos, node, digger)
    	  digger:get_inventory():add_item('main',def.drop_item)
 	end
 	minetest.node_dig(pos,node,digger)
+end
+
+farming.infect_on_timer = function(pos,elapsed)
+	local node = minetest.get_node(pos)
+	local def = minetest.registered_nodes[node.name]
+	local meta = minetest.get_meta(pos)
+	local actual_step=meta:get_int("farming:step")
+	if actual_step == nil then
+		minetest.swap_node(pos, {name="air"})
+		return
+	end
+	if actual_step == 0 then
+		print("plant dies")
+		minetest.swap_node(pos, {name="air"})
+		return
+	end
+	local infected = 0
+	if def.infect_rate_monoculture ~= nil then
+		local monoculture=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:"..def.plant_name)
+		if monoculture ~= nil then
+			for i = 1,#monoculture do
+				if math.random(1,max(2,def.infect_rate_monoculture))==1 then
+					farming.plant_infect(monoculture[i])
+					print("infection spread")
+					infected=infected+1
+				end
+			end
+		end
+	end
+	if infected == 0 then
+		local culture=minetest.find_nodes_in_area(vector.subtract(pos,3),vector.add(pos,3),"group:infectable")
+		if culture ~= nil then
+			for i = 1,#culture do
+				if math.random(1,max(2,def.infect_rate_base))==1 then
+					farming.plant_infect(culture[i])
+					print("infection spread")
+					infected=infected+1
+				end
+			end
+		end
+	end
+	meta:set_int("farming:step",actual_step-1)
+	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
 end
 
 farming.step_on_timer = function(pos, elapsed)
@@ -839,6 +757,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	minetest.get_node_timer(pt.above):start(math.random(wait_min, wait_max))
 	local meta = minetest.get_meta(pt.above)
 	meta:set_int("farming:step",0)
+	farming.set_node_metadata(pt.above)
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
@@ -1074,8 +993,6 @@ function farming.register_roast(rdef)
 	if rdef.eat_hp then
 	  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
 	end
---	print(roastitem)
---	print(dump(roast_def))
 	
 	minetest.register_craftitem(":" .. roastitem, roast_def)
 	
@@ -1102,7 +1019,6 @@ function farming.register_grind(rdef)
 	if rdef.grind then
 		grinditem = rdef.grind
 	end
---	print(grinditem)
 	local desc = grinditem:split(":")[2]
 	desc = desc:gsub("_"," ")
 	local mname = minetest.get_current_modname()
@@ -1192,9 +1108,45 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 end
 
 farming.set_node_metadata=function(pos)
+	local base_rate = 5
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local pdef = farming.registered_plants[def.plant_name]
-	local ill_rate=(pdef.light_max-minetest.get_node_light(pos,0.5))/(pdef.light_max-pdef.light_min)
-	
+	local ill_rate=base_rate * (pdef.light_max-minetest.get_node_light(pos,0.5))/(pdef.light_max-pdef.light_min)
+	-- calc coeff for temperature
+	local ill_temp=(base_rate * math.sqrt(math.min(minetest.get_heat(pos)-pdef.temperature_min,pdef.temperature_max-minetest.get_heat(pos))/(pdef.temperature_max-pdef.temperature_min)))
+	-- negative coeff means, it is out of range
+	if ill_temp < 0 then
+		ill_temp = (ill_temp * (-0.75))
+	end
+	-- calc coeff for humidity
+	local ill_hum=(base_rate * math.sqrt(math.min(minetest.get_humidity(pos)-pdef.humidity_min,pdef.humidity_max-minetest.get_humidity(pos))/(pdef.humidity_max-pdef.humidity_min)))
+	-- negative coeff means, it is out of range
+	if ill_hum < 0 then
+		ill_hum = (ill_hum * (-0.75))
+	end
+	local infect_rate = 1
+	if pdef.groups.infectable then
+		infect_rate = pdef.groups.infectable
+	end
+	ill_rate = math.ceil((ill_rate + ill_temp + ill_hum)/infect_rate)
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:weakness",ill_rate)
+
+	-- calculating 
+	local day_start=99999
+	local light_amount=0
+	for i=50,120 do
+		if minetest.get_node_light(pos,(i)/240)>pdef.light_min then
+			light_amount=light_amount+minetest.get_node_light(pos,i/240)
+			day_start=math.min(day_start,i)
+		end
+	end
+	if day_start > 240 then
+		day_start=120
+	end
+	-- daytime, when light reach light_min
+	meta:set_float("farming:daystart",day_start/240)
+	-- amount of light the crop gets till midday
+	meta:set_int("farming:lightamount",light_amount)
 end
