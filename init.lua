@@ -38,6 +38,8 @@ minetest.register_abm({
 })
 ]]
 
+-- 1h in minetest == 72s reale Zeit
+
 -- replacement LBM for pre-nodetimer plants
 minetest.register_lbm({
 	name = ":farming:start_nodetimer_",
@@ -50,9 +52,10 @@ minetest.register_lbm({
 minetest.register_abm({
 	nodenames="air",
 	intervall=1,
-	change=1000,
+	change=100000,
 	action = function(pos)
-		print(dump(farming.calc_light(pos,{light_min=15})))
+--		print(dump(farming.calc_light(pos,{light_min=15})))
+		print(os.clock(),minetest.get_timeofday())
 		end
 		})
 ]]

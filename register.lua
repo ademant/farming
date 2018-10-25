@@ -596,8 +596,18 @@ farming.step_on_timer = function(pos, elapsed)
 	end
 	-- new timer needed?
 	if def.next_step then
-		-- using light at midday to increase or decrease growing time
 		local wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
+		-- check for config values
+		if meta:get_int("farming:lightamount") ~= nil then
+			if farming.light_stat[def.light_min] ~= nil then
+				local ls = farming.light_stat[def.light_min]
+				if ls.amount ~= nil and meta:get_int("farming:lightamount") > 0 then
+					-- time till next step is stretched. Less light means longer growing time
+					wait_factor = ls.amount / meta:get_int("farming:lightamount")
+				end
+			end
+		end
+		-- using light at midday to increase or decrease growing time
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
