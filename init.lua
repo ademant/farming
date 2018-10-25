@@ -80,6 +80,7 @@ minetest.register_abm({
 	intervall = 5,
 	change=5,
 	action = function(pos)
+		local starttime=os.time()
 		local node=minetest.get_node(pos)
 		if node.name == "air" or node.name == "ignore" then
 			return
@@ -96,6 +97,7 @@ minetest.register_abm({
 		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
 		end
+--		print("infect time: "..os.time()-starttime)
 	end
 })
 
@@ -106,6 +108,7 @@ minetest.register_abm({
 	interval = 15+math.random(-1,1), -- little noise
 	chance = 200,
 	action = function(pos)
+		local starttime=os.clock()
 		local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
 		local above = minetest.get_node(ptabove)
 		if above.name ~= "air" then
@@ -148,7 +151,9 @@ minetest.register_abm({
 				local rand_plant = math.random(1,#sc)
 				minetest.add_node(ptabove, {name=sc[rand_plant],param2=1})
 				minetest.get_node_timer(ptabove):start(math.random(10, 15))
+				local starttime=os.clock()
 				farming.set_node_metadata(ptabove)
+				print("place time: "..(1000*(os.clock()-starttime)))
 			end
 --		end
 	end,
