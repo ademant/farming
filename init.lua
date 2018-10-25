@@ -153,7 +153,7 @@ minetest.register_abm({
 				minetest.get_node_timer(ptabove):start(math.random(10, 15))
 				local starttime=os.clock()
 				farming.set_node_metadata(ptabove)
-				print("place time: "..(1000*(os.clock()-starttime)))
+--				print("place time: "..(1000*(os.clock()-starttime)))
 			end
 --		end
 	end,

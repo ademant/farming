@@ -533,7 +533,7 @@ farming.infect_on_timer = function(pos,elapsed)
 		return
 	end
 	if meta:get_int("farming:step") == 0 then
-		print("plant dies")
+--		print("plant dies")
 		minetest.swap_node(pos, {name="air"})
 		return
 	end
@@ -1029,7 +1029,6 @@ end
 
 farming.calc_light=function(pos,pdef)
 	-- calculating 
-	print(dump(pos))
 	local outdata={day_start=99999,
 			light_amount=0,
 			}
