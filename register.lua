@@ -1017,6 +1017,23 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	return itemstack
 end
 
+farming.calc_light=function(pos,pdef)
+	-- calculating 
+	print(dump(pos))
+	local outdata={day_start=99999,
+			light_amount=0,
+			}
+	for i=50,120 do
+		if minetest.get_node_light(pos,(i)/240)>pdef.light_min then
+			outdata.light_amount=outdata.light_amount+minetest.get_node_light(pos,i/240)
+			outdata.day_start=math.min(outdata.day_start,i)
+		end
+	end
+	if outdata.day_start > 240 then
+		outdata.day_start=120
+	end
+	return outdata
+end
 farming.set_node_metadata=function(pos)
 	local base_rate = 5
 	local node = minetest.get_node(pos)
@@ -1042,21 +1059,10 @@ farming.set_node_metadata=function(pos)
 	ill_rate = math.ceil((ill_rate + ill_temp + ill_hum)/infect_rate)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:weakness",ill_rate)
-
-	-- calculating 
-	local day_start=99999
-	local light_amount=0
-	for i=50,120 do
-		if minetest.get_node_light(pos,(i)/240)>pdef.light_min then
-			light_amount=light_amount+minetest.get_node_light(pos,i/240)
-			day_start=math.min(day_start,i)
-		end
-	end
-	if day_start > 240 then
-		day_start=120
-	end
+	
+	local lightcalc=farming.calc_light(pos,pdef)
 	-- daytime, when light reach light_min
-	meta:set_float("farming:daystart",day_start/240)
+	meta:set_float("farming:daystart",lightcalc.day_start/240)
 	-- amount of light the crop gets till midday
-	meta:set_int("farming:lightamount",light_amount)
+	meta:set_int("farming:lightamount",lightcalc.light_amount)
 end

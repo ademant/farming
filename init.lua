@@ -13,8 +13,8 @@ minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loadi
 -- Load files
 
 
-dofile(farming.path .. "/config.lua")
 dofile(farming.path .. "/functions.lua")
+dofile(farming.path .. "/config.lua")
 
 dofile(farming.path .. "/api.lua")
 dofile(farming.path .. "/register.lua")
@@ -46,7 +46,31 @@ minetest.register_lbm({
 			minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
 	end,
 })
-
+--[[
+minetest.register_abm({
+	nodenames="air",
+	intervall=1,
+	change=1000,
+	action = function(pos)
+		print(dump(farming.calc_light(pos,{light_min=15})))
+		end
+		})
+]]
+--[[
+light_min	day_start	amount
+4			51			988
+5			53			978
+6			54			972
+7			55			965
+8			56			957
+9			57			948
+10			57			948
+11			58			937
+12			59			925
+13			60			912
+14			63			870
+]]
+		
 minetest.register_abm({
 	label="crops getting ill",
 	nodenames="group:infectable",
@@ -54,7 +78,6 @@ minetest.register_abm({
 	change=5,
 	action = function(pos)
 		local node=minetest.get_node(pos)
---		print(dump(node))
 		if node.name == "air" or node.name == "ignore" then
 			return
 		end
@@ -97,9 +120,7 @@ minetest.register_abm({
 		-- first check if any crops are nearby, because the counting
 		-- of nearby crops is time consuming
 		if minetest.find_node_near(pos,4,"group:farming") ~= nil then
-			local pos0 = vector.subtract(pos,4)
-			local pos1 = vector.add(pos,4)
-			if #minetest.find_nodes_in_area(pos0,pos1,"group:farming") > 2 then
+			if #minetest.find_nodes_in_area(vector.subtract(pos,4),vector.add(pos,4),"group:farming") > 2 then
 				return
 			end
 		end
