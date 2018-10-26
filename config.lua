@@ -55,4 +55,3 @@ farming.spreading_crops = {}
 
 farming.light_stat = farming.import_csv(farming.path.."/light_stat.txt",{
 	col_num={"day_start","amount","name"}})
-print(dump(farming.light_stat))

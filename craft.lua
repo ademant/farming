@@ -67,6 +67,12 @@ minetest.register_craftitem("farming:flour", {
 	groups = {food_flour = 1, flammable = 1},
 })
 
+minetest.register_craftitem("farming:grain_roasted", {
+	description = "Grain Roaste",
+	inventory_image = "farming_grain_roasted.png",
+	groups = {food_roasted = 1, flammable = 1},
+})
+
 minetest.register_craftitem(modname..":nettle_water",{
 	description = "Nettle Water",
 	inventory_image = "farming_tool_glass_nettle.png",

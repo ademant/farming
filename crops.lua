@@ -122,8 +122,9 @@ for i,tdef in pairs(crop_definition) do
 	if i ~= "default" then
 		-- only register when crop is enabled
 		if tdef.enabled then
-			print("farming registering "..tdef.name)
+			local starttime=os.clock()
 			farming.register_plant(tdef)
+			print("farming registering "..tdef.name.." in "..(math.floor(1000000*(os.clock()-starttime))/1000).." milliseconds")
 		else
 			print("farming "..tdef.name.." disabled")
 		end

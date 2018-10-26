@@ -84,7 +84,6 @@ farming.register_plant = function(def)
 		def.wilt_name=def.mod_name..":wilt_"..def.name
 		farming.register_wilt(def)
 	end
-   	farming.registered_plants[def.name] = def
 
     farming.register_seed(def)
 
@@ -105,6 +104,13 @@ farming.register_plant = function(def)
       farming.register_infect(def)
     end
     
+    for _,it in ipairs({"roast","grind","seed_drop"}) do
+		if def[it] ~= nil then
+			if minetest.registered_craftitems[def[it]] == nil then
+				farming.register_craftitem(def[it])
+			end
+		end
+	end
     if def.groups["use_flail"] then
 		def.straw_name="farming:straw"
 		if def.straw then
@@ -121,6 +127,11 @@ farming.register_plant = function(def)
     if def.groups["seed_roastable"] then
 		farming.register_roast(def)
     end
+    if def.groups["for_coffee"] then
+		farming.register_coffee(def)
+    end
+
+   	farming.registered_plants[def.name] = def
 end
 
 farming.register_harvest=function(hdef)
@@ -134,13 +145,16 @@ farming.register_harvest=function(hdef)
 	for _,coln in ipairs({"plant_name"}) do
 	  harvest_def[coln] = hdef[coln]
 	end
-	-- some existing groups are copied
---	for _,coln in ipairs({"use_flail","use_trellis"}) do
---		if hdef.groups[coln] then
---			harvest_def.groups[coln] = hdef.groups[coln]
---		end
---	end
 	minetest.register_craftitem(":" .. hdef.step_name, harvest_def)
+end
+farming.register_craftitem = function(itemname)
+	local desc = itemname:split(":")[2]
+	local item_def={
+		description = S(desc:gsub("^%l", string.upper)),
+		inventory_image = itemname:gsub(":","_")..".png",
+		groups = {flammable = 2},
+	}
+	minetest.register_craftitem(":"..itemname,item_def)
 end
 
 farming.register_infect=function(idef)
@@ -882,51 +896,59 @@ function farming.seed_craft(gdef)
 	})
 end
 
+function farming.register_coffee(cdef)
+	
+end
+
 function farming.register_roast(rdef)
 	if rdef.seed_name == nil then
 		return
 	end
-	if rdef.step_name == nil then
+	if rdef.roast == nil then
 		return
 	end
 	local roastitem = rdef.step_name.."_roasted"
 	if rdef.roast then
 		roastitem = rdef.roast
 	end
---	local mname = minetest.get_current_modname()
---	if rdef.mod_name then
---		mname = rdef.mod_name
---	end
-	local roast_png = roastitem:gsub(":","_")..".png"
-	
-	local roast_def={
-		description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
-		inventory_image = roast_png,
-		groups = rdef.groups or {flammable = 2},
-	}
-	for _,coln in ipairs({"plant_name"}) do
-	  roast_def[coln] = rdef[coln]
-	end
-	for _,coln in ipairs({"seed_roastable"}) do
-		if rdef.groups[coln] then
-			roast_def.groups[coln] = rdef.groups[coln]
+	-- if no roast defined in config, register an own roast item
+	if minetest.registered_craftitems[roastitem] == nil then
+--	if rdef.roast == nil then
+		local roast_png = roastitem:gsub(":","_")..".png"
+		
+		local roast_def={
+			description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
+			inventory_image = roast_png,
+			groups = rdef.groups or {flammable = 2},
+		}
+		for _,coln in ipairs({"plant_name"}) do
+		  roast_def[coln] = rdef[coln]
 		end
+		for _,coln in ipairs({"seed_roastable"}) do
+			if rdef.groups[coln] then
+				roast_def.groups[coln] = rdef.groups[coln]
+			end
+		end
+		if rdef.eat_hp then
+		  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
+		end
+		
+		minetest.register_craftitem(":" .. roastitem, roast_def)
 	end
-	if rdef.eat_hp then
-	  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
-	end
-	
-	minetest.register_craftitem(":" .. roastitem, roast_def)
 	
 	local cooktime = 3
 	if rdef.groups.seed_roastable then
 		cooktime = rdef.groups.seed_roastable
 	end
+	local seedname=rdef.seed_name
+	if rdef.seed_drop ~= nil then
+		seedname=rdef.seed_drop
+	end
 	minetest.register_craft({
 		type = "cooking",
 		cooktime = cooktime or 3,
 		output = roastitem,
-		recipe = rdef.seed_name
+		recipe = seedname
 	})
 end
 
@@ -943,10 +965,6 @@ function farming.register_grind(rdef)
 	end
 	local desc = grinditem:split(":")[2]
 	desc = desc:gsub("_"," ")
---	local mname = minetest.get_current_modname()
---	if rdef.mod_name then
---		mname = rdef.mod_name
---	end
 	local grind_png = grinditem:gsub(":","_")..".png"
 	
 	local grind_def={
