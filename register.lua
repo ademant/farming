@@ -1,5 +1,6 @@
 local S = farming.intllib
--- function to check definition
+
+-- function to check definition for a plant
 -- and set to defaults values
 local register_plant_check_def = function(def)
 	local default_def={harvest_max=2,place_param2 = 3,mod_name=minetest.get_current_modname()}
@@ -8,6 +9,7 @@ local register_plant_check_def = function(def)
 			def[dn] = dv
 		end
 	end
+	-- fallback default definition, if no defaults given by configuration
 	local default_env={temperature_min=0,temperature_max=100,humidity_min=0,humidity_max=100,
 		elevation_min=0,elevation_max=31000,light_min=10,light_max=default.LIGHT_MAX,rarety=10,
 		grow_time_mean=120,spread_rate=1e-5,infect_rate_base=1e-5,infect_rate_monoculture=1e-3}
@@ -116,7 +118,7 @@ farming.register_plant = function(def)
 		if def.straw then
 			def.straw_name=def.straw
 		end
-		farming.seed_craft(def)
+		farming.craft_seed(def)
     end
     if def.groups["use_trellis"] then
 		farming.trellis_seed(def)
@@ -172,7 +174,7 @@ farming.register_infect=function(idef)
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
-		on_timer=farming.infect_on_timer,
+		on_timer=farming.timer_infect,
 	}
 	for _,coln in ipairs({"name","seed_name","plant_name",
 		"place_param2","infect_rate_base","infect_rate_monoculture"}) do
@@ -199,7 +201,7 @@ farming.register_wilt=function(idef)
 		selection_box = {type = "fixed",
 			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 		sounds = default.node_sound_leaves_defaults(),
-		on_timer = farming.wilt_on_timer,
+		on_timer = farming.timer_wilt,
 	}
 	if idef.straw ~= nil then
 		wilt_def.drop={items={{items={idef.straw}}}}
@@ -239,7 +241,7 @@ farming.register_seed=function(sdef)
 		}),
 		next_step = sdef.step_name .. "_1",
 		on_place = farming.seed_on_place,
-		on_timer = farming.seed_on_timer,
+		on_timer = farming.timer_seed,
 	}
 	for i,colu in ipairs({"place_param2","fertility","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
@@ -312,7 +314,7 @@ farming.register_steps = function(sdef)
 		if i < sdef.steps then
 			ndef.groups["farming_grows"]=1 -- plant is growing
 			ndef.next_step=sdef.step_name .. "_" .. (i + 1)
-			ndef.on_timer = farming.step_on_timer
+			ndef.on_timer = farming.timer_step
 			ndef.grow_time_min=sdef.grow_time_min or 120
 			ndef.grow_time_max=sdef.grow_time_max or 180
 		end
@@ -353,7 +355,7 @@ farming.register_steps = function(sdef)
 		end
 		if i == sdef.steps then
 			ndef.groups["farming_fullgrown"]=1
-			ndef.on_dig = farming.harvest_on_dig
+			ndef.on_dig = farming.dig_harvest
 			if sdef.groups.wiltable ~= nil then
 				if sdef.groups.wiltable == 2 then
 					ndef.next_step=sdef.wilt_name
@@ -363,10 +365,10 @@ farming.register_steps = function(sdef)
 				end
 				if sdef.groups.wiltable == 3 then
 					ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
-					ndef.on_timer = farming.wilt_on_timer
+					ndef.on_timer = farming.timer_wilt
 					ndef.seed_name=sdef.seed_name
 				end
-				ndef.on_timer = farming.step_on_timer
+				ndef.on_timer = farming.timer_step
 				ndef.grow_time_min=sdef.wilt_time or 10
 				ndef.grow_time_max=math.ceil(ndef.grow_time_min*1.1)
 			end
@@ -378,7 +380,7 @@ farming.register_steps = function(sdef)
 		end
 		if i == sdef.steps and sdef.groups["punchable"] and i > 1 then
 		    ndef.pre_step = sdef.step_name .. "_" .. (i - 1)
-			ndef.on_punch = farming.step_on_punch
+			ndef.on_punch = farming.punch_step
 		end
 		minetest.register_node(":" .. ndef.description, ndef)
 	end
@@ -396,7 +398,7 @@ farming.register_billhook = function(name,def)
   end
   if def.on_use == nil then
 	def.on_use = function(itemstack, user, pointed_thing)
-			return farming.billhook_on_use(itemstack, user, pointed_thing, def.max_uses)
+			return farming.use_billhook(itemstack, user, pointed_thing, def.max_uses)
 		end
   end
   if not def.recipe then
@@ -494,13 +496,17 @@ farming.plant_cured = function(pos)
 	minetest.swap_node(pos, placenode)
 end
 
-farming.step_on_punch = function(pos, node, puncher, pointed_thing)
+-- function for handle punching of a crop
+-- if at last step than go back one step and give puncher one fruit
+-- then start timer again
+farming.punch_step = function(pos, node, puncher, pointed_thing)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow
 	if def.groups.punchable == nil then
 		return
 	end
+	-- only give fruit and go back if pre step is defined
 	if def.pre_step == nil then
 		return
 	end
@@ -513,11 +519,11 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	
 	if puncher ~= nil and puncher:get_player_name() ~= "" then
 		puncher:get_inventory():add_item('main',def.drop_item)
-	-- getting one more when using billhook
-		local tool_def = puncher:get_wielded_item():get_definition()
-		if tool_def.groups["billhook"] then
-		  puncher:get_inventory():add_item('main',def.drop_item)
-		end
+		-- getting one more when using billhook
+--		local tool_def = puncher:get_wielded_item():get_definition()
+--		if tool_def.groups["billhook"] then
+--		  puncher:get_inventory():add_item('main',def.drop_item)
+--		end
 	end
 	-- new timer needed?
 	local pre_def=minetest.registered_nodes[pre_node]
@@ -529,16 +535,26 @@ farming.step_on_punch = function(pos, node, puncher, pointed_thing)
 	return 
 end
 
-farming.harvest_on_dig = function(pos, node, digger)
+-- function for digging crops
+-- if dug with scythe by change you harvest more
+farming.dig_harvest = function(pos, node, digger)
 	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
-   	  digger:get_inventory():add_item('main',def.drop_item)
+		if tool_def.farming_change ~= nil then
+			if math.random(1,tool_def.farming_change)==1 then
+				digger:get_inventory():add_item('main',def.drop_item)
+			end
+		end
 	end
 	minetest.node_dig(pos,node,digger)
 end
 
-farming.infect_on_timer = function(pos,elapsed)
+-- timer function for infected plants
+-- the step of plant is reduced till zero then the plant dies
+-- nearby crops are infected by change given in configuration
+-- normally in monoculture the infection rate is higher
+farming.timer_infect = function(pos,elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local meta = minetest.get_meta(pos)
@@ -547,7 +563,6 @@ farming.infect_on_timer = function(pos,elapsed)
 		return
 	end
 	if meta:get_int("farming:step") == 0 then
---		print("plant dies")
 		minetest.swap_node(pos, {name="air"})
 		return
 	end
@@ -580,7 +595,10 @@ farming.infect_on_timer = function(pos,elapsed)
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
 end
 
-farming.step_on_timer = function(pos, elapsed)
+-- timer function called for a step to grow
+-- if enough light then grow to next step
+-- if a following step or wilt is defined then calculate new time and set timer
+farming.timer_step = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- check for enough light
@@ -718,7 +736,9 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	return itemstack
 end
 
-farming.seed_on_timer = function(pos, elapsed)
+-- timer function for growing seed
+-- after the time out the first step of plant in placed
+farming.timer_seed = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow seed
@@ -748,12 +768,14 @@ farming.seed_on_timer = function(pos, elapsed)
 	end
 end
 
--- actuall quite easy function to remove wilt plants
-farming.wilt_on_timer = function(pos, elapsed)
+-- timer function for wilt plants
+-- normal plants will die after the time
+-- weed like nettles can spread to neighbour places
+farming.timer_wilt = function(pos, elapsed)
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	if def.groups.wiltable <= 2 then -- normal crop
-		minetest.swap_node(pos, {name="air"})
+		minetest.swap_node(pos, {name="default:grass_"..math.random(1,5)})
 	end
 	if def.groups.wiltable == 3 then -- nettle or weed
 		-- determine all nearby nodes with soil
@@ -793,7 +815,8 @@ farming.wilt_on_timer = function(pos, elapsed)
 		end
 	end
 end
-			
+
+
 farming.seed_on_place = function(itemstack, placer, pointed_thing)
 	local node = minetest.get_node(pointed_thing.under)
 	local udef = minetest.registered_nodes[node.name]
@@ -809,7 +832,7 @@ end
 
 -- using tools
 -- adopted from minetest-games
-farming.tool_on_dig = function(itemstack, user, pointed_thing, uses)
+farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -863,7 +886,6 @@ farming.trellis_seed = function(gdef)
 		return
 	end
 	
-	
 	minetest.register_craft({
 	type = "shapeless",
 	output = gdef.seed_name.." 1",
@@ -873,8 +895,8 @@ farming.trellis_seed = function(gdef)
   })
 end
 
--- define seed crafting
-function farming.seed_craft(gdef)
+-- define seed crafting out of harvest, releasing kind of straw
+function farming.craft_seed(gdef)
 	if gdef.seed_name == nil then
 		return
 	end
@@ -900,6 +922,7 @@ function farming.register_coffee(cdef)
 	
 end
 
+-- registering roast items if needed for plant
 function farming.register_roast(rdef)
 	if rdef.seed_name == nil then
 		return
@@ -907,19 +930,17 @@ function farming.register_roast(rdef)
 	if rdef.roast == nil then
 		return
 	end
-	local roastitem = rdef.step_name.."_roasted"
-	if rdef.roast then
-		roastitem = rdef.roast
-	end
+	local roastitem=rdef.roast
 	-- if no roast defined in config, register an own roast item
 	if minetest.registered_craftitems[roastitem] == nil then
 --	if rdef.roast == nil then
 		local roast_png = roastitem:gsub(":","_")..".png"
-		
+		local rn = roastitem:split(":")[2]
+		rn=rn:gsub("_"," ")
 		local roast_def={
-			description = S(rdef.description:gsub("^%l", string.upper).." roasted"),
+			description = S(rdef.description:gsub("^%l", string.upper)),
 			inventory_image = roast_png,
-			groups = rdef.groups or {flammable = 2},
+			groups = {flammable = 2},
 		}
 		for _,coln in ipairs({"plant_name"}) do
 		  roast_def[coln] = rdef[coln]
@@ -952,6 +973,7 @@ function farming.register_roast(rdef)
 	})
 end
 
+-- registering grind items
 function farming.register_grind(rdef)
 	if rdef.seed_name == nil then
 		return
@@ -1001,7 +1023,9 @@ function farming.register_grind(rdef)
 	})
 end
 
-farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
+-- function for using billhook on punchable fruits
+-- add wear to billhook and give player by change one more fruit
+farming.use_billhook = function(itemstack, user, pointed_thing, uses)
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -1018,6 +1042,10 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 	local pdef=minetest.registered_nodes[under.name]
 	-- check if pointing at punchable crop
 	if pdef.groups.punchable == nil then
+		return
+	end
+	-- check if plant is full grown
+	if pdef.groups.farming_fullgrown == nil then
 		return
 	end
 	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
@@ -1041,10 +1069,12 @@ farming.billhook_on_use = function(itemstack, user, pointed_thing, uses)
 			user:get_inventory():add_item('main',pdef.drop_item)
 		end
 	end
+	-- call punching function of crop: normally go back one step and start timer
 	minetest.punch_node(pointed_thing.under)
 	return itemstack
 end
 
+-- calculate light amount on a position for a given light_min
 farming.calc_light=function(pos,pdef)
 	-- calculating 
 	local outdata={day_start=99999,
@@ -1061,6 +1091,8 @@ farming.calc_light=function(pos,pdef)
 	end
 	return outdata
 end
+
+-- calculate several meta data for a node and save in node storage
 farming.set_node_metadata=function(pos)
 	local base_rate = 5
 	local node = minetest.get_node(pos)

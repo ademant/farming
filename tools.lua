@@ -24,7 +24,7 @@ farming.register_scythe(":farming:scythe_wood", {
 	description = "Wooden Scythe",
 	inventory_image = "farming_tool_scythe_wood.png",
 	max_uses = 30,
-	farming_change = 20,
+	farming_change = 10,
 	material = "group:wood",
 	groups = {flammable = 2},
 	tool_capabilities = {
@@ -40,7 +40,7 @@ farming.register_scythe(":farming:scythe_stone", {
 	description = "Stone Scythe",
 	inventory_image = "farming_tool_scythe_stone.png",
 	max_uses = 60,
-	farming_change = 10,
+	farming_change = 5,
 	material = "group:stone",
 	groups = {flammable = 2},
 	tool_capabilities = {
@@ -56,7 +56,7 @@ farming.register_scythe(":farming:scythe_steel", {
 	description = "Steel Scythe",
 	inventory_image = "farming_tool_scythe_steel.png",
 	max_uses = 500,
-	farming_change = 6,
+	farming_change = 3,
 	material = "default:steel_ingot",
 	groups = {flammable = 2},
 })
