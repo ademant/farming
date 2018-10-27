@@ -1,9 +1,14 @@
+farming.time_farming={}
+farming.time_ill={}
+farming.time_planting={}
+
 minetest.register_abm({
 	label = "Farming soil",
 	nodenames = {"group:field"},
 	interval = 15,
 	chance = 4,
 	action = function(pos, node)
+		local starttime=os.clock()
 		local n_def = minetest.registered_nodes[node.name] or nil
 		local wet = n_def.soil.wet or nil
 		local base = n_def.soil.base or nil
@@ -48,6 +53,7 @@ minetest.register_abm({
 				end
 			end
 		end
+		table.insert(farming.time_farming,1,1000*(os.clock()-starttime))
 	end,
 })
 
@@ -58,7 +64,7 @@ minetest.register_abm({
 	intervall = 5,
 	change=5,
 	action = function(pos)
-		local starttime=os.time()
+		local starttime=os.clock()
 		local node=minetest.get_node(pos)
 		if node.name == "air" or node.name == "ignore" then
 			return
@@ -76,6 +82,7 @@ minetest.register_abm({
 			farming.plant_infect(pos)
 		end
 --		print("infect time: "..os.time()-starttime)
+		table.insert(farming.time_ill,1,1000*(os.clock()-starttime))
 	end
 })
 
@@ -134,5 +141,22 @@ minetest.register_abm({
 --				print("place time: "..(1000*(os.clock()-starttime)))
 			end
 --		end
+		table.insert(farming.time_planting,1,1000*(os.clock()-starttime))
 	end,
 })
+
+
+minetest.register_on_shutdown(function()
+	if not farming.time_farming then
+		table.sort(farming.time_farming)
+		print("farming median "..farming.time_farming[math.ceil(#farming.time_farming/2)])
+	end
+	if not farming.time_ill then
+		table.sort(farming.time_ill)
+		print("ill median "..farming.time_ill[math.ceil(#farming.time_ill/2)])
+	end
+	if not farming.time_planting then
+		table.sort(farming.time_planting)
+		print("planting median "..farming.time_planting[math.ceil(#farming.time_planting/2)])
+	end
+end)
