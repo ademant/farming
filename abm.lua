@@ -53,7 +53,7 @@ minetest.register_abm({
 				end
 			end
 		end
-		table.insert(farming.time_farming,1,1000*(os.clock()-starttime))
+		table.insert(farming.time_farming,1000*(os.clock()-starttime))
 	end,
 })
 
@@ -82,7 +82,7 @@ minetest.register_abm({
 			farming.plant_infect(pos)
 		end
 --		print("infect time: "..os.time()-starttime)
-		table.insert(farming.time_ill,1,1000*(os.clock()-starttime))
+		table.insert(farming.time_ill,1000*(os.clock()-starttime))
 	end
 })
 
@@ -133,6 +133,8 @@ minetest.register_abm({
 			  end
 			end
 			if #sc > 0 then
+						print("ping")
+
 				local rand_plant = math.random(1,#sc)
 				minetest.add_node(ptabove, {name=sc[rand_plant],param2=1})
 				minetest.get_node_timer(ptabove):start(math.random(10, 15))
@@ -141,21 +143,23 @@ minetest.register_abm({
 --				print("place time: "..(1000*(os.clock()-starttime)))
 			end
 --		end
-		table.insert(farming.time_planting,1,1000*(os.clock()-starttime))
+		table.insert(farming.time_planting,1000*(os.clock()-starttime))
 	end,
 })
 
 
 minetest.register_on_shutdown(function()
-	if not farming.time_farming then
+	if #farming.time_farming > 0 then
 		table.sort(farming.time_farming)
 		print("farming median "..farming.time_farming[math.ceil(#farming.time_farming/2)])
+--		print(dump(farming.time_farming))
 	end
-	if not farming.time_ill then
+	if #farming.time_ill > 0 then
 		table.sort(farming.time_ill)
 		print("ill median "..farming.time_ill[math.ceil(#farming.time_ill/2)])
+--		print(dump(farming.time_ill))
 	end
-	if not farming.time_planting then
+	if farming.time_planting ~= nil then
 		table.sort(farming.time_planting)
 		print("planting median "..farming.time_planting[math.ceil(#farming.time_planting/2)])
 	end

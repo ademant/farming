@@ -63,6 +63,7 @@ local step_node_def = {
 -- function to check definition for a plant
 -- and set to defaults values
 local register_plant_check_def = function(def) -- time optimised
+	local starttime=os.clock()
 	local actmodname=minetest.get_current_modname()
 	local base_name=actmodname..":"..def.name
 	def.mod_name=actmodname
@@ -81,12 +82,12 @@ local register_plant_check_def = function(def) -- time optimised
 	if not def.fertility then
 		def.fertility = {"grassland"}
 	end
-	if def.groups.seed_grindable then
+	if def.groups.seed_grindable ~= nil then
 		if not def.grind  then
 			def.grind = base_name.."_grinded"
 		end
 	end
-	if def.groups.seed_roastable then
+	if def.groups.seed_roastable ~= nil then
 		if not def.roast then
 			def.roast = base_name.."_roasted"
 		end
@@ -105,6 +106,7 @@ local register_plant_check_def = function(def) -- time optimised
 	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
 	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
+	print("time define infect "..1000*(os.clock()-starttime))
   return def
 end
 

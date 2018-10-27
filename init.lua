@@ -74,6 +74,6 @@ light_min	day_start	amount
 13			60			912
 14			63			870
 ]]
-		
+print(dump(farming.change_soil))
 --print(dump(farming.spreading_crops))
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")
