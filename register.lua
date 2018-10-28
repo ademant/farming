@@ -106,7 +106,7 @@ local register_plant_check_def = function(def) -- time optimised
 	end
 	def.grow_time_min=math.floor(def.grow_time_mean*0.75)
 	def.grow_time_max=math.floor(def.grow_time_mean*1.2)
-	print("time define infect "..1000*(os.clock()-starttime))
+--	print("time check definition "..1000*(os.clock()-starttime))
   return def
 end
 
@@ -229,6 +229,7 @@ farming.register_infect=function(idef)
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
 end
 farming.register_wilt=function(idef)
+	local starttime=os.clock()
 	if not idef.wilt_name then
 		return
 	end
@@ -252,14 +253,13 @@ farming.register_wilt=function(idef)
 	if idef.groups.wiltable then
 		wilt_def.groups["wiltable"]=idef.groups.wiltable
 	end
-	if idef.groups.infectable then
-		wilt_def.groups["infectable"]=idef.groups.infectable
-	end
 	minetest.register_node(":" .. idef.wilt_name, wilt_def)
+--	print("time register wilt "..1000*(os.clock()-starttime))
 end
 
 
 farming.register_seed=function(sdef) --time optimised
+	local starttim=os.clock()
     local seed_def = {
 		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		next_step = sdef.step_name .. "_1",
@@ -289,9 +289,11 @@ farming.register_seed=function(sdef) --time optimised
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
+--	print("time register seed "..1000*(os.clock()-starttime))
 end
 
 farming.register_steps = function(sdef)
+	--local starttime=os.clock()
     -- base configuration of all steps
 	-- copy some plant definition into definition of this steps
 	local node_def={plant_name=sdef.plant_name}
@@ -416,6 +418,7 @@ farming.register_steps = function(sdef)
 		end
 		minetest.register_node(":" .. ndef.description, ndef)
 	end
+--	print("time register step "..1000*(os.clock()-starttime))
 end
 
 farming.register_billhook = function(name,def)
@@ -491,8 +494,8 @@ end
 
 farming.plant_infect = function(pos)
 	local starttime=os.clock()
-	local node = minetest.get_node(pos)
-	local def = minetest.registered_nodes[node.name]
+--	local node = minetest.get_node(pos)
+	local def = minetest.registered_nodes[minetest.get_node(pos).name]
 	local infect_name=def.plant_name.."_infected"
 	if not minetest.registered_nodes[infect_name] then
 		return 
@@ -510,7 +513,7 @@ farming.plant_infect = function(pos)
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups["step"])
-	minetest.get_node_timer(pos):start(math.random(farming.wait_min or 10,farming.wait_max or 20))
+	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
 	table.insert(farming.time_plantinfect,1000*(os.clock()-starttime))
 end
 farming.plant_cured = function(pos)
@@ -537,7 +540,7 @@ end
 -- then start timer again
 farming.punch_step = function(pos, node, puncher, pointed_thing)
 	local starttime=os.clock()
-	local node = minetest.get_node(pos)
+--	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow
 	if def.groups.punchable == nil then
@@ -579,7 +582,7 @@ farming.dig_harvest = function(pos, node, digger)
 	local starttime=os.clock()
 	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
-	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
+	if tool_def.groups.scythe and def.drop_item then
 		if tool_def.farming_change ~= nil then
 			if math.random(1,tool_def.farming_change)==1 then
 				digger:get_inventory():add_item('main',def.drop_item)
@@ -642,16 +645,16 @@ end
 -- if a following step or wilt is defined then calculate new time and set timer
 farming.timer_step = function(pos, elapsed)
 	local starttime=os.clock()
-	local node = minetest.get_node(pos)
-	local def = minetest.registered_nodes[node.name]
+--	local node = minetest.get_node(pos)
+	local def = minetest.registered_nodes[minetest.get_node(pos).name]
 	-- check for enough light
-	local light = minetest.get_node_light(pos)
 	if not def.next_step then
 		return
 	end
+	local light = minetest.get_node_light(pos)
 	local pdef=farming.registered_plants[def.plant_name]
 	if not light or light < pdef.light_min or light > pdef.light_max then
-		minetest.get_node_timer(pos):start(math.random(farming.wait_min*2, farming.wait_max*2))
+		minetest.get_node_timer(pos):start(math.random(farming.wait_min, farming.wait_max))
 		return
 	end
 	-- grow
@@ -976,16 +979,16 @@ end
 
 -- registering roast items if needed for plant
 function farming.register_roast(rdef)
-	if rdef.seed_name == nil then
+	local starttime=os.clock()
+	if not rdef.seed_name then
 		return
 	end
-	if rdef.roast == nil then
+	if not rdef.roast then
 		return
 	end
 	local roastitem=rdef.roast
 	-- if no roast defined in config, register an own roast item
 	if minetest.registered_craftitems[roastitem] == nil then
---	if rdef.roast == nil then
 		local roast_png = roastitem:gsub(":","_")..".png"
 		local rn = roastitem:split(":")[2]
 		rn=rn:gsub("_"," ")
@@ -993,14 +996,11 @@ function farming.register_roast(rdef)
 			description = S(rdef.description:gsub("^%l", string.upper)),
 			inventory_image = roast_png,
 			groups = {flammable = 2},
+			plant_name=rdef.plant_name,
 		}
-		for _,coln in ipairs({"plant_name"}) do
-		  roast_def[coln] = rdef[coln]
-		end
-		for _,coln in ipairs({"seed_roastable"}) do
-			if rdef.groups[coln] then
-				roast_def.groups[coln] = rdef.groups[coln]
-			end
+		
+		if rdef.groups.seed_roastable then
+			roast_def.groups["seed_roastable"] = rdef.groups.seed_roastable
 		end
 		if rdef.eat_hp then
 		  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
@@ -1023,10 +1023,12 @@ function farming.register_roast(rdef)
 		output = roastitem,
 		recipe = seedname
 	})
+--	print("time register roast "..1000*(os.clock()-starttime))
 end
 
 -- registering grind items
 function farming.register_grind(rdef)
+	local starttime=os.clock()
 	if rdef.seed_name == nil then
 		return
 	end
@@ -1044,16 +1046,9 @@ function farming.register_grind(rdef)
 	local grind_def={
 		description = S(desc:gsub("^%l", string.upper).." roasted"),
 		inventory_image = grind_png,
-		groups = rdef.groups or {flammable = 2},
+		groups = {flammable = 2},
+		plant_name=rdef.plant_name,
 	}
-	for _,coln in ipairs({"plant_name"}) do
-	  grind_def[coln] = rdef[coln]
-	end
-	for _,coln in ipairs({"seed_grindable"}) do
-		if rdef.groups[coln] then
-			grind_def.groups[coln] = rdef.groups[coln]
-		end
-	end
 	
 	if rdef.eat_hp then
 	  grind_def.on_use=minetest.item_eat(rdef.eat_hp)
@@ -1061,10 +1056,6 @@ function farming.register_grind(rdef)
 	
 	minetest.register_craftitem(":" .. grinditem, grind_def)
 	
-	local cooktime = 3
-	if rdef.roast_time then
-		cooktime = rdef.roast_time
-	end
 	minetest.register_craft({
 		type = "shapeless",
 		output = grinditem,
@@ -1073,6 +1064,7 @@ function farming.register_grind(rdef)
 	replacements = {{"group:food_mortar_pestle", farming.modname..":mortar_pestle"}},
 
 	})
+--	print("time register grind "..1000*(os.clock()-starttime))
 end
 
 -- function for using billhook on punchable fruits

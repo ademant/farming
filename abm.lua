@@ -83,7 +83,6 @@ minetest.register_abm({
 				ill_rate = 5
 			end
 		end
-		print("ill_rate "..ill_rate)
 		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
 		end
