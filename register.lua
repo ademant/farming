@@ -490,6 +490,7 @@ farming.register_tool = function(name, def)
 end
 
 farming.plant_infect = function(pos)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local infect_name=def.plant_name.."_infected"
@@ -510,8 +511,10 @@ farming.plant_infect = function(pos)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups["step"])
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min or 10,farming.wait_max or 20))
+	table.insert(farming.time_plantinfect,1000*(os.clock()-starttime))
 end
 farming.plant_cured = function(pos)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local name = node.name
 	local def = minetest.registered_nodes[name]
@@ -526,12 +529,14 @@ farming.plant_cured = function(pos)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
+	table.insert(farming.time_plantcured,1000*(os.clock()-starttime))
 end
 
 -- function for handle punching of a crop
 -- if at last step than go back one step and give puncher one fruit
 -- then start timer again
 farming.punch_step = function(pos, node, puncher, pointed_thing)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow
@@ -564,12 +569,14 @@ farming.punch_step = function(pos, node, puncher, pointed_thing)
 	if pre_def.next_step then
 		minetest.get_node_timer(pos):start(math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200))
 	end
+	table.insert(farming.time_plantpunch,1000*(os.clock()-starttime))
 	return 
 end
 
 -- function for digging crops
 -- if dug with scythe by change you harvest more
 farming.dig_harvest = function(pos, node, digger)
+	local starttime=os.clock()
 	local def = minetest.registered_nodes[node.name]
 	local tool_def = digger:get_wielded_item():get_definition()
 	if (def.next_plant == nil) and (tool_def.groups["scythe"]) and def.drop_item then
@@ -580,6 +587,7 @@ farming.dig_harvest = function(pos, node, digger)
 		end
 	end
 	minetest.node_dig(pos,node,digger)
+	table.insert(farming.time_digharvest,1000*(os.clock()-starttime))
 end
 
 -- timer function for infected plants
@@ -587,6 +595,7 @@ end
 -- nearby crops are infected by change given in configuration
 -- normally in monoculture the infection rate is higher
 farming.timer_infect = function(pos,elapsed)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local meta = minetest.get_meta(pos)
@@ -625,12 +634,14 @@ farming.timer_infect = function(pos,elapsed)
 	end
 	meta:set_int("farming:step",meta:get_int("farming:step")-1)
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
+	table.insert(farming.time_infect,1000*(os.clock()-starttime))
 end
 
 -- timer function called for a step to grow
 -- if enough light then grow to next step
 -- if a following step or wilt is defined then calculate new time and set timer
 farming.timer_step = function(pos, elapsed)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- check for enough light
@@ -677,12 +688,14 @@ farming.timer_step = function(pos, elapsed)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
 	end
+	table.insert(farming.time_steptimer,1000*(os.clock()-starttime))
 	return
 end
 
 -- Seed placement
 -- adopted from minetest-game
 farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
+	local starttime=os.clock()
 	-- check if pointing at a node
 	if not pointed_thing then
 		return itemstack
@@ -765,12 +778,14 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
 	end
+	table.insert(farming.time_placeseed,1000*(os.clock()-starttime))
 	return itemstack
 end
 
 -- timer function for growing seed
 -- after the time out the first step of plant in placed
 farming.timer_seed = function(pos, elapsed)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow seed
@@ -798,12 +813,14 @@ farming.timer_seed = function(pos, elapsed)
 		minetest.get_node_timer(pos):start(node_timer)
 		return
 	end
+	table.insert(farming.time_seedtimer,1000*(os.clock()-starttime))
 end
 
 -- timer function for wilt plants
 -- normal plants will die after the time
 -- weed like nettles can spread to neighbour places
 farming.timer_wilt = function(pos, elapsed)
+	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	if def.groups.wiltable <= 2 then -- normal crop
@@ -846,6 +863,7 @@ farming.timer_wilt = function(pos, elapsed)
 			minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 		end
 	end
+	table.insert(farming.time_wilttimer,1000*(os.clock()-starttime))
 end
 
 
@@ -865,6 +883,7 @@ end
 -- using tools
 -- adopted from minetest-games
 farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
+	local starttime=os.clock()
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -906,6 +925,7 @@ farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
 			minetest.sound_play(wdef.sound.breaks, {pos = pointed_thing.above, gain = 0.5})
 		end
 	end
+	table.insert(farming.time_tooldig,1000*(os.clock()-starttime))
 	return itemstack
 end
 
@@ -1058,6 +1078,7 @@ end
 -- function for using billhook on punchable fruits
 -- add wear to billhook and give player by change one more fruit
 farming.use_billhook = function(itemstack, user, pointed_thing, uses)
+	local starttime=os.clock()
 	-- check if pointing at a node
 	if not pointed_thing then
 		return
@@ -1103,11 +1124,13 @@ farming.use_billhook = function(itemstack, user, pointed_thing, uses)
 	end
 	-- call punching function of crop: normally go back one step and start timer
 	minetest.punch_node(pointed_thing.under)
+	table.insert(farming.time_usehook,1000*(os.clock()-starttime))
 	return itemstack
 end
 
 -- calculate light amount on a position for a given light_min
 farming.calc_light=function(pos,pdef)
+	local starttime=os.clock()
 	-- calculating 
 	local outdata={day_start=99999,
 			light_amount=0,
@@ -1121,11 +1144,13 @@ farming.calc_light=function(pos,pdef)
 	if outdata.day_start > 240 then
 		outdata.day_start=120
 	end
+	table.insert(farming.time_calclight,1000*(os.clock()-starttime))
 	return outdata
 end
 
 -- calculate several meta data for a node and save in node storage
 farming.set_node_metadata=function(pos)
+	local starttime=os.clock()
 	local base_rate = 5
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
@@ -1156,6 +1181,7 @@ farming.set_node_metadata=function(pos)
 	meta:set_float("farming:daystart",lightcalc.day_start/240)
 	-- amount of light the crop gets till midday
 	meta:set_int("farming:lightamount",lightcalc.light_amount)
+	table.insert(farming.time_setmeta,1000*(os.clock()-starttime))
 end
 --	local starttime=os.clock()
 --	print("time define infect "..1000*(os.clock()-starttime))

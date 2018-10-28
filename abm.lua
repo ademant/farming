@@ -77,7 +77,13 @@ minetest.register_abm({
 		local ill_rate=meta:get_int("farming:weakness")
 		if ill_rate == nil then
 			return
+		else
+			if ill_rate >0 then
+			else
+				ill_rate = 5
+			end
 		end
+		print("ill_rate "..ill_rate)
 		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
 		end
@@ -133,7 +139,7 @@ minetest.register_abm({
 			  end
 			end
 			if #sc > 0 then
-						print("ping")
+--						print("ping")
 
 				local rand_plant = math.random(1,#sc)
 				minetest.add_node(ptabove, {name=sc[rand_plant],param2=1})
@@ -159,8 +165,22 @@ minetest.register_on_shutdown(function()
 		print("ill median "..farming.time_ill[math.ceil(#farming.time_ill/2)])
 --		print(dump(farming.time_ill))
 	end
-	if farming.time_planting ~= nil then
+	if #farming.time_planting >0 then
 		table.sort(farming.time_planting)
 		print("planting median "..farming.time_planting[math.ceil(#farming.time_planting/2)])
 	end
+	for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
+		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
+		"time_tooldig","time_usehook","time_calclight","time_setmeta"}) do
+		if (#farming[colu] > 0 ) then
+			local tv=farming[colu]
+			table.sort(tv)
+			print(colu.." "..tv[math.ceil(#tv/2)])
+		end
+	end
 end)
+for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
+		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
+		"time_tooldig","time_usehook","time_calclight","time_setmeta"}) do
+	farming[colu]={}
+end
