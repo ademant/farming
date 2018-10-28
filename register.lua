@@ -4,50 +4,6 @@ local farming_default_env={temperature_min=0,temperature_max=100,humidity_min=0,
 	elevation_min=0,elevation_max=31000,light_min=10,light_max=default.LIGHT_MAX,rarety=10,
 	grow_time_mean=120,spread_rate=1e-5,infect_rate_base=1e-5,infect_rate_monoculture=1e-3,
 	harvest_max=2,place_param2 = 3,}
-local base_infect_def={
-		drawtype = "plantlike",
-		waving = 1,
-		paramtype = "light",
-		walkable = false,
-		buildable_to = true,
-		on_dig = farming.plant_cured , -- why digging fails?
-		selection_box = {type = "fixed",
-			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
-		sounds = default.node_sound_leaves_defaults(),
-		on_timer=farming.timer_infect,
-		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_infect=2},
-	}
-local base_wilt_def={
-		drawtype = "plantlike",
-		waving = 1,
-		paramtype = "light",
-		walkable = false,
-		buildable_to = true,
-		selection_box = {type = "fixed",
-			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
-		sounds = default.node_sound_leaves_defaults(),
-		on_timer = farming.timer_wilt,
-		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_wilt=1},
-	}
-local base_seed_def = {
-		drawtype = "signlike",
-		paramtype = "light",
-		paramtype2 = "wallmounted",
-		walkable = false,
-		sunlight_propagates = true,
-		selection_box = {
-			type = "fixed",
-			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
-		},
-		sounds = default.node_sound_dirt_defaults({
-			dig = {name = "", gain = 0},
-			dug = {name = "default_grass_footstep", gain = 0.2},
-			place = {name = "default_place_node", gain = 0.25},
-		}),
-		on_place = farming.seed_on_place,
-		on_timer = farming.timer_seed,
-		groups = {farming_seed = 1, snappy = 3, attached_node = 1, flammable = 2},
-	}
 local step_node_def = {
 		drawtype = "plantlike",
 		waving = 1,
@@ -211,47 +167,59 @@ farming.register_craftitem = function(itemname)
 end
 
 farming.register_infect=function(idef)
-	local starttime=os.clock()
+--	local starttime=os.clock()
 	local infectpng=idef.mod_name.."_"..idef.plant_name.."_ill.png"
 	local infect_def={
 		description = S(idef.description),
 		tiles = {infectpng},
-		}
-	for _,coln in ipairs({"drawtype","waving","paramtype","walkable","buildable_to","on_dig",
-		"selection_box","sounds","on_timer","groups"}) do
-	  infect_def[coln] = base_infect_def[coln]
-	end
+		drawtype = "plantlike",
+		waving = 1,
+		paramtype = "light",
+		walkable = false,
+		buildable_to = true,
+		on_dig = farming.plant_cured , -- why digging fails?
+		selection_box = {type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
+		sounds = default.node_sound_leaves_defaults(),
+		on_timer=farming.timer_infect,
+		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_infect=2},
+	}
 	for _,coln in ipairs({"name","seed_name","plant_name",
-		"place_param2","infect_rate_base","infect_rate_monoculture"}) do
+		"infect_rate_base","infect_rate_monoculture"}) do
 	  infect_def[coln] = idef[coln]
 	end
 
 	infect_def.groups[idef.plant_name] = 0
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
-	print("time register infect "..1000*(os.clock()-starttime))
+--	print("time register infect "..1000*(os.clock()-starttime))
 end
 farming.register_wilt=function(idef)
-	local starttime=os.clock()
+--	local starttime=os.clock()
 	if not idef.wilt_name then
 		return
 	end
 	local wilt_def={
 		description = S(idef.description:gsub("^%l", string.upper).." wilted"),
 		tiles = {idef.basepng.."_wilt.png"},
+		drawtype = "plantlike",
+		waving = 1,
+		paramtype = "light",
+		walkable = false,
+		buildable_to = true,
+		selection_box = {type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
+		sounds = default.node_sound_leaves_defaults(),
+		on_timer = farming.timer_wilt,
+		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_wilt=1},
 	}
-	for _,coln in ipairs({"drawtype","waving","paramtype","walkable","buildable_to",
-		"selection_box","sounds","on_timer","groups"}) do
-	  wilt_def[coln] = base_wilt_def[coln]
-	end
 
 	if idef.straw then
 		wilt_def.drop={items={{items={idef.straw}}}}
 	end
-	for _,coln in ipairs({"name","seed_name","plant_name","place_param2","fertility"}) do
+	for _,coln in ipairs({"name","seed_name","plant_name","fertility"}) do
 	  wilt_def[coln] = idef[coln]
 	end
 
-	wilt_def.groups["step"] = -1
 	if idef.groups.wiltable then
 		wilt_def.groups["wiltable"]=idef.groups.wiltable
 	end
@@ -261,23 +229,35 @@ end
 
 
 farming.register_seed=function(sdef) --time optimised
-	local starttim=os.clock()
+--	local starttime=os.clock()
     local seed_def = {
 		description=S(sdef.name:gsub("^%l", string.upper).." Seed"),
 		next_step = sdef.step_name .. "_1",
+		drawtype = "signlike",
+		paramtype = "light",
+		paramtype2 = "wallmounted",
+		walkable = false,
+		sunlight_propagates = true,
+		selection_box = {
+			type = "fixed",
+			fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},
+		},
+		sounds = default.node_sound_dirt_defaults({
+			dig = {name = "", gain = 0},
+			dug = {name = "default_grass_footstep", gain = 0.2},
+			place = {name = "default_place_node", gain = 0.25},
+		}),
+		on_place = farming.seed_on_place,
+		on_timer = farming.timer_seed,
+		groups = {farming_seed = 1, snappy = 3, attached_node = 1, flammable = 2},
 	}
-	for _,coln in ipairs({"drawtype","paramtype","paramtype2","walkable",
-		"selection_box","sounds","on_timer","on_place","groups","sunlight_propagates"}) do
-	  seed_def[coln] = base_seed_def[coln]
-	end
-	for i,colu in ipairs({"place_param2","fertility","plant_name","grow_time_min","grow_time_max","light_min"}) do
+	for i,colu in ipairs({"fertility","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
 	local invimage=sdef.basepng.."_seed.png"
 	seed_def.inventory_image = invimage
 	seed_def.tiles = {invimage}
 	seed_def.wield_image = {invimage}
-	seed_def.groups["step"] = 0
 	seed_def.groups[sdef.mod_name] = 1
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
@@ -295,21 +275,11 @@ farming.register_seed=function(sdef) --time optimised
 end
 
 farming.register_steps = function(sdef)
-	--local starttime=os.clock()
+--	local starttime=os.clock()
     -- base configuration of all steps
 	-- copy some plant definition into definition of this steps
-	local node_def={plant_name=sdef.plant_name}
-	for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","walkable","buildable_to"}) do
-		node_def[colu]=step_node_def[colu]
-	end
-	for _,colu in ipairs({"paramtype2","place_param2","grow_time_min","grow_time_max","light_min"}) do
-	  if sdef[colu] then
-	    node_def[colu] = sdef[colu]
-	  end
-	end
 	-- define drop item: normal drop the seed
 	local dropitem=sdef.seed_name
-	node_def.drop_item = sdef.seed_name
 	-- if plant has to be harvested, drop harvest instead
 	if sdef.groups.has_harvest then
 		if sdef.seed_drop then
@@ -318,7 +288,6 @@ farming.register_steps = function(sdef)
 			dropitem = sdef.step_name
 		end
 	end
-	node_def.drop_item = dropitem
 	local is_hurting=(sdef.groups.damage_per_second~=nil)
 	local damage=0
 	if is_hurting then
@@ -334,23 +303,32 @@ farming.register_steps = function(sdef)
 	for i=1,max_step do
 		local reli=i/max_step
 	    local ndef={description=stepname..i,
-					groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1},
-					}
-	    for _,colu in ipairs({"paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
-				"drop_item","sounds","selection_box","drawtype","waving","paramtype","walkable",
-				"buildable_to","plant_name"}) do
-			ndef[colu]=node_def[colu]
+			drawtype = "plantlike",
+			waving = 1,
+			paramtype = "light",
+			walkable = false,
+			buildable_to = true,
+			selection_box = {type = "fixed",
+				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
+			sounds = default.node_sound_leaves_defaults(),
+			drop_item=drop_item,
+			drop={items={{items={drop_item}}}},
+			tiles={sdef.basepng.."_"..i..".png"},
+			groups = {snappy = 3, flammable = 2,flora=1, plant = 1, 
+				not_in_creative_inventory = 1, attached_node = 1,
+				step=i,
+				},
+		}
+	    for _,colu in ipairs({"grow_time_min","grow_time_max","light_min","plant_name"}) do
+			ndef[colu]=sdef[colu]
 		end
 		for _,colu in ipairs({"infectable","snappy","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
 		end
-		ndef.groups["step"] = i
 		ndef.groups[sdef.mod_name]=1
 		ndef.groups[sdef.plant_name]=1
-		ndef.tiles={sdef.basepng.."_"..i..".png"}
-		ndef.drop={items={{items={ndef.drop_item}}}}
 		if sdef.groups.use_trellis then
 			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
