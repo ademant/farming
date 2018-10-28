@@ -211,6 +211,7 @@ farming.register_craftitem = function(itemname)
 end
 
 farming.register_infect=function(idef)
+	local starttime=os.clock()
 	local infectpng=idef.mod_name.."_"..idef.plant_name.."_ill.png"
 	local infect_def={
 		description = S(idef.description),
@@ -227,6 +228,7 @@ farming.register_infect=function(idef)
 
 	infect_def.groups[idef.plant_name] = 0
 	minetest.register_node(":" .. idef.name.."_infected", infect_def)
+	print("time register infect "..1000*(os.clock()-starttime))
 end
 farming.register_wilt=function(idef)
 	local starttime=os.clock()
@@ -297,7 +299,7 @@ farming.register_steps = function(sdef)
     -- base configuration of all steps
 	-- copy some plant definition into definition of this steps
 	local node_def={plant_name=sdef.plant_name}
-	for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","walkable","buildable_to","groups"}) do
+	for _,colu in ipairs({"sounds","selection_box","drawtype","waving","paramtype","walkable","buildable_to"}) do
 		node_def[colu]=step_node_def[colu]
 	end
 	for _,colu in ipairs({"paramtype2","place_param2","grow_time_min","grow_time_max","light_min"}) do
@@ -331,10 +333,12 @@ farming.register_steps = function(sdef)
 	local stepname=sdef.step_name.."_"
 	for i=1,max_step do
 		local reli=i/max_step
-	    local ndef={description=stepname..i}
+	    local ndef={description=stepname..i,
+					groups = {snappy = 3, flammable = 2,flora=1, plant = 1, not_in_creative_inventory = 1, attached_node = 1},
+					}
 	    for _,colu in ipairs({"paramtype2","place_param2","grow_time_min","grow_time_max","light_min",
 				"drop_item","sounds","selection_box","drawtype","waving","paramtype","walkable",
-				"buildable_to","groups","plant_name"}) do
+				"buildable_to","plant_name"}) do
 			ndef[colu]=node_def[colu]
 		end
 		for _,colu in ipairs({"infectable","snappy","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
@@ -416,6 +420,7 @@ farming.register_steps = function(sdef)
 				ndef.on_punch = farming.punch_step
 			end
 		end
+--		print(dump(ndef))
 		minetest.register_node(":" .. ndef.description, ndef)
 	end
 --	print("time register step "..1000*(os.clock()-starttime))
@@ -494,7 +499,6 @@ end
 
 farming.plant_infect = function(pos)
 	local starttime=os.clock()
---	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[minetest.get_node(pos).name]
 	local infect_name=def.plant_name.."_infected"
 	if not minetest.registered_nodes[infect_name] then
@@ -1093,6 +1097,7 @@ farming.use_billhook = function(itemstack, user, pointed_thing, uses)
 	if pdef.groups.farming_fullgrown == nil then
 		return
 	end
+	print(dump(pdef.groups))
 	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
 		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
 		return
@@ -1124,19 +1129,24 @@ end
 farming.calc_light=function(pos,pdef)
 	local starttime=os.clock()
 	-- calculating 
-	local outdata={day_start=99999,
-			light_amount=0,
-			}
+	local day_start=99999
+	local light_amount=0
+	local light_min=pdef.light_min
 	for i=50,120 do
-		if minetest.get_node_light(pos,(i)/240)>pdef.light_min then
-			outdata.light_amount=outdata.light_amount+minetest.get_node_light(pos,i/240)
-			outdata.day_start=math.min(outdata.day_start,i)
+		local reli=i/240
+		local nl=minetest.get_node_light(pos,reli)
+		if nl>light_min then
+			light_amount=light_amount+nl
+			if day_start > 1000 then day_start = i end
 		end
 	end
-	if outdata.day_start > 240 then
-		outdata.day_start=120
+	if day_start > 240 then
+		day_start=120
 	end
 	table.insert(farming.time_calclight,1000*(os.clock()-starttime))
+	local outdata={day_start=day_start,
+			light_amount=light_amount,
+			}
 	return outdata
 end
 

@@ -174,7 +174,7 @@ minetest.register_on_shutdown(function()
 		if (#farming[colu] > 0 ) then
 			local tv=farming[colu]
 			table.sort(tv)
-			print(colu.." "..tv[math.ceil(#tv/2)])
+			print(colu.." "..tv[math.ceil(#tv*0.25)].." - "..tv[math.ceil(#tv*0.5)].." - "..tv[math.ceil(#tv*0.75)])
 		end
 	end
 end)
