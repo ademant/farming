@@ -168,18 +168,22 @@ minetest.register_on_shutdown(function()
 		table.sort(farming.time_planting)
 		print("planting median "..farming.time_planting[math.ceil(#farming.time_planting/2)])
 	end
+	--[[
 	for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
 		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
-		"time_tooldig","time_usehook","time_calclight","time_setmeta"}) do
+		"time_tooldig","time_usehook","time_calclight","time_placeseed","time_setmeta"}) do
 		if (#farming[colu] > 0 ) then
 			local tv=farming[colu]
 			table.sort(tv)
 			print(colu.." "..tv[math.ceil(#tv*0.25)].." - "..tv[math.ceil(#tv*0.5)].." - "..tv[math.ceil(#tv*0.75)])
 		end
 	end
+	]]
 end)
+--[[
 for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
 		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
-		"time_tooldig","time_usehook","time_calclight","time_setmeta"}) do
+		"time_tooldig","time_usehook","time_placeseed","time_calclight","time_setmeta"}) do
 	farming[colu]={}
 end
+]]

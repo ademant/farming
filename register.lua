@@ -108,7 +108,7 @@ farming.register_plant = function(def)
 				y_min=edef.elevation_min,y_max=edef.elevation_max,base_rate = def.spread_rate,
 				light_min=edef.light_min,light_max=edef.light_max}
 		farming.min_light = math.min(farming.min_light,edef.light_min)
-		table.insert(farming.spreading_crops,1,spread_def)
+		--table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
     if def.groups["infectable"] then
@@ -311,8 +311,8 @@ farming.register_steps = function(sdef)
 			selection_box = {type = "fixed",
 				fixed = {-0.5, -0.5, -0.5, 0.5, -5/16, 0.5},},
 			sounds = default.node_sound_leaves_defaults(),
-			drop_item=drop_item,
-			drop={items={{items={drop_item}}}},
+			drop_item=dropitem,
+			drop={items={{items={dropitem}}}},
 			tiles={sdef.basepng.."_"..i..".png"},
 			groups = {snappy = 3, flammable = 2,flora=1, plant = 1, 
 				not_in_creative_inventory = 1, attached_node = 1,
@@ -330,7 +330,7 @@ farming.register_steps = function(sdef)
 		ndef.groups[sdef.mod_name]=1
 		ndef.groups[sdef.plant_name]=1
 		if sdef.groups.use_trellis then
-			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
+			--table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
 		if i < max_step then
 			ndef.groups["farming_grows"]=1 -- plant is growing
@@ -367,7 +367,7 @@ farming.register_steps = function(sdef)
 		local step_harvest = math.floor(reli*sdef.harvest_max + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
-			table.insert(ndef.drop.items,1,{items={dropitem},rarity=(max_step - i + 1)*h})
+			--table.insert(ndef.drop.items,1,{items={dropitem},rarity=(max_step - i + 1)*h})
 		  end
 		end
 		if i == max_step then
@@ -381,7 +381,6 @@ farming.register_steps = function(sdef)
 					ndef.next_step = stepname .. (i - 1)
 				elseif nowilt == 3 then
 					ndef.pre_step = stepname .. (i - 1)
---					ndef.on_timer = farming.timer_wilt
 					ndef.seed_name=sdef.seed_name
 				end
 				ndef.on_timer = farming.timer_step
@@ -391,7 +390,7 @@ farming.register_steps = function(sdef)
 			-- at the end stage you can harvest by change a cultured seed (if defined)
 			if sdef.next_plant then
 			  local next_plant_rarity = (max_step - i + 1)*2
-			  table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=next_plant_rarity})
+			  --table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=next_plant_rarity})
 			end
 			if sdef.groups.punchable and i > 1 then
 				ndef.pre_step = stepname.. (i - 1)
@@ -496,7 +495,7 @@ farming.plant_infect = function(pos)
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",def.groups["step"])
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
-	table.insert(farming.time_plantinfect,1000*(os.clock()-starttime))
+	--table.insert(farming.time_plantinfect,1000*(os.clock()-starttime))
 end
 farming.plant_cured = function(pos)
 	local starttime=os.clock()
@@ -514,7 +513,7 @@ farming.plant_cured = function(pos)
 		placenode.param2 = def.place_param2
 	end
 	minetest.swap_node(pos, placenode)
-	table.insert(farming.time_plantcured,1000*(os.clock()-starttime))
+	--table.insert(farming.time_plantcured,1000*(os.clock()-starttime))
 end
 
 -- function for handle punching of a crop
@@ -522,7 +521,6 @@ end
 -- then start timer again
 farming.punch_step = function(pos, node, puncher, pointed_thing)
 	local starttime=os.clock()
---	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	-- grow
 	if def.groups.punchable == nil then
@@ -532,29 +530,20 @@ farming.punch_step = function(pos, node, puncher, pointed_thing)
 	if def.pre_step == nil then
 		return
 	end
-	local pre_node = def.pre_step
-	local placenode = {name = pre_node}
-	if pre_node.place_param2 then
-		placenode.param2 = pre_node.place_param2
-	end
-	minetest.swap_node(pos, placenode)
-	
 	if puncher ~= nil and puncher:get_player_name() ~= "" then
+		-- give one item only if no billhook is used
 		puncher:get_inventory():add_item('main',def.drop_item)
-		-- getting one more when using billhook
---		local tool_def = puncher:get_wielded_item():get_definition()
---		if tool_def.groups["billhook"] then
---		  puncher:get_inventory():add_item('main',def.drop_item)
---		end
 	end
+	minetest.swap_node(pos, {name=def.pre_step})
+	
 	-- new timer needed?
-	local pre_def=minetest.registered_nodes[pre_node]
+	local pre_def=minetest.registered_nodes[def.pre_step]
 	local meta = minetest.get_meta(pos)
 	meta:set_int("farming:step",pre_def.groups.step)
 	if pre_def.next_step then
 		minetest.get_node_timer(pos):start(math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200))
 	end
-	table.insert(farming.time_plantpunch,1000*(os.clock()-starttime))
+	--table.insert(farming.time_plantpunch,1000*(os.clock()-starttime))
 	return 
 end
 
@@ -572,7 +561,7 @@ farming.dig_harvest = function(pos, node, digger)
 		end
 	end
 	minetest.node_dig(pos,node,digger)
-	table.insert(farming.time_digharvest,1000*(os.clock()-starttime))
+	--table.insert(farming.time_digharvest,1000*(os.clock()-starttime))
 end
 
 -- timer function for infected plants
@@ -619,7 +608,7 @@ farming.timer_infect = function(pos,elapsed)
 	end
 	meta:set_int("farming:step",meta:get_int("farming:step")-1)
 	minetest.get_node_timer(pos):start(math.random(farming.wait_min,farming.wait_max))
-	table.insert(farming.time_infect,1000*(os.clock()-starttime))
+	--table.insert(farming.time_infect,1000*(os.clock()-starttime))
 end
 
 -- timer function called for a step to grow
@@ -627,7 +616,6 @@ end
 -- if a following step or wilt is defined then calculate new time and set timer
 farming.timer_step = function(pos, elapsed)
 	local starttime=os.clock()
---	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[minetest.get_node(pos).name]
 	-- check for enough light
 	if not def.next_step then
@@ -640,32 +628,32 @@ farming.timer_step = function(pos, elapsed)
 		return
 	end
 	-- grow
-	local placenode = {name = def.next_step}
 	local next_def=minetest.registered_nodes[def.next_step]
-	if def.place_param2 then
-		placenode.param2 = def.place_param2
-	end
-	minetest.swap_node(pos, placenode)
+	minetest.swap_node(pos, {name=def.next_step})
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups.step)
 	if next_def.groups.farming_wilt ~= nil then
 		if meta:get_int("farming:weakness") == nil then
 			farming.set_node_metadata(pos)
 		end
 		meta:set_int("farming:weakness",math.ceil(meta:get_int("farming:weakness")/2))
+	else
+		meta:set_int("farming:step",next_def.groups.step)
 	end
 	-- new timer needed?
 	if def.next_step then
-		local wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
+		local wait_factor = 1
 		-- check for config values
-		if meta:get_int("farming:lightamount") ~= nil then
-			if farming.light_stat[def.light_min] ~= nil then
+		local lightamount=meta:get_int("farming:lightamount")
+		if lightamount ~= nil then
+--			if farming.light_stat[def.light_min] ~= nil then
 				local ls = farming.light_stat[def.light_min]
-				if ls.amount ~= nil and meta:get_int("farming:lightamount") > 0 then
+				if ls.amount ~= nil and lightamount > 0 then
 					-- time till next step is stretched. Less light means longer growing time
-					wait_factor = ls.amount / meta:get_int("farming:lightamount")
+					wait_factor = ls.amount / lightamount
 				end
-			end
+--			end
+		else
+			wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
 		end
 		-- using light at midday to increase or decrease growing time
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
@@ -673,7 +661,7 @@ farming.timer_step = function(pos, elapsed)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
 		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
 	end
-	table.insert(farming.time_steptimer,1000*(os.clock()-starttime))
+	--table.insert(farming.time_steptimer,1000*(os.clock()-starttime))
 	return
 end
 
@@ -706,11 +694,11 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	end
 
 	local under = minetest.get_node(pointed_thing.under)
-	local above = minetest.get_node(pointed_thing.above)
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
 		return itemstack
 	end
+	local above = minetest.get_node(pointed_thing.above)
 	if not minetest.registered_nodes[above.name] then
 		return itemstack
 	end
@@ -763,7 +751,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 			and creative.is_enabled_for(player_name)) then
 		itemstack:take_item()
 	end
-	table.insert(farming.time_placeseed,1000*(os.clock()-starttime))
+	--table.insert(farming.time_placeseed,1000*(os.clock()-starttime))
 	return itemstack
 end
 
@@ -786,8 +774,8 @@ farming.timer_seed = function(pos, elapsed)
 	end
 	minetest.swap_node(pos, placenode)
 	local meta = minetest.get_meta(pos)
-	meta:set_int("farming:step",def.groups.step)
 	if def.next_step then
+		meta:set_int("farming:step",minetest.registered_nodes[def.next_step].groups.step)
 		-- using light at midday to increase or decrease growing time
 		local local_light_max = minetest.get_node_light(pos,0.5)
 		local wait_factor = math.max(0.75,def.light_min/local_light_max)
@@ -798,7 +786,7 @@ farming.timer_seed = function(pos, elapsed)
 		minetest.get_node_timer(pos):start(node_timer)
 		return
 	end
-	table.insert(farming.time_seedtimer,1000*(os.clock()-starttime))
+	--table.insert(farming.time_seedtimer,1000*(os.clock()-starttime))
 end
 
 -- timer function for wilt plants
@@ -822,7 +810,7 @@ farming.timer_wilt = function(pos, elapsed)
 				for j=1,#neighb do
 					local jpos=neighb[j]
 					if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
-						table.insert(freen,1,jpos)
+						--table.insert(freen,1,jpos)
 					end
 				end
 				-- randomly pick one and spread
@@ -848,7 +836,7 @@ farming.timer_wilt = function(pos, elapsed)
 			minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 		end
 	end
-	table.insert(farming.time_wilttimer,1000*(os.clock()-starttime))
+	--table.insert(farming.time_wilttimer,1000*(os.clock()-starttime))
 end
 
 
@@ -910,7 +898,7 @@ farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
 			minetest.sound_play(wdef.sound.breaks, {pos = pointed_thing.above, gain = 0.5})
 		end
 	end
-	table.insert(farming.time_tooldig,1000*(os.clock()-starttime))
+	--table.insert(farming.time_tooldig,1000*(os.clock()-starttime))
 	return itemstack
 end
 
@@ -1075,7 +1063,6 @@ farming.use_billhook = function(itemstack, user, pointed_thing, uses)
 	if pdef.groups.farming_fullgrown == nil then
 		return
 	end
-	print(dump(pdef.groups))
 	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
 		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
 		return
@@ -1099,7 +1086,7 @@ farming.use_billhook = function(itemstack, user, pointed_thing, uses)
 	end
 	-- call punching function of crop: normally go back one step and start timer
 	minetest.punch_node(pointed_thing.under)
-	table.insert(farming.time_usehook,1000*(os.clock()-starttime))
+	--table.insert(farming.time_usehook,1000*(os.clock()-starttime))
 	return itemstack
 end
 
@@ -1121,7 +1108,7 @@ farming.calc_light=function(pos,pdef)
 	if day_start > 240 then
 		day_start=120
 	end
-	table.insert(farming.time_calclight,1000*(os.clock()-starttime))
+	--table.insert(farming.time_calclight,1000*(os.clock()-starttime))
 	local outdata={day_start=day_start,
 			light_amount=light_amount,
 			}
@@ -1161,7 +1148,7 @@ farming.set_node_metadata=function(pos)
 	meta:set_float("farming:daystart",lightcalc.day_start/240)
 	-- amount of light the crop gets till midday
 	meta:set_int("farming:lightamount",lightcalc.light_amount)
-	table.insert(farming.time_setmeta,1000*(os.clock()-starttime))
+	--table.insert(farming.time_setmeta,1000*(os.clock()-starttime))
 end
 --	local starttime=os.clock()
 --	print("time define infect "..1000*(os.clock()-starttime))
