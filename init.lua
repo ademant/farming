@@ -17,8 +17,10 @@ dofile(farming.path .. "/functions.lua")
 dofile(farming.path .. "/config.lua")
 
 dofile(farming.path .. "/api.lua")
-dofile(farming.path .. "/register.lua")
+dofile(farming.path .. "/actions_register.lua") -- several actions defined
+dofile(farming.path .. "/nodes_register.lua") -- registering of nodes and items
 dofile(farming.path .. "/nodes.lua")
+dofile(farming.path .. "/tools_register.lua")
 dofile(farming.path .. "/tools.lua")
 dofile(farming.path .. "/utensils.lua")
 dofile(farming.path .. "/craft.lua")
@@ -74,6 +76,6 @@ light_min	day_start	amount
 13			60			912
 14			63			870
 ]]
-print(dump(farming.change_soil))
+--print(dump(farming.change_soil))
 --print(dump(farming.spreading_crops))
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- loaded ")
