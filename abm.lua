@@ -1,6 +1,3 @@
-farming.time_farming={}
-farming.time_ill={}
-farming.time_planting={}
 
 minetest.register_abm({
 	label = "Farming soil",
@@ -120,55 +117,37 @@ minetest.register_abm({
 				return
 			end
 		end
---		if math.random(0,100) < 1 then
-			local node_y=pos.y
-			local sc={}
-			for _,line in ipairs(farming.spreading_crops) do
-				if line.y_min<=node_y and line.y_max>=node_y then
-					local node_temp=minetest.get_heat(pos)
-					if line.temp_min<=node_temp and line.temp_max>=node_temp then
-						local node_hum=minetest.get_humidity(pos)
-						if line.hum_min<=node_hum and line.hum_max>=node_hum then
-							if line.light_min<=ptlight and line.light_max >= ptlight then
-								for k=1,line.base_rate do
-									table.insert(sc,line.name)
-								end
+		local node_y=pos.y
+		local sc={}
+		for _,line in ipairs(farming.spreading_crops) do
+			if line.y_min<=node_y and line.y_max>=node_y then
+				local node_temp=minetest.get_heat(pos)
+				if line.temp_min<=node_temp and line.temp_max>=node_temp then
+					local node_hum=minetest.get_humidity(pos)
+					if line.hum_min<=node_hum and line.hum_max>=node_hum then
+						if line.light_min<=ptlight and line.light_max >= ptlight then
+							for k=1,line.base_rate do
+								table.insert(sc,line.name)
 							end
 						end
 					end
 				end
 			end
-			if #sc > 0 then
---				local rand_plant = math.random(1,#sc)
-				minetest.add_node(ptabove, {name=sc[math.random(1,#sc)],param2=1})
-				minetest.get_node_timer(ptabove):start(math.random(10, 15))
---				local starttime=os.clock()
-				farming.set_node_metadata(ptabove)
---				print("place time: "..(1000*(os.clock()-starttime)))
-			end
---		end
-		table.insert(farming.time_planting,1000*(os.clock()-starttime))
+		end
+		if #sc > 0 then
+			minetest.add_node(ptabove, {name=sc[math.random(1,#sc)],param2=1})
+			minetest.get_node_timer(ptabove):start(math.random(10, 15))
+			farming.set_node_metadata(ptabove)
+		end
+--		table.insert(farming.time_planting,1000*(os.clock()-starttime))
 	end,
 })
 
 
-minetest.register_on_shutdown(function()
-	if #farming.time_farming > 0 then
-		table.sort(farming.time_farming)
-		print("farming median "..farming.time_farming[math.ceil(#farming.time_farming*0.25)].." - "..farming.time_farming[math.ceil(#farming.time_farming/2)].." - "..farming.time_farming[math.ceil(#farming.time_farming*.75)])
---		print(dump(farming.time_farming))
-	end
-	if #farming.time_ill > 0 then
-		table.sort(farming.time_ill)
-		print("ill median "..farming.time_ill[math.ceil(#farming.time_ill/2)])
---		print(dump(farming.time_ill))
-	end
-	if #farming.time_planting >0 then
-		table.sort(farming.time_planting)
-		print("planting median "..farming.time_planting[math.ceil(#farming.time_planting*0.25)].." - "..farming.time_planting[math.ceil(#farming.time_planting/2)].." - "..farming.time_planting[math.ceil(#farming.time_planting*0.75)])
-	end
+-- for optimisation only
+--minetest.register_on_shutdown(function()
 	--[[
-	for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
+	for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch","time_planting","time_ill","time_farming",
 		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
 		"time_tooldig","time_usehook","time_calclight","time_placeseed","time_setmeta"}) do
 		if (#farming[colu] > 0 ) then
@@ -178,9 +157,9 @@ minetest.register_on_shutdown(function()
 		end
 	end
 	]]
-end)
+--end)
 --[[
-for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch",
+for _,colu in ipairs({"time_plantinfect","time_plantcured","time_plantpunch","time_planting","time_ill","time_farming",
 		"time_digharvest","time_steptimer","time_infect","time_seedtimer","time_wilttimer",
 		"time_tooldig","time_usehook","time_placeseed","time_calclight","time_setmeta"}) do
 	farming[colu]={}

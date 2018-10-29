@@ -24,7 +24,7 @@ farming.wait_min = farming.config:get_int("wati_min") or 10
 farming.wait_max = farming.config:get_int("wati_max") or 20
 farming.wilt_removal_time = wilt_removal_time or 60
 farming.wilt_time = 5
-farming.min_light = 14
+farming.min_light = 10
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}

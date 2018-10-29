@@ -86,6 +86,7 @@ farming.dig_harvest = function(pos, node, digger)
 			end
 		end
 	end
+--	print(dump(def.drop))
 	minetest.node_dig(pos,node,digger)
 	--table.insert(farming.time_digharvest,1000*(os.clock()-starttime))
 end
@@ -95,7 +96,7 @@ end
 -- nearby crops are infected by change given in configuration
 -- normally in monoculture the infection rate is higher
 farming.timer_infect = function(pos,elapsed)
-	local starttime=os.clock()
+--	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local meta = minetest.get_meta(pos)
@@ -323,9 +324,6 @@ farming.timer_wilt = function(pos, elapsed)
 	local starttime=os.clock()
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
-	if def.groups.wiltable <= 2 then -- normal crop
-		minetest.swap_node(pos, {name="default:grass_"..math.random(1,5)})
-	end
 	if def.groups.wiltable == 3 then -- nettle or weed
 		-- determine all nearby nodes with soil
 		local farming_nearby=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:farming")
@@ -362,6 +360,9 @@ farming.timer_wilt = function(pos, elapsed)
 		if wran == 1 then
 			minetest.get_node_timer(pos):start(math.random(def.grow_time_min or 10,def.grow_time_max or 20))
 		end
+	else --normal crop
+		minetest.set_node(pos, {name="air"})
+		minetest.add_node(ptabove, {name="default:grass_"..math.random(1,5),param2=1})
 	end
 	--table.insert(farming.time_wilttimer,1000*(os.clock()-starttime))
 end

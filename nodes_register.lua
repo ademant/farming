@@ -37,6 +37,13 @@ local register_plant_check_def = function(def) -- time optimised
 			def.roast = base_name.."_roasted"
 		end
 	end
+	if def.groups.for_coffee ~= nil then
+		if def.roast ~= nil then
+			if string.find(def.roast,"roasted")~=nil then
+				def.coffeepowder=def.roast:gsub("roasted","powder")
+			end
+		end
+	end
 	-- check if seed_drop is set and check if it is a node name
 	if def.seed_drop then
 		if not string.match(def.seed_drop,":") then
@@ -363,7 +370,7 @@ farming.register_steps = function(sdef)
 		local step_harvest = math.floor(reli*sdef.harvest_max + 0.05)
 		if step_harvest > 1 then
 		  for h = 2,step_harvest do
-			--table.insert(ndef.drop.items,1,{items={dropitem},rarity=(max_step - i + 1)*h})
+			table.insert(ndef.drop.items,1,{items={dropitem},rarity=(max_step - i + 1)*h})
 		  end
 		end
 		if i == max_step then
@@ -425,7 +432,38 @@ function farming.craft_seed(gdef)
 end
 
 function farming.register_coffee(cdef)
+	local starttime=os.clock()
+	if not cdef.coffeepowder then
+		return
+	end
+	if not cdef.roast then
+		return
+	end
+	local powder_png = cdef.coffeepowder:gsub(":","_")..".png"
 	
+	local powder_def={
+		description = S(cdef.description:gsub("^%l", string.upper).." powder"),
+		inventory_image = powder_png,
+		groups = {flammable = 2},
+		plant_name=cdef.plant_name,
+	}
+	
+	if cdef.eat_hp then
+	  powder_def.on_use=minetest.item_eat(cdef.eat_hp)
+	end
+	print(dump(cdef))
+	print(dump(powder_def))
+	minetest.register_craftitem(":" .. cdef.coffeepowder, powder_def)
+	
+	minetest.register_craft({
+		type = "shapeless",
+		output = cdef.coffeepowder,
+		recipe = {cdef.roast,
+				farming.modname..":coffee_grinder"},
+	replacements = {{"group:food_coffee_grinder", farming.modname..":coffee_grinder"}},
+
+	})
+--	print("time register coffee "..1000*(os.clock()-starttime))
 end
 
 -- registering roast items if needed for plant
