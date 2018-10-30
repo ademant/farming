@@ -411,6 +411,7 @@ farming.timer_wilt = function(pos, elapsed)
 	if def.groups.wiltable == 3 then -- nettle or weed
 		-- determine all nearby nodes with soil
 		local farming_nearby=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:farming")
+		-- within radius 2 not more than 4 nettles should be for further spreading
 		if #farming_nearby <= 4 then
 			local neighb=minetest.find_nodes_in_area(vector.subtract(pos,2),vector.add(pos,2),"group:soil")
 			if neighb ~= nil then
