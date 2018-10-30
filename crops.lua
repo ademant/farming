@@ -95,8 +95,6 @@ local crop_cols={
 	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity","wiltable"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
 
---print(dump(crop_definition))
-
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
 if crop_definition["default"] ~= nil then
@@ -108,6 +106,8 @@ if crop_definition["default"] ~= nil then
 			table.insert(test_values,1,d)
 		end
 	end
+
+	-- check for each crop, if value can be copied from default entry
 	for i,tdef in pairs(crop_definition) do
 		if tdef.name ~= default_crop.name then
 			for j,colu in pairs(test_values) do
@@ -122,6 +122,7 @@ end
 -- register crops
 for i,tdef in pairs(crop_definition) do
 	if i ~= "default" then
+	
 		-- only register when crop is enabled
 		if tdef.enabled then
 			local starttime=os.clock()
@@ -132,4 +133,3 @@ for i,tdef in pairs(crop_definition) do
 		end
 	end
 end
-
