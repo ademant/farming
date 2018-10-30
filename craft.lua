@@ -1,6 +1,6 @@
 local S = farming.intllib
 local modname=minetest.get_current_modname()
-
+local modlist=minetest.get_modnames()
 
 -- defining template for roasting
 local function roast_seed(seed_name,roast_name,cooktime)
@@ -25,27 +25,6 @@ minetest.register_craft({
 })
 
 
-roast_seed("farming:seed_barley","farming:seed_barley_roasted")
-roast_seed("farming:seed_wheat","farming_grain:seed_wheat_roasted")
-
-minetest.register_craft({
-type = "shapeless",
-output = modname..":grain_powder",
-recipe = {
-	"group:food_grain_roasted", modname..":coffee_grinder"
-},
-replacements = {{"group:food_coffee_grinder", modname..":coffee_grinder"}},
-})
-
-minetest.register_craft( {
-	output = modname..":grain_coffee_cup",
-	type = "shapeless",
-	recipe = {"vessels:drinking_glass", "group:food_grain_powder",
-		"bucket:bucket_water"},
-	replacements = {
-		{"bucket:bucket_water", "bucket:bucket_empty"},
-	}
-})
 
 minetest.register_craftitem("farming:bread", {
 	description = "Bread",
@@ -67,20 +46,38 @@ minetest.register_craftitem("farming:flour", {
 	groups = {food_flour = 1, flammable = 1},
 })
 
-minetest.register_craftitem("farming:grain_roasted", {
-	description = "Grain Roasted",
-	inventory_image = "farming_grain_roasted.png",
-	groups = {food_roasted = 1, flammable = 1},
+minetest.register_craftitem("farming:grain_coffee_cup", {
+	description = "Grain Coffee",
+	inventory_image = "farming_coffee_cup.png",
+	groups = {coffee = 1, flammable = 1},
+})
+minetest.register_craftitem("farming:coffee_cup", {
+	description = "Coffee",
+	inventory_image = "farming_coffee_cup.png",
+	groups = {coffee = 1, flammable = 1},
 })
 
-minetest.register_craftitem(modname..":nettle_water",{
-	description = "Nettle Water",
-	inventory_image = "farming_tool_glass_nettle.png",
-	groups = {desinfect = 1}
-})
-minetest.register_craft({
-	output=modname..":nettle_water 10",
-	type = "shapeless",
-	recipe={"vessels:glass_bottle 10","bucket_water",farming.modname..":nettle"},
-	replacements = {{"bucket_water", "bucket_empty"}}
-})
+if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") then
+	minetest.register_craftitem(modname..":nettle_water",{
+		description = "Nettle Water",
+		inventory_image = "farming_tool_glass_nettle.png",
+		groups = {desinfect = 1}
+	})
+	minetest.register_craft({
+		output=modname..":nettle_water",
+		type = "shapeless",
+		recipe={"vessels:glass_bottle","bucket:bucket_water",modname..":nettle"},
+		replacements = {{"bucket:bucket_water", "bucket:bucket_empty"}}
+	})
+	minetest.register_craft( {
+		output = modname..":grain_coffee_cup",
+		type = "shapeless",
+		recipe = {"vessels:drinking_glass", "group:food_grain_powder",
+			"bucket:bucket_water"},
+		replacements = {
+			{"bucket:bucket_water", "bucket:bucket_empty"},
+		}
+	})
+else
+	print("Mod vessels/bucket not available. Seriously? -> no COFFEE!")
+end

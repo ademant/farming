@@ -256,18 +256,15 @@ farming.timer_step = function(pos, elapsed)
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
+
+		local timespeed=minetest.settings:get("time_speed")
 		local time_wait=math.random(wait_min,wait_max)
-		local rtw=time_wait/(86400)
-		local local_rwt=rtw*minetest.settings:get("time_speed")
+		local local_rwt=time_wait*timespeed/(86400)
 		local daystart=meta:get_float("farming:daystart")
 		local acttime=minetest.get_timeofday()
---		print(time_wait.." - "..rtw.." - "..local_rwt.." - "..acttime.." - "..daystart.." - "..minetest.settings:get("time_speed"))
+
 		if math.abs(acttime+local_rwt-0.5)>(0.5-daystart) then
-			local tdiff=(1+daystart-acttime-local_rwt)
-			local_rwt=local_rwt+tdiff
-			rtw=local_rwt/minetest.settings:get("time_speed")
-			time_wait=rtw*86400
---			print("wait ".. tdif.." - "..time_wait)
+			time_wait=86400*(1+daystart-acttime)/timespeed
 		end
 		minetest.get_node_timer(pos):start(time_wait)
 	end
@@ -310,6 +307,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	if not minetest.registered_nodes[under.name] then
 		return itemstack
 	end
+
 	local above = minetest.get_node(pointed_thing.above)
 	if not minetest.registered_nodes[above.name] then
 		return itemstack
@@ -328,6 +326,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 		if minetest.get_item_group(plantname,"on_soil") >= 1 then
 			return
 		else
+
 			-- check if node is correct one
 			local plant_def=farming.registered_plants[pdef.plant_name]
 			-- check for correct temperature
@@ -335,10 +334,12 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 				minetest.chat_send_player(player_name,"Elevation must be between "..plant_def.elevation_min.." and "..plant_def.elevation_max)
 				return
 			end
+
 			if minetest.get_heat(pointed_thing.under) < plant_def.temperature_min or minetest.get_heat(pointed_thing.under) > plant_def.temperature_max then
 				minetest.chat_send_player(player_name,"Temperature "..minetest.get_heat(pt.under).." is out of range for planting.")
 				return
 			end
+
 			if minetest.get_humidity(pointed_thing.under) < plant_def.humidity_min or minetest.get_humidity(pointed_thing.under) > plant_def.humidity_max then
 				minetest.chat_send_player(player_name,"Humidity "..minetest.get_humidity(pt.under).." is out of range for planting.")
 				return
@@ -398,6 +399,7 @@ farming.timer_seed = function(pos, elapsed)
 
 	if def.next_step then
 		meta:set_int("farming:step",minetest.registered_nodes[def.next_step].groups.step)
+
 		-- using light at midday to increase or decrease growing time
 		local local_light_max = minetest.get_node_light(pos,0.5)
 		local wait_factor = math.max(0.75,def.light_min/local_light_max)
@@ -611,6 +613,8 @@ farming.calc_light=function(pos,pdef)
 	local day_start=99999
 	local light_amount=0
 	local light_min=pdef.light_min
+	
+	-- run from 5:00 till 12:00 in 6min steps
 	for i=50,120 do
 		local reli=i/240
 		local nl=minetest.get_node_light(pos,reli)
@@ -619,13 +623,16 @@ farming.calc_light=function(pos,pdef)
 			if day_start > 1000 then day_start = i end
 		end
 	end
+	
 	if day_start > 240 then
 		day_start=120
 	end
+	
 	--table.insert(farming.time_calclight,1000*(os.clock()-starttime))
 	local outdata={day_start=day_start,
 			light_amount=light_amount,
 			}
+			
 	return outdata
 end
 
@@ -637,24 +644,29 @@ farming.set_node_metadata=function(pos)
 	local def = minetest.registered_nodes[node.name]
 	local pdef = farming.registered_plants[def.plant_name]
 	local ill_rate=base_rate * (pdef.light_max-minetest.get_node_light(pos,0.5))/(pdef.light_max-pdef.light_min)
+
 	-- calc coeff for temperature
 	local ill_temp=(base_rate * math.sqrt(math.min(minetest.get_heat(pos)-pdef.temperature_min,pdef.temperature_max-minetest.get_heat(pos))/(pdef.temperature_max-pdef.temperature_min)))
 	-- negative coeff means, it is out of range
 	if ill_temp < 0 then
 		ill_temp = (ill_temp * (-0.75))
 	end
+
 	-- calc coeff for humidity
 	local ill_hum=(base_rate * math.sqrt(math.min(minetest.get_humidity(pos)-pdef.humidity_min,pdef.humidity_max-minetest.get_humidity(pos))/(pdef.humidity_max-pdef.humidity_min)))
 	-- negative coeff means, it is out of range
 	if ill_hum < 0 then
 		ill_hum = (ill_hum * (-0.75))
 	end
+
 	local infect_rate = 1
 	if pdef.groups.infectable then
 		infect_rate = pdef.groups.infectable
 	end
+
 	ill_rate = math.ceil((ill_rate + ill_temp + ill_hum)/infect_rate)
 	local meta = minetest.get_meta(pos)
+
 	-- weakness as rate, how easily a crop can be infected
 	meta:set_int("farming:weakness",ill_rate)
 	-- healthiness as mechanism to controll if a crop will be infected

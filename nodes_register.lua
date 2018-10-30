@@ -185,6 +185,7 @@ farming.register_infect=function(idef)
 		place_param2=idef.place_param2,
 		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_infect=2},
 	}
+	
 	for _,coln in ipairs({"name","seed_name","plant_name",
 		"infect_rate_base","infect_rate_monoculture"}) do
 	  infect_def[coln] = idef[coln]
@@ -218,6 +219,7 @@ farming.register_wilt=function(idef)
 	if idef.straw then
 		wilt_def.drop={items={{items={idef.straw}}}}
 	end
+	
 	for _,coln in ipairs({"name","seed_name","plant_name","fertility"}) do
 	  wilt_def[coln] = idef[coln]
 	end
@@ -254,25 +256,31 @@ farming.register_seed=function(sdef) --time optimised
 		place_param2=sdef.place_param2,
 		groups = {farming_seed = 1, snappy = 3, attached_node = 1, flammable = 2},
 	}
+	
 	for i,colu in ipairs({"fertility","plant_name","grow_time_min","grow_time_max","light_min"}) do
 	  seed_def[colu] = sdef[colu]
 	end
+	
 	local invimage=sdef.basepng.."_seed.png"
 	seed_def.inventory_image = invimage
 	seed_def.tiles = {invimage}
 	seed_def.wield_image = {invimage}
 	seed_def.groups[sdef.mod_name] = 1
+	
 	for k, v in pairs(sdef.fertility) do
 		seed_def.groups[v] = 1
 	end
+	
 	for i,colu in ipairs({"on_soil","for_flour"}) do 
 		if sdef.groups[colu] then
 		  seed_def.groups[colu] = sdef.groups[colu]
 		end
 	end
+	
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
 	end
+	
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
 --	print("time register seed "..1000*(os.clock()-starttime))
 end
@@ -291,16 +299,20 @@ farming.register_steps = function(sdef)
 			dropitem = sdef.step_name
 		end
 	end
+	
 	local is_hurting=(sdef.groups.damage_per_second~=nil)
 	local damage=0
+	
 	if is_hurting then
 		damate=sdef.groups.damage_per_second
 	end
+	
 	local is_viscos=(sdef.groups.liquid_viscosity and farming.config:get_int("viscosity") > 0)
 	local viscosity=0
 	if is_viscos then
 		viscosity=sdef.groups.liquid_viscosity
 	end
+	
 	local max_step=sdef.steps
 	local stepname=sdef.step_name.."_"
 	for i=1,max_step do
@@ -323,19 +335,23 @@ farming.register_steps = function(sdef)
 				step=i,
 				},
 		}
+		
 	    for _,colu in ipairs({"grow_time_min","grow_time_max","light_min","plant_name"}) do
 			ndef[colu]=sdef[colu]
 		end
+		
 		for _,colu in ipairs({"infectable","snappy","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
 		end
+		
 		ndef.groups[sdef.mod_name]=1
 		ndef.groups[sdef.plant_name]=1
 		if sdef.groups.use_trellis then
 			--table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
+
 		if i < max_step then
 			ndef.groups["farming_grows"]=1 -- plant is growing
 			ndef.next_step=stepname.. (i + 1)
@@ -343,6 +359,7 @@ farming.register_steps = function(sdef)
 			ndef.grow_time_min=sdef.grow_time_min
 			ndef.grow_time_max=sdef.grow_time_max
 		end
+
 		-- hurting and viscosity not for first step, which is used for random generation
 		if i > 1 then
 			-- check if plant hurts while going through
@@ -353,6 +370,7 @@ farming.register_steps = function(sdef)
 					ndef.damage_per_second = step_damage
 				end
 			end
+
 			-- for some crops you should walk slowly through like a wheat field
 			if is_viscos then
 				local step_viscosity=math.ceil(viscosity*reli)
@@ -374,10 +392,12 @@ farming.register_steps = function(sdef)
 			table.insert(ndef.drop.items,1,{items={dropitem},rarity=(max_step - i + 1)*h})
 		  end
 		end
+
 		if i == max_step then
 			ndef.groups["farming_fullgrown"]=1
 			ndef.on_dig = farming.dig_harvest
 			if sdef.groups.wiltable  then
+
 				local nowilt=sdef.groups.wiltable
 				if nowilt == 2 then
 					ndef.next_step=sdef.wilt_name
@@ -387,15 +407,18 @@ farming.register_steps = function(sdef)
 					ndef.pre_step = stepname .. (i - 1)
 					ndef.seed_name=sdef.seed_name
 				end
+
 				ndef.on_timer = farming.timer_step
 				ndef.grow_time_min=sdef.wilt_time or 10
 				ndef.grow_time_max=math.ceil(ndef.grow_time_min*1.1)
 			end
+
 			-- at the end stage you can harvest by change a cultured seed (if defined)
 			if sdef.next_plant then
 			  local next_plant_rarity = (max_step - i + 1)*2
 			  --table.insert(ndef.drop.items,1,{items={sdef.next_plant},rarity=next_plant_rarity})
 			end
+
 			if sdef.groups.punchable and i > 1 then
 				ndef.pre_step = stepname.. (i - 1)
 				ndef.on_punch = farming.punch_step
@@ -417,10 +440,12 @@ function farming.craft_seed(gdef)
 	if gdef.harvest_name == nil then
 		return
 	end
+	
 	local straw_name = "farming:straw"
 	if gdef.straw_name ~= nil then
 		straw_name = gdef.straw_name
 	end
+	
 	minetest.register_craft({
 		type = "shapeless",
 		output = gdef.seed_name.." 1",
@@ -440,12 +465,13 @@ function farming.register_coffee(cdef)
 	if not cdef.roast then
 		return
 	end
+	
 	local powder_png = cdef.coffeepowder:gsub(":","_")..".png"
 	
 	local powder_def={
 		description = S(cdef.description:gsub("^%l", string.upper).." powder"),
 		inventory_image = powder_png,
-		groups = {flammable = 2},
+		groups = {flammable = 2,food_grain_powder=1},
 		plant_name=cdef.plant_name,
 	}
 	
@@ -474,12 +500,14 @@ function farming.register_roast(rdef)
 	if not rdef.roast then
 		return
 	end
+	
 	local roastitem=rdef.roast
 	-- if no roast defined in config, register an own roast item
 	if minetest.registered_craftitems[roastitem] == nil then
 		local roast_png = roastitem:gsub(":","_")..".png"
 		local rn = roastitem:split(":")[2]
 		rn=rn:gsub("_"," ")
+		
 		local roast_def={
 			description = S(rdef.description:gsub("^%l", string.upper)),
 			inventory_image = roast_png,
@@ -501,10 +529,12 @@ function farming.register_roast(rdef)
 	if rdef.groups.seed_roastable then
 		cooktime = rdef.groups.seed_roastable
 	end
+	
 	local seedname=rdef.seed_name
 	if rdef.seed_drop ~= nil then
 		seedname=rdef.seed_drop
 	end
+	
 	minetest.register_craft({
 		type = "cooking",
 		cooktime = cooktime or 3,
@@ -523,10 +553,12 @@ function farming.register_grind(rdef)
 	if rdef.step_name == nil then
 		return
 	end
+	
 	local grinditem = rdef.step_name.."_flour"
 	if rdef.grind then
 		grinditem = rdef.grind
 	end
+	
 	local desc = grinditem:split(":")[2]
 	desc = desc:gsub("_"," ")
 	local grind_png = grinditem:gsub(":","_")..".png"
@@ -549,7 +581,7 @@ function farming.register_grind(rdef)
 		output = grinditem,
 		recipe = {rdef.seed_name.." "..rdef.groups["seed_grindable"],
 				farming.modname..":mortar_pestle"},
-	replacements = {{"group:food_mortar_pestle", farming.modname..":mortar_pestle"}},
+		replacements = {{"group:food_mortar_pestle", farming.modname..":mortar_pestle"}},
 
 	})
 --	print("time register grind "..1000*(os.clock()-starttime))
