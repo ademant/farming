@@ -1,3 +1,4 @@
+
 farming.has_value = function(tab, val)
 -- test if val is in tab
     for index, value in ipairs(tab) do
@@ -10,6 +11,7 @@ end
 
 local has_value=farming.has_value
 
+-- read table "infile" where in "def" is defined, which cols are numbers and which belongs to a group
 farming.import_csv = function(infile,def)
 	-- import configurations from crops.csv
 	local file = io.open(infile, "r")

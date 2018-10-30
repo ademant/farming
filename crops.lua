@@ -34,6 +34,8 @@ Actual columns:
 				2			Plant wilt and remove itself after time. During wilt you can harvest straw if defined.
 							For grain
 				3			crop is spreading seed around and go one step back or dies like nettles
+	is_bush		void
+				any value	define a bush with a mesh instead of tiles
 	infection_defense
 				any value	can protect nearby crop against infection. value give range of protection
 	seed_extractable
@@ -88,7 +90,7 @@ local crop_cols={
 	"temperature_min","temperature_max","humidity_min","humidity_max",
 	"elevation_min","elevation_max","light_min","light_max",
 	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time","wilt_time"},
-	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable",
+	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable","is_bush",
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
 	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity","wiltable"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
