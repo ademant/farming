@@ -256,7 +256,20 @@ farming.timer_step = function(pos, elapsed)
 		local wait_min = math.ceil(def.grow_time_min * wait_factor)
 		local wait_max = math.ceil(def.grow_time_max * wait_factor)
 		if wait_max <= wait_min then wait_max = 2*wait_min end
-		minetest.get_node_timer(pos):start(math.random(wait_min,wait_max))
+		local time_wait=math.random(wait_min,wait_max)
+		local rtw=time_wait/(86400)
+		local local_rwt=rtw*minetest.settings:get("time_speed")
+		local daystart=meta:get_float("farming:daystart")
+		local acttime=minetest.get_timeofday()
+--		print(time_wait.." - "..rtw.." - "..local_rwt.." - "..acttime.." - "..daystart.." - "..minetest.settings:get("time_speed"))
+		if math.abs(acttime+local_rwt-0.5)>(0.5-daystart) then
+			local tdiff=(1+daystart-acttime-local_rwt)
+			local_rwt=local_rwt+tdiff
+			rtw=local_rwt/minetest.settings:get("time_speed")
+			time_wait=rtw*86400
+--			print("wait ".. tdif.." - "..time_wait)
+		end
+		minetest.get_node_timer(pos):start(time_wait)
 	end
 	--table.insert(farming.time_steptimer,1000*(os.clock()-starttime))
 	return
