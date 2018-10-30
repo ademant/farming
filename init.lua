@@ -13,19 +13,19 @@ minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loadi
 -- Load files
 
 
-dofile(farming.path .. "/functions.lua")
-dofile(farming.path .. "/config.lua")
+dofile(farming.path .. "/functions.lua") --few helping functions
+dofile(farming.path .. "/config.lua") -- configuration of mod
 
-dofile(farming.path .. "/api.lua")
+dofile(farming.path .. "/api.lua") -- api of former mod
 dofile(farming.path .. "/actions_register.lua") -- several actions defined
 dofile(farming.path .. "/nodes_register.lua") -- registering of nodes and items
-dofile(farming.path .. "/nodes.lua")
-dofile(farming.path .. "/tools_register.lua")
-dofile(farming.path .. "/tools.lua")
-dofile(farming.path .. "/utensils.lua")
-dofile(farming.path .. "/craft.lua")
-dofile(farming.path .. "/crops.lua")
-dofile(farming.path .. "/abm.lua")
+dofile(farming.path .. "/nodes.lua") --registering nodes
+dofile(farming.path .. "/tools_register.lua") --register functions for tools
+dofile(farming.path .. "/tools.lua") --define tools
+dofile(farming.path .. "/utensils.lua") -- utensils like grinder
+dofile(farming.path .. "/craft.lua") -- some craft definitions
+dofile(farming.path .. "/crops.lua") -- loading definition of crop and register
+dofile(farming.path .. "/abm.lua") -- abm functions
 
 --print("dump registered plants")
 --print(dump(farming.registered_plants))

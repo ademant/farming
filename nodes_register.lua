@@ -152,6 +152,7 @@ farming.register_harvest=function(hdef) --time optimised
 		groups = {flammable = 2,farming_harvest=1},
 		plant_name=hdef.plant_name,
 	}
+	print(hdef.step_name)
 	minetest.register_craftitem(":" .. hdef.step_name, harvest_def)
 end
 
@@ -451,8 +452,6 @@ function farming.register_coffee(cdef)
 	if cdef.eat_hp then
 	  powder_def.on_use=minetest.item_eat(cdef.eat_hp)
 	end
-	print(dump(cdef))
-	print(dump(powder_def))
 	minetest.register_craftitem(":" .. cdef.coffeepowder, powder_def)
 	
 	minetest.register_craft({

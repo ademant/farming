@@ -68,7 +68,7 @@ minetest.register_craftitem("farming:flour", {
 })
 
 minetest.register_craftitem("farming:grain_roasted", {
-	description = "Grain Roaste",
+	description = "Grain Roasted",
 	inventory_image = "farming_grain_roasted.png",
 	groups = {food_roasted = 1, flammable = 1},
 })

@@ -362,7 +362,7 @@ farming.timer_wilt = function(pos, elapsed)
 		end
 	else --normal crop
 		minetest.set_node(pos, {name="air"})
-		minetest.add_node(ptabove, {name="default:grass_"..math.random(1,5),param2=1})
+		minetest.add_node(pos, {name="default:grass_"..math.random(1,5),param2=1})
 	end
 	--table.insert(farming.time_wilttimer,1000*(os.clock()-starttime))
 end

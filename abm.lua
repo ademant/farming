@@ -50,7 +50,7 @@ minetest.register_abm({
 				end
 			end
 		end
-		table.insert(farming.time_farming,1000*(os.clock()-starttime))
+--		table.insert(farming.time_farming,1000*(os.clock()-starttime))
 	end,
 })
 
@@ -84,7 +84,7 @@ minetest.register_abm({
 			farming.plant_infect(pos)
 		end
 --		print("infect time: "..os.time()-starttime)
-		table.insert(farming.time_ill,1000*(os.clock()-starttime))
+--		table.insert(farming.time_ill,1000*(os.clock()-starttime))
 	end
 })
 
