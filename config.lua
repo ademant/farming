@@ -24,7 +24,10 @@ farming.wait_max = 20
 farming.wilt_removal_time = 60
 farming.wilt_time = 5
 farming.min_light = 10
-farming.health_threshold=50
+farming.health_threshold=50 -- plant with healthiness smaller this threshold can get ill
+farming.factor_regrow = 2 -- after punching fruits the plant needs more time to regrow
+farming.abm_planting=15 -- time intervall for abm planting
+farming.abm_planting_change=200 -- change for abm planting for execution
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}

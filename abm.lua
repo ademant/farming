@@ -92,8 +92,8 @@ minetest.register_abm({
 	label="Planting crops",
 	nodenames = farming.change_soil,
 	neighbors = {"air"},
-	interval = 15+math.random(-1,1), -- little noise
-	chance = 200,
+	interval = farming.abm_planting+math.random(-1,1), -- little noise
+	chance = farming.abm_planting_chance,
 	action = function(pos)
 		local starttime=os.clock()
 		local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
@@ -125,7 +125,7 @@ minetest.register_abm({
 				if line.temp_min<=node_temp and line.temp_max>=node_temp then
 					local node_hum=minetest.get_humidity(pos)
 					if line.hum_min<=node_hum and line.hum_max>=node_hum then
-						if line.light_min<=ptlight and line.light_max >= ptlight then
+						if line.light_min<ptlight and line.light_max >= ptlight then
 							for k=1,line.base_rate do
 								table.insert(sc,line.name)
 							end

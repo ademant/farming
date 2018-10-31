@@ -116,6 +116,7 @@ farming.punch_step = function(pos, node, puncher, pointed_thing)
 	meta:set_int("farming:step",pre_def.groups.step)
 
 	if pre_def.next_step then
+		local waittime=math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200) * farming.factor_regrow
 		minetest.get_node_timer(pos):start(math.random(pre_def.grow_time_min or 100, pre_def.grow_time_max or 200))
 	end
 	--table.insert(farming.time_plantpunch,1000*(os.clock()-starttime))
