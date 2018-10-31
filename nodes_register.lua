@@ -99,6 +99,7 @@ farming.register_plant = function(def)
 
 	farming.register_steps(def)
 	
+	-- crops, which should be cultured, does not randomly appear on the field
 	if (not def.groups["to_culture"]) then
 		local edef=def
 		local spread_def={name=def.step_name.."_1",
@@ -114,6 +115,8 @@ farming.register_plant = function(def)
       farming.register_infect(def)
     end
     
+    -- if defined special roast, grind item or seed to drop,
+    -- check if the item already exist. when not than register it.
     for _,it in ipairs({"roast","grind","seed_drop"}) do
 		if def[it] ~= nil then
 			if minetest.registered_craftitems[def[it]] == nil then
@@ -121,6 +124,7 @@ farming.register_plant = function(def)
 			end
 		end
 	end
+
     if def.groups["use_flail"] then
 		def.straw_name="farming:straw"
 		if def.straw then
@@ -128,15 +132,20 @@ farming.register_plant = function(def)
 		end
 		farming.craft_seed(def)
     end
+
     if def.groups["use_trellis"] then
 		farming.trellis_seed(def)
+		print(dump(def))
     end
+
     if def.groups["seed_grindable"] then
 		farming.register_grind(def)
     end
+
     if def.groups["seed_roastable"] then
 		farming.register_roast(def)
     end
+
     if def.groups["for_coffee"] then
 		farming.register_coffee(def)
     end
@@ -585,6 +594,23 @@ function farming.register_grind(rdef)
 
 	})
 --	print("time register grind "..1000*(os.clock()-starttime))
+end
+
+farming.trellis_seed = function(gdef)
+	if gdef.seed_name == nil then
+		return
+	end
+	if gdef.harvest_name == nil then
+		return
+	end
+	
+	minetest.register_craft({
+	type = "shapeless",
+	output = gdef.seed_name.." 1",
+	recipe = {
+		farming.modname..":trellis",gdef.harvest_name
+	},
+  })
 end
 
 --	local starttime=os.clock()

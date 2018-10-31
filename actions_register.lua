@@ -536,22 +536,6 @@ farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
 end
 
 -- generate "seed" out of harvest and trellis
-farming.trellis_seed = function(gdef)
-	if gdef.seed_name == nil then
-		return
-	end
-	if gdef.harvest_name == nil then
-		return
-	end
-	
-	minetest.register_craft({
-	type = "shapeless",
-	output = gdef.seed_name.." 1",
-	recipe = {
-		farming.modname..":trellis",gdef.harvest_name
-	},
-  })
-end
 
 -- function for using billhook on punchable fruits
 -- add wear to billhook and give player by change one more fruit
