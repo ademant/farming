@@ -313,7 +313,7 @@ farming.register_steps = function(sdef)
 	local damage=0
 	
 	if is_hurting then
-		damate=sdef.groups.damage_per_second
+		damage=sdef.groups.damage_per_second
 	end
 	
 	local is_viscos=(sdef.groups.liquid_viscosity and farming.config:get_int("viscosity") > 0)
@@ -349,7 +349,7 @@ farming.register_steps = function(sdef)
 			ndef[colu]=sdef[colu]
 		end
 		
-		for _,colu in ipairs({"infectable","snappy","punchable","damage_per_second","liquid_viscosity","wiltable"}) do
+		for _,colu in ipairs({"infectable","snappy","damage_per_second","liquid_viscosity","wiltable"}) do
 			if sdef.groups[colu] then
 			  ndef.groups[colu] = sdef.groups[colu]
 			end
@@ -404,6 +404,11 @@ farming.register_steps = function(sdef)
 
 		if i == max_step then
 			ndef.groups["farming_fullgrown"]=1
+			for _,colu in ipairs({"punchable","seed_extractable"}) do
+				if sdef.groups[colu] then
+				  ndef.groups[colu] = sdef.groups[colu]
+				end
+			end
 			ndef.on_dig = farming.dig_harvest
 			if sdef.groups.wiltable  then
 

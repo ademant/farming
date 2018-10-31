@@ -2,7 +2,7 @@ local S = farming.intllib
 local modname=minetest.get_current_modname()
 
 -- coffee grinder
-
+-- to grind roasted grain seed or roasted coffee beans
 minetest.register_craftitem(modname..":coffee_grinder", {
 	description = S("Coffee Grinder"),
 	inventory_image = "farming_tool_coffee_grinder.png",
@@ -18,6 +18,7 @@ minetest.register_craft({
 })
 
 -- flail
+-- use to extract seed from wheat/hemp/nettle harvest, leaving straw/fiber
 minetest.register_craftitem(modname..":flail", {
 	description = S("Threshing Flail"),
 	inventory_image = "farming_tool_flail.png",
@@ -33,6 +34,7 @@ minetest.register_craft({
 	}
 })
 -- Trellis
+-- some cultured crops need a trellis to grow
 minetest.register_craftitem(modname..":trellis", {
 	description = S("Trellis"),
 	inventory_image = "farming_tool_trellis.png",

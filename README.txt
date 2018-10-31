@@ -4,10 +4,18 @@ See license.txt for license information.
 
 Mod for extending the farming capabilities of minetest. 
 You have wild crops, which you can cultivate to get faster and more harvest.
-(TODO) The crops can be infected, where you get nothing. And the infection spreads to nearby crops.
-(TODO) A culture of crops can be destroyed by the infection, where the cultured variant of crops 
+The crops can be infected, where you get nothing. And the infection spreads to nearby crops.
+A culture of crops can be destroyed by the infection, where the cultured variant of crops 
 are easier infected than the wild form.
-With special plants you can make a curing mixture. And other plants can protect the culture.
+With special plants (right now nettles) you can make a curing mixture. And other plants can protect the culture.
+You should use special devices to get more fruits:
+- With a scythe you dig the node and by change get one more harvest. The change is better for a steel scythe than for stone or wood
+- With a billhook you punch for example berries to get by change one berry more.
+Booth are weared out by each harvest.
+
+For each crop you can define the count of step. In the last step the crop is full-grown, where the crops are punchable. 
+The defined grow time is modified by the amount of light the crop would see and the place: The less light at 
+the position will be (under a tree for example), the longer the crop needs to reach the next step.
 
 The code is written to enable extension by other mods.
 You have only one txt file to configure the crops. It's read in a table. Not defined fields are filled,
@@ -28,6 +36,9 @@ Based on the definition the behauvior is defined:
 - Crops with trellis: For creating seedable items you have to craft out of the harvest the seed with a trellis.
 	Diggin any step will release the trellis for further usage. By using the option "use_trellis" the craft 
 	is direct registered.
+- crops with extractable seed: The normal harvest are the leaves of the plant, which you can punch out of the box.
+	To get a seed of the fruit, you have to use a seed picker. The plant goes back one step and need to regrow booth
+	leaves and seed.
 
 Authors of source code
 ----------------------

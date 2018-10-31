@@ -11,7 +11,7 @@ for i,line in pairs(tool_definition) do
 	
 	tool_def={description=line.name:gsub("_"," "),
 		inventory_image="farming_tool_"..line.name..".png",
-		max_used=line.max_uses,
+		max_uses=line.max_uses,
 		farming_change=line.farming_change,
 		material = line.material,
 		groups={flammable = 2},
@@ -35,3 +35,36 @@ for i,line in pairs(tool_definition) do
 		farming.register_hoe("farming:"..line.name,tool_def)
 	end
 end
+
+-- Picker
+-- to extract seeds from crops, which usually give harvest, e.g. tea
+farming.register_tool("farming:picker", {
+	description = S("Seed Picker"),
+	inventory_image = "farming_tool_picker.png",
+	groups = {farming_picker = 1, flammable = 2},
+	max_uses=30,
+	tool_capabilities = {
+		full_punch_intervall = 1.0,
+		max_drop_level = 2,
+		groupcaps = {
+			snappy = {times={[1]=5,[2]=2,[3]=1.4},},
+			uses=30,
+			maxlevel=3,
+		},
+		damage_groups = {fleshy = 1},
+	},
+	on_use = function(itemstack, user, pointed_thing)
+		return farming.use_picker(itemstack, user, pointed_thing, 30)
+		end
+
+})
+
+minetest.register_craft({
+	output = "farming:picker",
+	recipe = {
+		{"", "", "group:stick"},
+		{"", "group:stick", "group:wool"},
+		{"group:stick", "", ""},
+	}
+})
+

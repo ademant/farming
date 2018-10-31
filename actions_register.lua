@@ -236,39 +236,43 @@ farming.timer_step = function(pos, elapsed)
 	else
 		meta:set_int("farming:step",next_def.groups.step)
 	end
+	
+	if next_def.groups.farming_fullgrown ~= nil then
+		meta:set_int("farming:seeds",1)
+	else
+		meta:set_int("farming:seeds",0)
+	end
 
 	-- new timer needed?
-	if def.next_step then
-		local wait_factor = 1
-		-- check for config values
-		local lightamount=meta:get_int("farming:lightamount")
+	local wait_factor = 1
+	-- check for config values
+	local lightamount=meta:get_int("farming:lightamount")
 
-		if lightamount ~= nil then
-			local ls = farming.light_stat[def.light_min]
-			if ls.amount ~= nil and lightamount > 0 then
-				-- time till next step is stretched. Less light means longer growing time
-				wait_factor = ls.amount / lightamount
-			end
-		else
-			wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
+	if lightamount ~= nil then
+		local ls = farming.light_stat[def.light_min]
+		if ls.amount ~= nil and lightamount > 0 then
+			-- time till next step is stretched. Less light means longer growing time
+			wait_factor = ls.amount / lightamount
 		end
-
-		-- using light at midday to increase or decrease growing time
-		local wait_min = math.ceil(def.grow_time_min * wait_factor)
-		local wait_max = math.ceil(def.grow_time_max * wait_factor)
-		if wait_max <= wait_min then wait_max = 2*wait_min end
-
-		local timespeed=minetest.settings:get("time_speed")
-		local time_wait=math.random(wait_min,wait_max)
-		local local_rwt=time_wait*timespeed/(86400)
-		local daystart=meta:get_float("farming:daystart")
-		local acttime=minetest.get_timeofday()
-
-		if math.abs(acttime+local_rwt-0.5)>(0.5-daystart) then
-			time_wait=86400*(1+daystart-acttime)/timespeed
-		end
-		minetest.get_node_timer(pos):start(time_wait)
+	else
+		wait_factor = math.max(0.75,def.light_min/minetest.get_node_light(pos,0.5))
 	end
+
+	-- using light at midday to increase or decrease growing time
+	local wait_min = math.ceil(def.grow_time_min * wait_factor)
+	local wait_max = math.ceil(def.grow_time_max * wait_factor)
+	if wait_max <= wait_min then wait_max = 2*wait_min end
+
+	local timespeed=minetest.settings:get("time_speed")
+	local time_wait=math.random(wait_min,wait_max)
+	local local_rwt=time_wait*timespeed/(86400)
+	local daystart=meta:get_float("farming:daystart")
+	local acttime=minetest.get_timeofday()
+
+	if math.abs(acttime+local_rwt-0.5)>(0.5-daystart) then
+		time_wait=86400*(1+daystart-acttime)/timespeed
+	end
+	minetest.get_node_timer(pos):start(time_wait)
 	--table.insert(farming.time_steptimer,1000*(os.clock()-starttime))
 	return
 end
@@ -536,8 +540,72 @@ farming.dig_by_tool = function(itemstack, user, pointed_thing, uses)
 	return itemstack
 end
 
--- generate "seed" out of harvest and trellis
+farming.use_picker = function(itemstack, user, pointed_thing,uses)
+	local starttime=os.clock()
+	-- check if pointing at a node
+	if not pointed_thing then
+		return
+	end
+	if pointed_thing.type ~= "node" then
+		return
+	end
+	local under = minetest.get_node(pointed_thing.under)
+	-- return if any of the nodes is not registered
+	if not minetest.registered_nodes[under.name] then
+		return
+	end
 
+	local pdef=minetest.registered_nodes[under.name]
+	-- check if pointing at punchable crop
+	if pdef.groups.punchable == nil then
+		return
+	end
+	-- check if plant is full grown
+	if pdef.groups.farming_fullgrown == nil then
+		return
+	end
+	-- check if seeds can be extracted
+	if pdef.groups.seed_extractable == nil then
+		return
+	end
+	-- check if seeds are available
+	local meta = minetest.get_meta(pos)
+	if meta:get_int("farming:seeds") == nil then
+		meta:set_int("farming:seeds",0)
+		return
+	else
+		if meta:get_int("farming:seeds")==0 then
+			return
+		end
+	end
+	
+	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
+		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
+		return
+	end
+	
+	local tdef=itemstack:get_definition()
+	if not (creative and creative.is_enabled_for
+			and creative.is_enabled_for(user:get_player_name())) then
+		-- wear tool
+		itemstack:add_wear(65535/(uses-1))
+		-- tool break sound
+		if itemstack:get_count() == 0 and tdef.sound and tdef.sound.breaks then
+			minetest.sound_play(tdef.sound.breaks, {pos = pointed_thing.above, gain = 0.5})
+		end
+	end
+	user:get_inventory():add_item('main',pdef.seed_name)
+	if math.random(1,3)==1 then
+		user:get_inventory():add_item('main',pdef.seed_name)
+	end
+	-- call punching function of crop: normally go back one step and start timer
+	minetest.punch_node(pointed_thing.under)
+	local meta = minetest.get_meta(pos)
+	meta:set_int("farming:seeds",0)
+
+	--table.insert(farming.time_usehook,1000*(os.clock()-starttime))
+	return itemstack
+end
 -- function for using billhook on punchable fruits
 -- add wear to billhook and give player by change one more fruit
 farming.use_billhook = function(itemstack, user, pointed_thing, uses)
@@ -662,5 +730,7 @@ farming.set_node_metadata=function(pos)
 	meta:set_float("farming:daystart",lightcalc.day_start/240)
 	-- amount of light the crop gets till midday
 	meta:set_int("farming:lightamount",lightcalc.light_amount)
+	-- init the amount of seed available at the crop
+	meta:set_int("farming:seeds",0)
 	--table.insert(farming.time_setmeta,1000*(os.clock()-starttime))
 end

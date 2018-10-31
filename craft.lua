@@ -81,3 +81,22 @@ if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") 
 else
 	print("Mod vessels/bucket not available. Seriously? -> no COFFEE!")
 end
+
+if farming.has_value(modlist,"wool") then
+	minetest.register_craft({
+		output="wool:white",
+		type="shapeless",
+		recipe={"farming:cotton","farming:cotton","farming:cotton","farming:cotton"},
+		})
+	minetest.register_craft({
+		output="wool:dark_green",
+		type="shapeless",
+		recipe={"farming:nettle_fibre","farming:nettle_fibre","farming:nettle_fibre","farming:nettle_fibre"},
+		})
+	minetest.register_craft({
+		output="wool:dark_green",
+		type="shapeless",
+		recipe={"farming:hemp_fibre","farming:hemp_fibre","farming:hemp_fibre","farming:hemp_fibre"},
+		})
+	
+end

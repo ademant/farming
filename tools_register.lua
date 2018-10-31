@@ -71,8 +71,6 @@ farming.register_tool = function(name, def)
 	})
 end
 
-
-
 -- copied from farming_redo
 farming.hoe_on_use = function(itemstack, user, pointed_thing, uses)
 	local pt = pointed_thing
