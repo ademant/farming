@@ -75,7 +75,7 @@ farming.register_plant = function(def)
     def = register_plant_check_def(def)
 	-- local definitions
 	def.step_name=def.mod_name..":"..def.name
-	def.seed_name=def.mod_name..":seed_"..def.name
+	def.seed_name=def.mod_name..":"..def.name.."_seed"
 	def.plant_name = def.name
     -- if plant has harvest then registering
     if def.groups["has_harvest"] ~= nil then
@@ -270,7 +270,7 @@ farming.register_seed=function(sdef) --time optimised
 	  seed_def[colu] = sdef[colu]
 	end
 	
-	local invimage=sdef.basepng.."_seed.png"
+	local invimage=sdef.seed_name:gsub(":","_")..".png"
 	seed_def.inventory_image = invimage
 	seed_def.tiles = {invimage}
 	seed_def.wield_image = {invimage}

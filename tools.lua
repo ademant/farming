@@ -53,12 +53,17 @@ farming.register_tool("farming:picker", {
 		},
 		damage_groups = {fleshy = 1},
 	},
-	on_use = function(itemstack, user, pointed_thing)
-		return farming.use_picker(itemstack, user, pointed_thing, 30)
-		end
+	recipe= {
+		{"", "", "group:stick"},
+		{"", "group:stick", "group:wool"},
+		{"group:stick", "", ""},
+	}
+--	on_use = function(itemstack, user, pointed_thing)
+--		return farming.use_picker(itemstack, user, pointed_thing, 30)
+--		end
 
 })
-
+--[[
 minetest.register_craft({
 	output = "farming:picker",
 	recipe = {
@@ -67,4 +72,4 @@ minetest.register_craft({
 		{"group:stick", "", ""},
 	}
 })
-
+]]
