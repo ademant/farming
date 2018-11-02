@@ -549,9 +549,15 @@ farming.use_picker = function(itemstack, user, pointed_thing,uses)
 	if pointed_thing.type ~= "node" then
 		return
 	end
-	local under = minetest.get_node(pointed_thing.under)
+	local pos = pointed_thing.under
+	local under = minetest.get_node(pos)
 	-- return if any of the nodes is not registered
 	if not minetest.registered_nodes[under.name] then
+		return
+	end
+
+	if minetest.is_protected(pos, user:get_player_name()) then
+		minetest.record_protection_violation(pos, user:get_player_name())
 		return
 	end
 
@@ -577,11 +583,6 @@ farming.use_picker = function(itemstack, user, pointed_thing,uses)
 		if meta:get_int("farming:seeds")==0 then
 			return
 		end
-	end
-	
-	if minetest.is_protected(pointed_thing.under, user:get_player_name()) then
-		minetest.record_protection_violation(pointed_thing.under, user:get_player_name())
-		return
 	end
 	
 	local tdef=itemstack:get_definition()

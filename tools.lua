@@ -57,10 +57,10 @@ farming.register_tool("farming:picker", {
 		{"", "", "group:stick"},
 		{"", "group:stick", "group:wool"},
 		{"group:stick", "", ""},
-	}
---	on_use = function(itemstack, user, pointed_thing)
---		return farming.use_picker(itemstack, user, pointed_thing, 30)
---		end
+	},
+	on_use = function(itemstack, user, pointed_thing)
+		return farming.use_picker(itemstack, user, pointed_thing, 30)
+		end
 
 })
 --[[

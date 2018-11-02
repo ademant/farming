@@ -135,7 +135,7 @@ farming.register_plant = function(def)
 
     if def.groups["use_trellis"] then
 		farming.trellis_seed(def)
-		print(dump(def))
+--		print(dump(def))
     end
 
     if def.groups["seed_grindable"] then
@@ -161,7 +161,7 @@ farming.register_harvest=function(hdef) --time optimised
 		groups = {flammable = 2,farming_harvest=1},
 		plant_name=hdef.plant_name,
 	}
-	print(hdef.step_name)
+--	print(hdef.step_name)
 	minetest.register_craftitem(":" .. hdef.step_name, harvest_def)
 end
 
@@ -358,7 +358,7 @@ farming.register_steps = function(sdef)
 		ndef.groups[sdef.mod_name]=1
 		ndef.groups[sdef.plant_name]=1
 		if sdef.groups.use_trellis then
-			--table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
+			table.insert(ndef.drop.items,1,{items={"farming:trellis"}})
 		end
 
 		if i < max_step then
@@ -436,6 +436,10 @@ farming.register_steps = function(sdef)
 			if sdef.groups.punchable and i > 1 then
 				ndef.pre_step = stepname.. (i - 1)
 				ndef.on_punch = farming.punch_step
+			end
+			
+			if sdef.groups.seed_extractable then
+				ndef.seed_name = sdef.seed_name
 			end
 		end
 --		print(dump(ndef))
