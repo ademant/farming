@@ -126,9 +126,8 @@ farming.register_plant = function(def)
 	end
 
     if def.groups["use_flail"] then
-		def.straw_name="farming:straw"
-		if def.straw then
-			def.straw_name=def.straw
+		if def.straw == nil then
+			def.straw= "farming:straw"
 		end
 		farming.craft_seed(def)
     end
@@ -460,8 +459,8 @@ function farming.craft_seed(gdef)
 	end
 	
 	local straw_name = "farming:straw"
-	if gdef.straw_name ~= nil then
-		straw_name = gdef.straw_name
+	if gdef.straw ~= nil then
+		straw_name = gdef.straw
 	end
 	
 	minetest.register_craft({

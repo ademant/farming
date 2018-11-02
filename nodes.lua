@@ -85,7 +85,7 @@ minetest.register_node("farming:straw", {
 	tiles = {"farming_straw.png"},
 	inventory_image = {"farming_straw.png"},
 	is_ground_content = false,
-	groups = {snappy=3, flammable=4, fall_damage_add_percent=-30},
+	groups = {snappy=3, flammable=2, fall_damage_add_percent=-30},
 	sounds = default.node_sound_leaves_defaults(),
 })
 minetest.register_node("farming:hemp_fibre", {
@@ -93,7 +93,7 @@ minetest.register_node("farming:hemp_fibre", {
 	tiles = {"farming_hemp_fibre.png"},
 	inventory_image = "farming_hemp_fibre.png",
 	is_ground_content = false,
-	groups = {snappy=3, flammable=4, fall_damage_add_percent=-30},
+	groups = {snappy=3, flammable=2, fall_damage_add_percent=-30},
 	sounds = default.node_sound_leaves_defaults(),
 })
 minetest.register_node("farming:nettle_fibre", {
@@ -101,7 +101,7 @@ minetest.register_node("farming:nettle_fibre", {
 	tiles = {"farming_nettle_fibre.png"},
 	inventory_image = "farming_nettle_fibre.png",
 	is_ground_content = false,
-	groups = {snappy=3, flammable=4, fall_damage_add_percent=-30},
+	groups = {snappy=3, flammable=2, fall_damage_add_percent=-30},
 	sounds = default.node_sound_leaves_defaults(),
 })
 

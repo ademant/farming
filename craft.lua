@@ -100,3 +100,19 @@ if farming.has_value(modlist,"wool") then
 		})
 	
 end
+
+minetest.register_craft({
+	type = "fuel",
+	recipe = "farming:straw",
+	burntime = 10,
+})
+minetest.register_craft({
+	type = "fuel",
+	recipe = "farming:nettle_fibre",
+	burntime = 8,
+})
+minetest.register_craft({
+	type = "fuel",
+	recipe = "farming:hemp_fibre",
+	burntime = 8,
+})
