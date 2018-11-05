@@ -1,1 +1,5 @@
-An enhanced farming mod with wild and cultured wheat.
+An enhanced farming mod with spreding crops which wilt if not harvested.
+The crops are roughly parted into diggable and punchable fruits. Diggable fruits give harvest by digging, where you have to craft the seeds out of the harvest.
+Punchable fruits give you one harvest by punching and regrow the fruit.
+If waited too long, the fruits are wilt, degrading into time without any harvest, so be in time.
+Fruits can be infected and spreading the infections to other crops nearby with the possibility to heal the crops with kind of medicine.
