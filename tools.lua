@@ -9,7 +9,7 @@ local tool_definition = farming.import_csv(farming.path.."/tools.txt",crop_cols)
 
 for i,line in pairs(tool_definition) do
 	
-	tool_def={description=line.name:gsub("_"," "),
+	tool_def={description=S(line.name:gsub("_"," ")),
 		inventory_image="farming_tool_"..line.name..".png",
 		max_uses=line.max_uses,
 		farming_change=line.farming_change,
@@ -27,6 +27,8 @@ for i,line in pairs(tool_definition) do
 			}
 		}
 	local tooltype=line.name:split("_")[1]
+	print(tooltype)
+	print(dump(tool_def))
 	if tooltype=="billhook" then
 		farming.register_billhook("farming:"..line.name,tool_def)
 	elseif tooltype=="scythe" then

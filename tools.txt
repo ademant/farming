@@ -1,10 +1,10 @@
 name,material,max_uses,farming_change,max_level,snappy,damage,times
 billhook_wood,group:wood,100,10,2,3,3,5
 billhook_stone,group:stone,200,6,2,3,4,4.5
-billhook_steel,default:iron_ingot,400,3,3,3,5,3.8
+billhook_steel,default:steel_ingot,400,3,3,3,5,3.8
 scythe_wood,group:wood,60,10,2,3,4,5
 scythe_stone,group:stone,110,6,2,3,5,4.4
-scythe_steel,default:iron_ingot,250,3,3,3,6,3.7
+scythe_steel,default:steel_ingot,250,3,3,3,6,3.7
 hoe_wood,group:wood,60,10,2,3,4,5
 hoe_stone,group:stone,110,6,2,3,5,4.4
-hoe_steel,default:iron_ingot,250,3,3,3,6,3.7
+hoe_steel,default:steel_ingot,250,3,3,3,6,3.7
