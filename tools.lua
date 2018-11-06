@@ -27,8 +27,6 @@ for i,line in pairs(tool_definition) do
 			}
 		}
 	local tooltype=line.name:split("_")[1]
-	print(tooltype)
-	print(dump(tool_def))
 	if tooltype=="billhook" then
 		farming.register_billhook("farming:"..line.name,tool_def)
 	elseif tooltype=="scythe" then
