@@ -19,15 +19,15 @@ end
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
 farming.rarety =  0.002
 -- random waiting time for growing
-farming.wait_min = 10
-farming.wait_max = 20
+farming.wait_min = 60
+farming.wait_max = 80
 farming.wilt_removal_time = 60
-farming.wilt_time = 5
+farming.wilt_time = 100
 farming.min_light = 10
 farming.health_threshold=50 -- plant with healthiness smaller this threshold can get ill
 farming.factor_regrow = 2 -- after punching fruits the plant needs more time to regrow
-farming.abm_planting=15 -- time intervall for abm planting
-farming.abm_planting_change=200 -- change for abm planting for execution
+farming.abm_planting=40 -- time intervall for abm planting
+farming.abm_planting_change=500 -- change for abm planting for execution
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}
