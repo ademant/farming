@@ -58,8 +58,8 @@ minetest.register_abm({
 minetest.register_abm({
 	label="crops getting ill",
 	nodenames="group:infectable",
-	intervall = 5,
-	change=5,
+	intervall = 120,
+	change=50,
 	action = function(pos)
 		local starttime=os.clock()
 		local node=minetest.get_node(pos)
