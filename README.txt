@@ -44,6 +44,7 @@ Authors of source code
 ----------------------
 Originally by PilzAdam (MIT)
 webdesigner97 (MIT)
+TenPlus1 (MIT)
 ademant (MIT)
 Various Minetest developers and contributors (MIT)
 
