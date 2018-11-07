@@ -51,14 +51,18 @@ farming.register_tool = function(name, def)
 		name = ":" .. name
 	end
 	-- Check def table
-	if def.description == nil then
-		def.description = "Farming tool"
-	end
 	if def.inventory_image == nil then
 		def.inventory_image = "unknown_item.png"
 	end
 	if def.max_uses == nil then
 		def.max_uses = 30
+	end
+	if def.description == nil then
+		def.description = "Farming tool"
+	end
+	def.description=def.description.."\nmax uses: "..def.max_uses
+	if def.farming_change then
+		def.description=def.description.."\nfarming change: "..def.farming_change
 	end
 	def.sound={breaks = "default_tool_breaks"}
 
