@@ -1,11 +1,11 @@
 farming.rarety (Crop Rarety) float 0.002
 farming.viscosity (Viscosity of walking through grain) int 1 1 10
 farming.wait_min (Minimum waiting time for next growing step) int 60 5 500
-farming.wait_max (Maximum waiting time for next growing step) int 70 5 500
+farming.wait_max (Maximum waiting time for next growing step) int 70 6 510
 farming.wilt_removal_time (Mean time to remove wilt crops) int 40 5 500
 farming.wilt_time (Mean time for fullgrown crop to wilt) int 90 5 500
 farming.min_light (Min light needed for crops to grow) int 10 1 14
 farming.health_threshold (healthiness threshold) int 50 1 100
 farming.factor_regrow (factor for regrow after punching) float 2
-farming.abm_planting (time intervall for abm planting) int 60 5 500
-farming.abm_planting_change (change for abm planting for execution) int 200 5 20000
+farming.abm_planting (time intervall for abm planting) int 30 5 500
+farming.abm_planting_change (change for abm planting for execution) int 750 5 20000
