@@ -46,16 +46,6 @@ minetest.register_craftitem("farming:flour", {
 	groups = {food_flour = 1, flammable = 1},
 })
 
-minetest.register_craftitem("farming:grain_coffee_cup", {
-	description = "Grain Coffee",
-	inventory_image = "farming_coffee_cup.png",
-	groups = {coffee = 1, flammable = 1},
-})
-minetest.register_craftitem("farming:coffee_cup", {
-	description = "Coffee",
-	inventory_image = "farming_coffee_cup.png",
-	groups = {coffee = 1, flammable = 1},
-})
 
 if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") then
 	minetest.register_craftitem(modname..":nettle_water",{
@@ -70,9 +60,51 @@ if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") 
 		replacements = {{"bucket:bucket_water", "bucket:bucket_empty"}}
 	})
 	minetest.register_craft( {
-		output = modname..":grain_coffee_cup",
+		output = modname..":grain_coffee_cup 3",
 		type = "shapeless",
-		recipe = {"vessels:drinking_glass", "group:food_grain_powder",
+		recipe = {"vessels:drinking_glass","vessels:drinking_glass","vessels:drinking_glass", "group:food_grain_powder",
+			"bucket:bucket_water"},
+		replacements = {
+			{"bucket:bucket_water", "bucket:bucket_empty"},
+		}
+	})
+	minetest.register_craft( {
+		output = modname..":coffee_cup",
+		type = "shapeless",
+		recipe = {"vessels:drinking_glass", "group:food_powder",
+			"bucket:bucket_water"},
+		replacements = {
+			{"bucket:bucket_water", "bucket:bucket_empty"},
+		}
+	})
+	minetest.register_craftitem("farming:grain_coffee_cup", {
+		description = "Grain Coffee",
+		inventory_image = "farming_coffee_cup.png",
+		on_use = minetest.item_eat(2,"vessels:drinking_glass"),
+		groups = {coffee = 1, flammable = 1, beverage=1},
+	})
+	minetest.register_craftitem("farming:grain_coffee_cup_hot", {
+		description = "Grain Coffee hot",
+		inventory_image = "farming_coffee_cup_hot.png",
+		on_use = minetest.item_eat(4,"vessels:drinking_glass"),
+		groups = {coffee = 2, flammable = 1, beverage=2},
+	})
+	minetest.register_craft({
+		type = "cooking",
+		cooktime = 2,
+		output = "farming:grain_coffee_cup_hot",
+		recipe = "farming:grain_coffee_cup"
+	})
+	minetest.register_craftitem("farming:grain_milk", {
+		description = "Grain Milk",
+		inventory_image = "farming_grain_milk.png",
+		on_use = minetest.item_eat(5,"vessels:drinking_glass"),
+		groups = {flammable = 1, beverage=1},
+	})
+	minetest.register_craft( {
+		output = modname..":grain_milk 3",
+		type = "shapeless",
+		recipe = {"vessels:drinking_glass","vessels:drinking_glass","vessels:drinking_glass", "farming:flour",
 			"bucket:bucket_water"},
 		replacements = {
 			{"bucket:bucket_water", "bucket:bucket_empty"},
