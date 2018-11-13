@@ -47,6 +47,15 @@ minetest.register_craftitem("farming:flour", {
 })
 
 
+-- function to drink item on use with fallback to eat if thirsty mod not available
+local drink_or_eat = function(hp_change,replace_with_item,itemstack,user,pointed_thing)
+	if minetest.get_modpath("thirsty") ~= nil then
+		thirsty.drink(user,3*hp_change)
+	else
+		minetest.do_item_eat(hp_change,replace_with_item,itemstack,user,pointed_thing)
+	end
+end
+
 if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") then
 	minetest.register_craftitem(modname..":nettle_water",{
 		description = "Nettle Water",
@@ -80,13 +89,13 @@ if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") 
 	minetest.register_craftitem("farming:grain_coffee_cup", {
 		description = "Grain Coffee",
 		inventory_image = "farming_coffee_cup.png",
-		on_use = minetest.item_eat(2,"vessels:drinking_glass"),
+		on_use = drink_or_eat(2,"vessels:drinking_glass",...),
 		groups = {coffee = 1, flammable = 1, beverage=1},
 	})
 	minetest.register_craftitem("farming:grain_coffee_cup_hot", {
 		description = "Grain Coffee hot",
 		inventory_image = "farming_coffee_cup_hot.png",
-		on_use = minetest.item_eat(4,"vessels:drinking_glass"),
+		on_use = drink_or_eat(4,"vessels:drinking_glass"),
 		groups = {coffee = 2, flammable = 1, beverage=2},
 	})
 	minetest.register_craft({
@@ -98,7 +107,7 @@ if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") 
 	minetest.register_craftitem("farming:grain_milk", {
 		description = "Grain Milk",
 		inventory_image = "farming_grain_milk.png",
-		on_use = minetest.item_eat(5,"vessels:drinking_glass"),
+		on_use = drink_or_eat(5,"vessels:drinking_glass"),
 		groups = {flammable = 1, beverage=1},
 	})
 	minetest.register_craft( {

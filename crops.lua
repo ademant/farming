@@ -94,7 +94,6 @@ local crop_cols={
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
 	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity","wiltable"}}
 local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
-
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
 if crop_definition["default"] ~= nil then
