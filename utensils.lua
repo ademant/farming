@@ -64,3 +64,17 @@ minetest.register_craft({
 		{"", "group:stone", ""},
 	}
 })
+
+minetest.register_craftitem(modname..":mortar_pestle_highlevel", {
+	description = S("Mortar and Pestle"),
+	inventory_image = "farming_tool_mortar_pestle_hl.png",
+	groups = {food_mortar_pestle = 1, flammable = 2},
+})
+
+minetest.register_craft({
+	output = modname..":mortar_pestle_highlevel",
+	recipe = {
+		{"default:obsidian", "default:iron_ingot", "default:obsidian"},
+		{"", "default:obsidian", ""},
+	}
+})

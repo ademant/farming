@@ -96,3 +96,5 @@ Created by ademant (CC BY 3.0):
   farming_spelt (based on farming_barley)
   farming_hop
   farming_tobaco (based on pictures of wikimedia)
+  farming_tool_spinningwheal (based on drawing by firkin on opencliparts)
+  farming_yarn (based on picture from ikiwana on wikimedia)
