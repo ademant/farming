@@ -65,7 +65,7 @@ local drink_or_eat = function(hp_change,replace_with_item,itemstack,user,pointed
 	end
 end
 
-if farming.has_value(modlist,"vessels") and farming.has_value(modlist,"bucket") then
+if basic_functions.has_value(modlist,"vessels") and basic_functions.has_value(modlist,"bucket") then
 	minetest.register_craftitem(modname..":nettle_water",{
 		description = "Nettle Water",
 		inventory_image = "farming_tool_glass_nettle.png",
@@ -138,7 +138,7 @@ else
 	print("Mod vessels/bucket not available. Seriously? -> no COFFEE!")
 end
 
-if farming.has_value(modlist,"wool") then
+if basic_functions.has_value(modlist,"wool") then
 	minetest.register_craft({
 		output="wool:white",
 		type="shapeless",

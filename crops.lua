@@ -10,6 +10,8 @@ Actual columns:
 	next_plant	text		For wild crop the name of the cultured crop. By change you get the seed or harvest of the cultured one
 							Should be a name of another crop in this list
 	Rarety					How often the crop spawn in the wild
+	Rarety_grass_drop		Change to get crop as drop item when digging grass
+	Rarety_junglegrass_drop	Change to get crop as drop item when digging jungle grass
 	Steps					Amount of steps the growing needs till full grown plant. Must be set
 	harvest_max				Max. amount of harvest or seed you can dig out of full grown plant
 	eat_hp					eat health point: How many HP you get by eating the seed.
@@ -84,16 +86,16 @@ Actual columns:
 local S = farming.intllib
 farming.path = minetest.get_modpath("farming")
 
-local has_value = farming.has_value 
+local has_value = basic_functions.has_value 
 local crop_cols={
 	col_num={"rarety","steps","harvest_max","eat_hp",
 	"temperature_min","temperature_max","humidity_min","humidity_max",
 	"elevation_min","elevation_max","light_min","light_max",
-	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time","wilt_time"},
+	"infect_rate_base","infect_rate_monoculture","spread_rate","grow_time_mean","roast_time","wilt_time","rarety_grass_drop"},
 	groups_num={"to_culture","to_dig","has_harvest","on_soil","punchable","infectable","is_bush",
 	"seed_extractable","use_flail","use_trellis","snappy","infection_defence","seed_roastable",
 	"seed_grindable","for_flour","for_coffee","damage_per_second","liquid_viscosity","wiltable"}}
-local crop_definition = farming.import_csv(farming.path.."/crops.txt",crop_cols)
+local crop_definition = basic_functions.import_csv(farming.path.."/crops.txt",crop_cols)
 -- for the default entry is checked, which numeric values are filled
 -- this values are copied into void fields of the crops
 if crop_definition["default"] ~= nil then
@@ -132,3 +134,7 @@ for i,tdef in pairs(crop_definition) do
 		end
 	end
 end
+
+minetest.override_item("default:grass_5",{drop=farming.grass_drop})
+minetest.override_item("default:grass_4",{drop=farming.grass_drop})
+minetest.override_item("default:junglegrass",{drop=farming.junglegrass_drop})

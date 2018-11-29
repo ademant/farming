@@ -249,7 +249,7 @@ farming.timer_step = function(pos, elapsed)
 	local lightamount=meta:get_int("farming:lightamount")
 
 	if lightamount ~= nil then
-		local ls = farming.light_stat[def.light_min]
+		local ls = farming.light_stat[tostring(def.light_min)]
 		if ls.amount ~= nil and lightamount > 0 then
 			-- time till next step is stretched. Less light means longer growing time
 			wait_factor = ls.amount / lightamount
@@ -439,7 +439,7 @@ farming.timer_wilt = function(pos, elapsed)
 				-- get soil nodes with air above
 				for j=1,#neighb do
 					local jpos=neighb[j]
-					if farming.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
+					if basic_functions.has_value({"air","default:grass_1","default:grass_2","default:grass_3","default:grass_4","default:grass_5"},minetest.get_node({x=jpos.x,y=jpos.y+1,z=jpos.z}).name) then
 						table.insert(freen,1,jpos)
 					end
 				end

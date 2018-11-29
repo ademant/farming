@@ -1,11 +1,11 @@
 local S = farming.intllib
 farming.path = minetest.get_modpath("farming")
 
-local has_value = farming.has_value 
+local has_value = basic_functions.has_value 
 local crop_cols={
 	col_num={"max_uses","farming_change","max_level","damage","times"},
 	groups_num={"snappy"}}
-local tool_definition = farming.import_csv(farming.path.."/tools.txt",crop_cols)
+local tool_definition = basic_functions.import_csv(farming.path.."/tools.txt",crop_cols)
 
 for i,line in pairs(tool_definition) do
 	

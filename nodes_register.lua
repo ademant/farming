@@ -149,6 +149,17 @@ farming.register_plant = function(def)
 		farming.register_coffee(def)
     end
 
+	if def.rarety_grass_drop ~= nil then
+		if def.harvest_name ~= nil then
+			table.insert(farming.grass_drop.items,1,{items={def.harvest_name},rarety=def.rarety_grass_drop})
+		end
+	end
+	if def.rarety_junglegrass_drop ~= nil then
+		if def.harvest_name ~= nil then
+			table.insert(farming.junglegrass_drop.items,1,{items={def.harvest_name},rarety=def.rarety_junglegrass_drop})
+		end
+	end
+	
    	farming.registered_plants[def.name] = def
 end
 
