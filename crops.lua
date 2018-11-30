@@ -135,7 +135,22 @@ for i,tdef in pairs(crop_definition) do
 	end
 end
 
-print(dump2(farming.grass_drop))
-minetest.override_item("default:grass_5",{drop=farming.grass_drop})
-minetest.override_item("default:grass_4",{drop=farming.grass_drop})
-minetest.override_item("default:junglegrass",{drop=farming.junglegrass_drop})
+local no_items=tonumber(#farming.grass_drop.items)
+local tgd={items={}}
+for i,gdrop in pairs(farming.grass_drop.items) do
+	if gdrop.rarity ~= nil then
+	  gdrop.rarity=gdrop.rarity * (1 + no_items - tonumber(i))
+	end
+	table.insert(tgd.items,gdrop)
+end
+minetest.override_item("default:grass_5",{drop=tgd})
+minetest.override_item("default:grass_4",{drop=tgd})
+local no_items=tonumber(#farming.junglegrass_drop.items)
+local tgd={items={}}
+for i,gdrop in pairs(farming.junglegrass_drop.items) do
+	if gdrop.rarity ~= nil then
+	  gdrop.rarity=gdrop.rarity * (1 + no_items - tonumber(i))
+	end
+	table.insert(tgd.items,gdrop)
+end
+minetest.override_item("default:junglegrass",{drop=tgd})
