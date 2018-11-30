@@ -370,7 +370,7 @@ farming.place_seed = function(itemstack, placer, pointed_thing, plantname)
 	local meta = minetest.get_meta(pointed_thing.above)
 	meta:set_int("farming:step",0)
 
-	farming.set_node_metadata(pointed_thing.above)
+	farming.set_node_metadata(pointed_thing.above,placer)
 
 	if not (creative and creative.is_enabled_for
 			and creative.is_enabled_for(player_name)) then
@@ -692,14 +692,17 @@ farming.calc_light=function(pos,pdef)
 end
 
 -- calculate several meta data for a node and save in node storage
-farming.set_node_metadata=function(pos)
+farming.set_node_metadata=function(pos,player)
 	local starttime=os.clock()
 	local base_rate = 5
 	local node = minetest.get_node(pos)
 	local def = minetest.registered_nodes[node.name]
 	local pdef = farming.registered_plants[def.plant_name]
 	local ill_rate=base_rate * (pdef.light_max-minetest.get_node_light(pos,0.5))/(pdef.light_max-pdef.light_min)
-
+	local player_meta=99
+	if player ~= nil then
+		player_meta=player:get_meta()
+	end
 	-- calc coeff for temperature
 	local ill_temp=(base_rate * math.sqrt(math.min(minetest.get_heat(pos)-pdef.temperature_min,pdef.temperature_max-minetest.get_heat(pos))/(pdef.temperature_max-pdef.temperature_min)))
 	-- negative coeff means, it is out of range
@@ -720,6 +723,11 @@ farming.set_node_metadata=function(pos)
 	end
 
 	ill_rate = math.ceil((ill_rate + ill_temp + ill_hum)/infect_rate)
+	if player_meta <> 99 then
+		if player_meta:get_int("xp:farming") ~= nil then
+			ill_rate = math.ceil(ill_rate * player_meta:get_int("xp:farming"))
+		end
+	end
 	local meta = minetest.get_meta(pos)
 
 	-- weakness as rate, how easily a crop can be infected
