@@ -59,4 +59,4 @@ farming.junglegrass_drop={max_items=1,items = {items={"default:junglegrass"}}}
 -- reading light statistics. needed for calculation of grow time
 farming.light_stat = basic_functions.import_csv(farming.path.."/light_stat.txt",{
 	col_num={"day_start","amount","name"}})
-print(dump2(farming.light_stat))
+

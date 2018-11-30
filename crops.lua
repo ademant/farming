@@ -135,6 +135,7 @@ for i,tdef in pairs(crop_definition) do
 	end
 end
 
+print(dump2(farming.grass_drop))
 minetest.override_item("default:grass_5",{drop=farming.grass_drop})
 minetest.override_item("default:grass_4",{drop=farming.grass_drop})
 minetest.override_item("default:junglegrass",{drop=farming.junglegrass_drop})

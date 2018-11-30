@@ -70,6 +70,7 @@ farming.plant_cured = function(pos)
 	local def = minetest.registered_nodes[name]
 	local meta = minetest.get_meta(pos)
 	local cured_step=meta:get_int("farming:step")
+	if cured_step == nil then cured_stel = 1 end
 	local cured_name=def.step_name.."_"..cured_step
 
 	if not minetest.registered_nodes[cured_name] then

@@ -151,12 +151,12 @@ farming.register_plant = function(def)
 
 	if def.rarety_grass_drop ~= nil then
 		if def.harvest_name ~= nil then
-			table.insert(farming.grass_drop.items,1,{items={def.harvest_name},rarety=def.rarety_grass_drop})
+			table.insert(farming.grass_drop.items,1,{items={def.harvest_name},rarity=def.rarety_grass_drop})
 		end
 	end
 	if def.rarety_junglegrass_drop ~= nil then
 		if def.harvest_name ~= nil then
-			table.insert(farming.junglegrass_drop.items,1,{items={def.harvest_name},rarety=def.rarety_junglegrass_drop})
+			table.insert(farming.junglegrass_drop.items,1,{items={def.harvest_name},rarity=def.rarety_junglegrass_drop})
 		end
 	end
 	
