@@ -205,7 +205,7 @@ farming.register_infect=function(idef)
 		groups = {snappy = 3, attached_node = 1, flammable = 2,farming_infect=2},
 	}
 	
-	for _,coln in ipairs({"name","seed_name","plant_name",
+	for _,coln in ipairs({"step_name","name","seed_name","plant_name",
 		"infect_rate_base","infect_rate_monoculture"}) do
 	  infect_def[coln] = idef[coln]
 	end

@@ -83,7 +83,6 @@ minetest.register_abm({
 		if math.random(1,ill_rate)==1 then
 			farming.plant_infect(pos)
 		end
---		print("infect time: "..os.time()-starttime)
 --		table.insert(farming.time_ill,1000*(os.clock()-starttime))
 	end
 })

@@ -723,7 +723,7 @@ farming.set_node_metadata=function(pos,player)
 	end
 
 	ill_rate = math.ceil((ill_rate + ill_temp + ill_hum)/infect_rate)
-	if player_meta <> 99 then
+	if player_meta ~= 99 then
 		if player_meta:get_int("xp:farming") ~= nil then
 			ill_rate = math.ceil(ill_rate * player_meta:get_int("xp:farming"))
 		end
