@@ -7,6 +7,7 @@ Actual columns:
 	Name					Name of the crop. Is used for registering all nodes and craftitems
 	Enabled		void		crop is not registered in the game
 				an value	crop is registered with configured features
+	hijack		text		Which crop of other mod should be hijacked (not to use in mod:farming)
 	next_plant	text		For wild crop the name of the cultured crop. By change you get the seed or harvest of the cultured one
 							Should be a name of another crop in this list
 	Rarety					How often the crop spawn in the wild
