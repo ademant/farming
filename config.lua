@@ -53,8 +53,8 @@ farming.spreading_crops = {}
 farming.registered_plants = {}
 
 -- temp list for grass drop
-farming.grass_drop={max_items=1,items = {items={"default:grass_1"}}}
-farming.junglegrass_drop={max_items=1,items = {items={"default:junglegrass"}}}
+farming.grass_drop={max_items=1,items = {items={items={"default:grass_1"}}}}
+farming.junglegrass_drop={max_items=1,items = {items={items={"default:junglegrass"}}}}
 
 -- reading light statistics. needed for calculation of grow time
 farming.light_stat = basic_functions.import_csv(farming.path.."/light_stat.txt",{

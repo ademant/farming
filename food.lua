@@ -15,6 +15,12 @@ minetest.register_craft({
 	output = "farming:sugar 2",
 	recipe = "default:papyrus",
 })
+minetest.register_craft({
+	type = "cooking",
+	cooktime = 2,
+	output = "farming:sugar 3",
+	recipe = "default:sugarbeet_seed",
+})
 
 
 --= Salt
