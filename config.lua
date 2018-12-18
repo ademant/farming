@@ -35,7 +35,7 @@ local test_soil = {"default:dirt","default:dirt_with_grass","default:dirt_with_d
 	"default:dirt_with_coniferous_litter","default:permafrost_with_moss"}
 for i,s in ipairs(test_soil) do
   if minetest.registered_nodes[s] ~= nil then
-    table.insert(farming.change_soil,s)
+	farming.add_soil(s)
   end
 end
 farming.change_soil_desert = {}

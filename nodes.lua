@@ -10,11 +10,6 @@ local add_soil = function(item,soil)
 	})
 end
 
--- override grass items
-if (farming.change_soil == nil) then
-  farming.change_soil = {"default:dirt","default:dirt_with_grass","default:dirt_with_dry_grass","default:dirt_with_rainforest_litter",
-	"default:dirt_with_coniferous_litter","default:permafrost_with_moss"}
-end
 for i,v in ipairs(farming.change_soil) do
 	add_soil(v,"farming:soil")
 end
