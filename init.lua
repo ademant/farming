@@ -12,6 +12,8 @@ farming.intllib = S
 minetest.log("action", "[MOD]"..minetest.get_current_modname().." -- start loading from "..minetest.get_modpath(minetest.get_current_modname()))
 -- Load files
 
+-- import settingtypes.txt
+basic_functions.import_settingtype(farming.path .. "/settingtypes.txt")
 
 dofile(farming.path .. "/api.lua") -- several helping functions
 dofile(farming.path .. "/config.lua") -- configuration of mod
