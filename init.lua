@@ -26,7 +26,6 @@ dofile(farming.path .. "/tools.lua") --define tools
 dofile(farming.path .. "/utensils.lua") -- utensils like grinder
 dofile(farming.path .. "/craft.lua") -- some craft definitions
 dofile(farming.path .. "/crops.lua") -- loading definition of crop and register
-dofile(farming.path .. "/food.lua") -- several foods out of crops
 dofile(farming.path .. "/abm.lua") -- abm functions
 
 -- replacement LBM for pre-nodetimer plants

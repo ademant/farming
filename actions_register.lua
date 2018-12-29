@@ -21,15 +21,17 @@ farming.plant_infect = function(pos)
 	local meta = minetest.get_meta(pos)
 	local toremove=false
 	if meta:get_int("farming:healthiness") then
-		local healthiness=meta:get_int("farming:healthiness")
-		-- check for nearby plants which can protect against infections
-		for i=1,3 do
-			local protplant=minetest.find_node_near(pos,i,"group:infection_defense")
-			if protplant ~= nil then
-				ppdef=minetest.get_node(protplant)
-				-- the protection plant has to be within their defined radius
-				if ppdef.groups.infection_defense >= i then
-					healthiness=healthiness+i*10
+		local healthiness=tonumber(meta:get_int("farming:healthiness"))
+		if healthiness ~= nil then
+			-- check for nearby plants which can protect against infections
+			for i=1,3 do
+				local protplant=minetest.find_node_near(pos,i,"group:infection_defense")
+				if protplant ~= nil then
+					ppdef=minetest.get_node(protplant)
+					-- the protection plant has to be within their defined radius
+					if ppdef.groups.infection_defense >= i then
+						healthiness=healthiness+i*10
+					end
 				end
 			end
 		end
