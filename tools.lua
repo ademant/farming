@@ -63,13 +63,3 @@ farming.register_tool("farming:picker", {
 		end
 
 })
---[[
-minetest.register_craft({
-	output = "farming:picker",
-	recipe = {
-		{"", "", "group:stick"},
-		{"", "group:stick", "group:wool"},
-		{"group:stick", "", ""},
-	}
-})
-]]

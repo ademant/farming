@@ -27,6 +27,7 @@ dofile(farming.path .. "/utensils.lua") -- utensils like grinder
 dofile(farming.path .. "/craft.lua") -- some craft definitions
 dofile(farming.path .. "/crops.lua") -- loading definition of crop and register
 dofile(farming.path .. "/abm.lua") -- abm functions
+dofile(farming.path .. "/compatibility.lua") -- Compatibility with other mods
 
 -- replacement LBM for pre-nodetimer plants
 minetest.register_lbm({
