@@ -17,17 +17,17 @@ else
 end
 
 -- rarety of crops on map, default is 0.001 (higher number = more crops)
-farming.rarety =  minetest.settings:get("farming.rarety") or 0.002
-farming.viscosity =  minetest.settings:get("farming.viscosity") or 1
-farming.wait_min =  minetest.settings:get("farming.wait_min") or 60
-farming.wait_max =  minetest.settings:get("farming.wait_max") or 70
-farming.wilt_removal_time =  minetest.settings:get("farming.wilt_removal_time") or 40
-farming.wilt_time =  minetest.settings:get("farming.wilt_time") or 90
-farming.min_light =  minetest.settings:get("farming.min_light") or 10
-farming.health_threshold =  minetest.settings:get("farming.health_threshold") or 50
-farming.factor_regrow =  minetest.settings:get("farming.factor_regrow") or 2
-farming.abm_planting =  minetest.settings:get("farming.abm_planting") or 30
-farming.abm_planting_change =  minetest.settings:get("farming.abm_planting_change") or 750
+farming.rarety =  tonumber(minetest.settings:get("farming.rarety")) or 0.002
+farming.viscosity =  tonumber(minetest.settings:get("farming.viscosity")) or 1
+farming.wait_min =  tonumber(minetest.settings:get("farming.wait_min")) or 60
+farming.wait_max =  tonumber(minetest.settings:get("farming.wait_max")) or 70
+farming.wilt_removal_time =  tonumber(minetest.settings:get("farming.wilt_removal_time")) or 40
+farming.wilt_time =  tonumber(minetest.settings:get("farming.wilt_time")) or 90
+farming.min_light =  tonumber(minetest.settings:get("farming.min_light")) or 10
+farming.health_threshold =  tonumber(minetest.settings:get("farming.health_threshold")) or 50
+farming.factor_regrow =  tonumber(minetest.settings:get("farming.factor_regrow")) or 2
+farming.abm_planting =  tonumber(minetest.settings:get("farming.abm_planting")) or 30
+farming.abm_planting_change =  tonumber(minetest.settings:get("farming.abm_planting_change")) or 750
 
 -- node type, where grain can be randomly found
 farming.change_soil = {}
