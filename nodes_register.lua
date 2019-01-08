@@ -85,6 +85,7 @@ farming.register_plant = function(def)
 		else
 			def.harvest_name = def.step_name
 		end
+		print(def.harvest_name)
 		farming.register_harvest(def)
     else
 		def.harvest_name=def.seed_name
