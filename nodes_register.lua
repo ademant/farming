@@ -299,6 +299,7 @@ farming.register_seed=function(sdef) --time optimised
 	
 	if sdef.eat_hp then
 	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
+	  seed_def.groups["eatable"]=sdef.eat_hp
 	end
 	
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
@@ -506,6 +507,7 @@ function farming.register_coffee(cdef)
 	
 	if cdef.eat_hp then
 	  powder_def.on_use=minetest.item_eat(cdef.eat_hp)
+	  powder_def.groups["eatable"]=cdef.eat_hp
 	end
 	minetest.register_craftitem(":" .. cdef.coffeepowder, powder_def)
 	
@@ -549,6 +551,7 @@ function farming.register_roast(rdef)
 		end
 		if rdef.eat_hp then
 		  roast_def.on_use=minetest.item_eat(rdef.eat_hp*2)
+		  roast_def.groups["eatable"]=rdef.eat_hp*2
 		end
 		
 		minetest.register_craftitem(":" .. roastitem, roast_def)
@@ -601,6 +604,7 @@ function farming.register_grind(rdef)
 	
 	if rdef.eat_hp then
 	  grind_def.on_use=minetest.item_eat(rdef.eat_hp)
+	  grind_def.groups["eatable"]=rdef.eat_hp
 	end
 	
 	minetest.register_craftitem(":" .. grinditem, grind_def)
