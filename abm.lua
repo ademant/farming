@@ -90,7 +90,7 @@ minetest.register_abm({
 minetest.register_abm({
 	label="Planting crops",
 	nodenames = farming.change_soil,
-	neighbors = {"air"},
+	neighbors = {"air","group:grass","group:dry_grass"},
 	interval = farming.abm_planting+math.random(-1,1), -- little noise
 	chance = farming.abm_planting_chance,
 	action = function(pos)

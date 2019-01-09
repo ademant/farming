@@ -20,6 +20,10 @@ minetest.override_item("flowers:mushroom_brown", {
 })
 end
 
+jg_groups=table.copy(minetest.registered_nodes["default:junglegrass"].groups)
+jg_groups["grass"]=1
+minetest.override_item("default:junglegrass",{groups=jg_groups})
+
 --= Aliases
 
 -- Banana

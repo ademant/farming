@@ -77,8 +77,9 @@ farming.register_plant = function(def)
 	def.step_name=def.mod_name..":"..def.name
 	def.seed_name=def.mod_name..":"..def.name.."_seed"
 	def.plant_name = def.name
+	local def_groups=def.groups
     -- if plant has harvest then registering
-    if def.groups["has_harvest"] ~= nil then
+    if def_groups["has_harvest"] ~= nil then
 		-- if plant drops seed of wild crop, set the wild seed as harvest
 		if def.seed_drop ~= nil then
 			def.harvest_name = def.seed_drop
@@ -90,7 +91,7 @@ farming.register_plant = function(def)
 		def.harvest_name=def.seed_name
     end
     
-    if def.groups["wiltable"] == 2 then
+    if def_groups["wiltable"] == 2 then
 		def.wilt_name=def.mod_name..":wilt_"..def.name
 		farming.register_wilt(def)
 	end
@@ -100,7 +101,7 @@ farming.register_plant = function(def)
 	farming.register_steps(def)
 	
 	-- crops, which should be cultured, does not randomly appear on the field
-	if (not def.groups["to_culture"]) then
+	if (not def_groups["to_culture"]) then
 		local edef=def
 		local spread_def={name=def.step_name.."_1",
 				temp_min=edef.temperature_min,temp_max=edef.temperature_max,
@@ -111,7 +112,7 @@ farming.register_plant = function(def)
 		table.insert(farming.spreading_crops,1,spread_def)
 	end
 	
-    if def.groups["infectable"] then
+    if def_groups["infectable"] then
       farming.register_infect(def)
     end
     
@@ -125,27 +126,27 @@ farming.register_plant = function(def)
 		end
 	end
 
-    if def.groups["use_flail"] then
+    if def_groups["use_flail"] then
 		if def.straw == nil then
 			def.straw= "farming:straw"
 		end
 		farming.craft_seed(def)
     end
 
-    if def.groups["use_trellis"] then
+    if def_groups["use_trellis"] then
 		farming.trellis_seed(def)
 --		print(dump(def))
     end
 
-    if def.groups["seed_grindable"] then
+    if def_groups["seed_grindable"] then
 		farming.register_grind(def)
     end
 
-    if def.groups["seed_roastable"] then
+    if def_groups["seed_roastable"] then
 		farming.register_roast(def)
     end
 
-    if def.groups["for_coffee"] then
+    if def_groups["for_coffee"] then
 		farming.register_coffee(def)
     end
 
