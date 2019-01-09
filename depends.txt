@@ -1,5 +1,7 @@
 default
+basic_functions
 intllib?
 wool?
 bucket?
+thirsty?
 vessels?
