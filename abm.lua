@@ -98,7 +98,9 @@ minetest.register_abm({
 		local ptabove={x=pos.x,y=pos.y+1,z=pos.z}
 		local above = minetest.get_node(ptabove)
 		if above.name ~= "air" then
-			return
+			if (minetest.get_item_group(above.name, "grass")==0) or (minetest.get_item_group(above.name, "dry_grass")==0) then
+				return
+			end
 		end
 		local ptlight=minetest.get_node_light(ptabove)
 		if ptlight < farming.min_light then
