@@ -298,9 +298,18 @@ farming.register_seed=function(sdef) --time optimised
 		end
 	end
 	
-	if sdef.eat_hp then
-	  seed_def.on_use=minetest.item_eat(sdef.eat_hp)
-	  seed_def.groups["eatable"]=sdef.eat_hp
+	if sdef.eat_hp or sdef.drink then
+		local eat_hp=0
+		if sdef.eat_hp then
+			eat_hp=sdef.eat_hp
+		end
+		seed_def.on_use=minetest.item_eat(eat_hp)
+		if sdef.eat_hp then
+			seed_def.groups["eatable"]=sdef.eat_hp
+		end
+		if sdef.drink then
+			seed_def.groups["drinkable"]=sdef.drink
+		end
 	end
 	
 	minetest.register_node(":" .. sdef.seed_name, seed_def)
