@@ -1,3 +1,5 @@
+Mod is integrated into my farming modpack and if I find an easy way, there will be a single farming mod.
+
 Minetest Game mod: farming
 ==========================
 See license.txt for license information.
